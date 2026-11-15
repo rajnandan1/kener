@@ -7,6 +7,7 @@ import devtoolsJson from "vite-plugin-devtools-json";
 import { playwright } from "@vitest/browser-playwright";
 import { configDefaults } from "vitest/config";
 import { buildCheerioGuest } from "./scripts/cheerio-guest.js";
+import { browserTestCommands } from "./scripts/browser-test-commands.ts";
 
 import * as dotenv from "dotenv";
 
@@ -30,18 +31,10 @@ export default defineConfig(({ mode }) => {
   const allowedHost = getAllowedHost(origin);
 
   return {
+    // Keep the editor and its extensions in one optimized module graph. Mixing
+    // bundled and excluded CodeMirror modules creates duplicate state instances.
     optimizeDeps: {
-      include: ["rrule"],
-      exclude: [
-        "svelte-codemirror-editor",
-        "codemirror",
-        "@codemirror/lang-javascript",
-        "@codemirror/lang-json",
-        "@codemirror/lang-markdown",
-        "@codemirror/lang-css",
-        "@codemirror/lang-html",
-        "@uiw/codemirror-theme-github",
-      ],
+      include: ["rrule", "svelte-codemirror-editor", "@codemirror/state", "@codemirror/view"],
     },
     plugins: [tailwindcss(), sveltekit(), version(), devtoolsJson()],
     server: {
@@ -84,6 +77,7 @@ export default defineConfig(({ mode }) => {
             name: "client",
             browser: {
               enabled: true,
+              commands: browserTestCommands,
               headless: true,
               provider: playwright({ contextOptions: { timezoneId: "UTC" } }),
               instances: [{ browser: "chromium" }],

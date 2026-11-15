@@ -197,11 +197,8 @@
       <div class="flex items-end gap-4">
         <div class="flex-1 space-y-2">
           <Label for="deleteDataConfirm">
-            {$adminT("Type")}
-            <span class="text-destructive font-mono"
-              >{$adminT("delete {monitorTag} data", { monitorTag: monitorTag })}</span
-            >
-            {$adminT("to confirm")}
+            {$adminT("To confirm, type")}
+            <code class="text-destructive font-mono">delete {monitorTag} data</code>
           </Label>
           <p class="text-muted-foreground">
             {$adminT(
@@ -230,9 +227,8 @@
       <div class="flex items-end gap-4">
         <div class="flex-1 space-y-2">
           <Label for="deleteConfirm">
-            {$adminT("Type")}
-            <span class="text-destructive font-mono">{$adminT("delete {monitorTag}", { monitorTag: monitorTag })}</span>
-            {$adminT("to confirm")}
+            {$adminT("To confirm, type")}
+            <code class="text-destructive font-mono">delete {monitorTag}</code>
           </Label>
           <p class="text-muted-foreground">
             {$adminT("Deleting monitor is irreversible. Please be sure before deleting.")}

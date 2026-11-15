@@ -36,7 +36,7 @@
   import { SveltePurify } from "@humanspeak/svelte-purify";
 
   import { EditorState } from "@codemirror/state";
-  import CodeMirror from "svelte-codemirror-editor";
+  import CodeMirror from "$lib/components/manage/CodeEditor.svelte";
   import { markdown } from "@codemirror/lang-markdown";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
   import mdToHTML from "$lib/marked";
@@ -734,9 +734,8 @@
             <div class="space-y-4 py-4">
               <div class="flex flex-col gap-2">
                 <Label
-                  >{$adminT("Type")} <span class="font-mono font-semibold">{deleteConfirmPhrase}</span>
-                  {$adminT("to confirm")}</Label
-                >
+                  >{$adminT("To confirm, type")} <span class="font-mono font-semibold">{deleteConfirmPhrase}</span>
+                </Label>
                 <Input bind:value={deleteConfirmText} placeholder={deleteConfirmPhrase} />
               </div>
             </div>
@@ -942,7 +941,7 @@
                   <DropdownMenu.Root>
                     <DropdownMenu.Trigger>
                       {#snippet child({ props })}
-                        <Button {...props} variant="ghost" size="icon">
+                        <Button aria-label={$adminT("More monitor actions")} {...props} variant="ghost" size="icon">
                           <MoreVerticalIcon class="size-4" />
                         </Button>
                       {/snippet}
@@ -1164,10 +1163,20 @@
                         </div>
                       </div>
                       <div class="ml-4 flex gap-1">
-                        <Button variant="ghost" size="icon" onclick={() => startEditComment(comment)}>
+                        <Button
+                          aria-label={$adminT("Edit update")}
+                          variant="ghost"
+                          size="icon"
+                          onclick={() => startEditComment(comment)}
+                        >
                           <PencilIcon class="size-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onclick={() => deleteComment(comment.id)}>
+                        <Button
+                          aria-label={$adminT("Delete update")}
+                          variant="ghost"
+                          size="icon"
+                          onclick={() => deleteComment(comment.id)}
+                        >
                           <TrashIcon class="size-4" />
                         </Button>
                       </div>

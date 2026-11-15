@@ -383,7 +383,13 @@
       >
       {#if totalPages > 1}
         <div class="flex items-center gap-2">
-          <Button variant="outline" size="icon" disabled={pageNo === 1} onclick={() => goToPage(pageNo - 1)}>
+          <Button
+            aria-label={$adminT("Previous page")}
+            variant="outline"
+            size="icon"
+            disabled={pageNo === 1}
+            onclick={() => goToPage(pageNo - 1)}
+          >
             <ChevronLeftIcon class="size-4" />
           </Button>
           <div class="flex items-center gap-1">
@@ -397,7 +403,13 @@
               {/if}
             {/each}
           </div>
-          <Button variant="outline" size="icon" disabled={pageNo === totalPages} onclick={() => goToPage(pageNo + 1)}>
+          <Button
+            aria-label={$adminT("Next page")}
+            variant="outline"
+            size="icon"
+            disabled={pageNo === totalPages}
+            onclick={() => goToPage(pageNo + 1)}
+          >
             <ChevronRightIcon class="size-4" />
           </Button>
         </div>

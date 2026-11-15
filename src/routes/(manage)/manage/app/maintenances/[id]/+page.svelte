@@ -861,7 +861,7 @@
 
         <!-- Monitor Selection -->
         <div class="flex flex-col gap-3">
-          <Label>{$adminT("Affected Monitors")}</Label>
+          <Label>{$adminT("Monitors affected by maintenance")}</Label>
 
           <!-- Available monitors to add -->
           <div class="rounded-md border p-3">
@@ -1028,7 +1028,12 @@
                         {$adminT("Cancel")}
                       </Button>
                     {/if}
-                    <Button variant="ghost" size="icon" onclick={() => deleteEvent(event.id)}>
+                    <Button
+                      aria-label={$adminT("Delete event")}
+                      variant="ghost"
+                      size="icon"
+                      onclick={() => deleteEvent(event.id)}
+                    >
                       <TrashIcon class="size-4" />
                     </Button>
                   </div>

@@ -12,7 +12,7 @@
   import X from "@lucide/svelte/icons/x";
   import { DefaultPingEval } from "$lib/anywhere.js";
   import { EditorState } from "@codemirror/state";
-  import CodeMirror from "svelte-codemirror-editor";
+  import CodeMirror from "$lib/components/manage/CodeEditor.svelte";
   import { javascript } from "@codemirror/lang-javascript";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
   import { mode } from "mode-watcher";
@@ -82,7 +82,7 @@
           <div class="bg-muted/50 rounded-lg border p-3">
             <div class="mb-2 flex items-center justify-between">
               <span class="text-sm font-medium">{$adminT("Host {value1}", { value1: index + 1 })}</span>
-              <Button variant="ghost" size="icon" onclick={() => removeHost(index)}>
+              <Button aria-label={$adminT("Remove host")} variant="ghost" size="icon" onclick={() => removeHost(index)}>
                 <X class="size-4" />
               </Button>
             </div>

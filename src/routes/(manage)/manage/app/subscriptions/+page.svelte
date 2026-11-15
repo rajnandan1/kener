@@ -539,6 +539,7 @@
                   </Table.Cell>
                   <Table.Cell class="text-center">
                     <Button
+                      aria-label={$adminT("Delete Subscriber")}
                       variant="ghost"
                       size="icon"
                       class="text-destructive hover:bg-destructive/10 h-8 w-8"
@@ -568,7 +569,13 @@
           >
           {#if totalPages > 1}
             <div class="flex items-center gap-2">
-              <Button variant="outline" size="icon" disabled={page === 1} onclick={() => goToPage(page - 1)}>
+              <Button
+                aria-label={$adminT("Previous page")}
+                variant="outline"
+                size="icon"
+                disabled={page === 1}
+                onclick={() => goToPage(page - 1)}
+              >
                 <ChevronLeftIcon class="size-4" />
               </Button>
               <div class="flex items-center gap-1">
@@ -586,7 +593,13 @@
                   {/if}
                 {/each}
               </div>
-              <Button variant="outline" size="icon" disabled={page === totalPages} onclick={() => goToPage(page + 1)}>
+              <Button
+                aria-label={$adminT("Next page")}
+                variant="outline"
+                size="icon"
+                disabled={page === totalPages}
+                onclick={() => goToPage(page + 1)}
+              >
                 <ChevronRightIcon class="size-4" />
               </Button>
             </div>

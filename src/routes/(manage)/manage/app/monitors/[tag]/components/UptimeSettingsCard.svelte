@@ -119,7 +119,7 @@
       <InputGroup.Root>
         <InputGroup.Addon>{$adminT("a =")}</InputGroup.Addon>
         <InputGroup.Input
-          placeholder={$adminT("up + maintenance")}
+          placeholder="up + maintenance"
           bind:value={uptimeSettings.uptime_formula_numerator}
           class={!isValidUptimeFormula(uptimeSettings.uptime_formula_numerator) ? "border-destructive" : ""}
         />
@@ -127,7 +127,7 @@
       <InputGroup.Root>
         <InputGroup.Addon>{$adminT("b =")}</InputGroup.Addon>
         <InputGroup.Input
-          placeholder={$adminT("up + maintenance + down + degraded")}
+          placeholder="up + maintenance + down + degraded"
           bind:value={uptimeSettings.uptime_formula_denominator}
           class={!isValidUptimeFormula(uptimeSettings.uptime_formula_denominator) ? "border-destructive" : ""}
         />

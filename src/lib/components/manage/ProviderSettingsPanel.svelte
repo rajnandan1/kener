@@ -224,7 +224,7 @@
                 </div>
               {/each}
               <div class="flex flex-col gap-2">
-                <Label>{$adminT("Status")}</Label>
+                <Label for="provider-enabled">{$adminT("Status")}</Label>
                 <Select.Root
                   type="single"
                   value={selected.isEnabled ? "enabled" : "disabled"}
@@ -233,12 +233,12 @@
                     selected.isEnabled = value === "enabled";
                   }}
                 >
-                  <Select.Trigger class="w-32">
-                    {selected.isEnabled ? $adminT("Enable") : $adminT("Disable")}
+                  <Select.Trigger id="provider-enabled" class="w-32">
+                    {selected.isEnabled ? $adminT("Enabled") : $adminT("Disabled")}
                   </Select.Trigger>
                   <Select.Content>
-                    <Select.Item value="enabled">{$adminT("Enable")}</Select.Item>
-                    <Select.Item value="disabled">{$adminT("Disable")}</Select.Item>
+                    <Select.Item value="enabled">{$adminT("Enabled")}</Select.Item>
+                    <Select.Item value="disabled">{$adminT("Disabled")}</Select.Item>
                   </Select.Content>
                 </Select.Root>
               </div>

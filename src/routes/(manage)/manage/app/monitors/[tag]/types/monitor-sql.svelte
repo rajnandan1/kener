@@ -8,7 +8,7 @@
   import * as Select from "$lib/components/ui/select/index.js";
   import * as InputGroup from "$lib/components/ui/input-group/index.js";
   import { EditorState } from "@codemirror/state";
-  import CodeMirror from "svelte-codemirror-editor";
+  import CodeMirror from "$lib/components/manage/CodeEditor.svelte";
   import { javascript } from "@codemirror/lang-javascript";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
   import { mode } from "mode-watcher";

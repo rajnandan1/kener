@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
   import CircleCheckIcon from "@lucide/svelte/icons/circle-check";
   import InfoIcon from "@lucide/svelte/icons/info";
   import Loader2Icon from "@lucide/svelte/icons/loader-2";
@@ -13,6 +15,8 @@
 
 <Sonner
   theme={mode.current}
+  containerAriaLabel={$adminT("Notifications")}
+  closeButtonAriaLabel={$adminT("Close toast")}
   class="toaster group"
   style="--normal-bg: var(--color-popover); --normal-text: var(--color-popover-foreground); --normal-border: var(--color-border);"
   {...restProps}

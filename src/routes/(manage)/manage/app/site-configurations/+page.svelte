@@ -901,7 +901,12 @@
                 disabled={uploadingLogo}
               />
               {#if siteData.logo}
-                <Button variant="ghost" size="icon" onclick={() => clearImage("logo")}>
+                <Button
+                  aria-label={$adminT("Remove logo")}
+                  variant="ghost"
+                  size="icon"
+                  onclick={() => clearImage("logo")}
+                >
                   <XIcon class="h-4 w-4" />
                 </Button>
               {/if}
@@ -971,7 +976,12 @@
                 disabled={uploadingFavicon}
               />
               {#if siteData.favicon}
-                <Button variant="ghost" size="icon" onclick={() => clearImage("favicon")}>
+                <Button
+                  aria-label={$adminT("Remove favicon")}
+                  variant="ghost"
+                  size="icon"
+                  onclick={() => clearImage("favicon")}
+                >
                   <XIcon class="h-4 w-4" />
                 </Button>
               {/if}
@@ -1042,7 +1052,12 @@
                 disabled={uploadingSocialPreviewImage}
               />
               {#if siteData.socialPreviewImage}
-                <Button variant="ghost" size="icon" onclick={() => clearImage("socialPreviewImage")}>
+                <Button
+                  aria-label={$adminT("Remove social preview image")}
+                  variant="ghost"
+                  size="icon"
+                  onclick={() => clearImage("socialPreviewImage")}
+                >
                   <XIcon class="h-4 w-4" />
                 </Button>
               {/if}
@@ -1123,11 +1138,17 @@
                       alt={$adminT("Icon")}
                       class="h-6 w-6 object-contain"
                     />
-                    <Button variant="ghost" size="sm" onclick={() => (item.iconURL = "")}>
+                    <Button
+                      aria-label={$adminT("Remove navigation icon")}
+                      variant="ghost"
+                      size="sm"
+                      onclick={() => (item.iconURL = "")}
+                    >
                       <XIcon class="h-4 w-4" />
                     </Button>
                   {:else}
                     <Button
+                      aria-label={$adminT("Upload navigation icon")}
                       variant="outline"
                       size="sm"
                       disabled={item.uploading}
@@ -1150,7 +1171,12 @@
                 </div>
               </div>
             </div>
-            <Button variant="ghost" size="icon" onclick={() => removeNavItem(index)}>
+            <Button
+              aria-label={$adminT("Remove navigation link")}
+              variant="ghost"
+              size="icon"
+              onclick={() => removeNavItem(index)}
+            >
               <XIcon class="h-4 w-4" />
             </Button>
           </div>
@@ -1586,6 +1612,7 @@
               <div class="flex items-center gap-2">
                 <Input type="url" bind:value={url.loc} placeholder="https://example.com/page" class="flex-1" />
                 <Button
+                  aria-label={$adminT("Remove sitemap URL")}
                   variant="ghost"
                   size="icon"
                   onclick={() => removeSitemapUrl(index)}

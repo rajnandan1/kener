@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getAdminI18n } from "$lib/admin-i18n/context";
-  const { t: adminT } = getAdminI18n();
+  const { t: adminT, locale: adminLocale } = getAdminI18n();
 
   import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button/index.js";
@@ -11,7 +11,7 @@
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
   import CopyButton from "$lib/components/CopyButton.svelte";
-  import ColorPicker from "svelte-awesome-color-picker";
+  import ColorPicker from "$lib/components/manage/ColorPicker.svelte";
   import CopyIcon from "@lucide/svelte/icons/copy";
   import EyeIcon from "@lucide/svelte/icons/eye";
   import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
@@ -25,6 +25,17 @@
   let monitors = $state<MonitorRecord[]>([]);
   let activatedLocales = $state<{ code: string; name: string }[]>([]);
   let loading = $state(true);
+
+  const languageNames = $derived(new Intl.DisplayNames([$adminLocale], { type: "language" }));
+  function displayLanguage(language: { code: string; name: string }): string {
+    try {
+      const code = language.code === "dk" ? "da" : language.code;
+      const name = languageNames.of(code);
+      return name && name.toLowerCase() !== code.toLowerCase() ? name : language.name;
+    } catch {
+      return language.name;
+    }
+  }
 
   // Badge configuration
   let badgeConfig = $state({
@@ -57,11 +68,7 @@
     if (!badgeConfig.tag) return "";
 
     const baseUrl =
-      `${protocol}//${domain}` +
-      clientResolver(
-        resolve,
-        `/badge/${badgeConfig.tag}/${$adminT(badgeConfig.badgeType === "status" ? "Status" : badgeConfig.badgeType === "uptime" ? "Uptime" : "Latency")}`
-      );
+      `${protocol}//${domain}` + clientResolver(resolve, `/badge/${badgeConfig.tag}/${badgeConfig.badgeType}`);
     const params = new URLSearchParams();
 
     // sinceLast and hideDuration only apply to uptime/latency badges
@@ -102,7 +109,9 @@
     const monitor = monitors.find((m) => m.tag === badgeConfig.tag);
     const altText = monitor
       ? `${monitor.name} ${$adminT(badgeConfig.badgeType === "status" ? "Status" : badgeConfig.badgeType === "uptime" ? "Uptime" : "Latency")}`
-      : badgeConfig.badgeType;
+      : $adminT(
+          badgeConfig.badgeType === "status" ? "Status" : badgeConfig.badgeType === "uptime" ? "Uptime" : "Latency"
+        );
     return `![${altText}](${badgeUrl})`;
   });
 
@@ -112,7 +121,9 @@
     const monitor = monitors.find((m) => m.tag === badgeConfig.tag);
     const altText = monitor
       ? `${monitor.name} ${$adminT(badgeConfig.badgeType === "status" ? "Status" : badgeConfig.badgeType === "uptime" ? "Uptime" : "Latency")}`
-      : badgeConfig.badgeType;
+      : $adminT(
+          badgeConfig.badgeType === "status" ? "Status" : badgeConfig.badgeType === "uptime" ? "Uptime" : "Latency"
+        );
     return `<img src="${badgeUrl}" alt="${altText}" />`;
   });
 
@@ -221,7 +232,7 @@
                     if (v) badgeConfig.badgeType = v as "status" | "uptime" | "latency";
                   }}
                 >
-                  <Select.Trigger id="badge-type" class="w-full capitalize">
+                  <Select.Trigger id="badge-type" class="w-full">
                     {$adminT(
                       badgeConfig.badgeType === "status"
                         ? "Status"
@@ -259,12 +270,14 @@
                     }}
                   >
                     <Select.Trigger id="badge-locale" class="w-full">
-                      {activatedLocales.find((l) => l.code === (badgeConfig.locale || "en"))?.name ||
-                        $adminT("English")}
+                      {displayLanguage({
+                        code: badgeConfig.locale || "en",
+                        name: activatedLocales.find((l) => l.code === (badgeConfig.locale || "en"))?.name || "English"
+                      })}
                     </Select.Trigger>
                     <Select.Content>
                       {#each activatedLocales as locale (locale.code)}
-                        <Select.Item value={locale.code}>{locale.name}</Select.Item>
+                        <Select.Item value={locale.code}>{displayLanguage(locale)}</Select.Item>
                       {/each}
                     </Select.Content>
                   </Select.Root>
@@ -322,7 +335,7 @@
                       if (v) badgeConfig.metric = v as "average" | "maximum" | "minimum";
                     }}
                   >
-                    <Select.Trigger id="latency-metric" class="w-full capitalize">
+                    <Select.Trigger id="latency-metric" class="w-full">
                       {badgeConfig.metric === "average"
                         ? $adminT("Average")
                         : badgeConfig.metric === "maximum"
@@ -351,12 +364,12 @@
                     if (v) badgeConfig.style = v as BadgeStyle;
                   }}
                 >
-                  <Select.Trigger id="badge-style" class="w-full capitalize">
+                  <Select.Trigger id="badge-style" class="w-full">
                     {$adminT(badgeConfig.style)}
                   </Select.Trigger>
                   <Select.Content>
                     {#each BADGE_STYLES as style (style)}
-                      <Select.Item value={style} class="capitalize">{$adminT(style)}</Select.Item>
+                      <Select.Item value={style} class="">{$adminT(style)}</Select.Item>
                     {/each}
                   </Select.Content>
                 </Select.Root>
@@ -400,7 +413,13 @@
                 <div>
                   <p class="flex items-center justify-between">
                     <span>{$adminT("Preview")}</span>
-                    <Button variant="ghost" size="icon-sm" onclick={refreshPreview} disabled={!badgeConfig.tag}>
+                    <Button
+                      aria-label={$adminT("Refresh preview")}
+                      variant="ghost"
+                      size="icon-sm"
+                      onclick={refreshPreview}
+                      disabled={!badgeConfig.tag}
+                    >
                       <RefreshCwIcon class="size-4" />
                     </Button>
                   </p>
@@ -415,9 +434,9 @@
 
                 <!-- URL -->
                 <div class="space-y-2">
-                  <Label>{$adminT("Badge URL")}</Label>
+                  <Label for="badge-url">{$adminT("Badge URL")}</Label>
                   <div class="flex gap-2">
-                    <Input value={badgeUrl} readonly class="font-mono text-xs" />
+                    <Input id="badge-url" value={badgeUrl} readonly class="font-mono text-xs" />
                     <CopyButton text={badgeUrl}>
                       <CopyIcon class="size-4" />
                     </CopyButton>
@@ -426,9 +445,9 @@
 
                 <!-- Markdown -->
                 <div class="space-y-2">
-                  <Label>{$adminT("Markdown")}</Label>
+                  <Label for="badge-markdown">{$adminT("Markdown")}</Label>
                   <div class="flex gap-2">
-                    <Input value={markdownSnippet} readonly class="font-mono text-xs" />
+                    <Input id="badge-markdown" value={markdownSnippet} readonly class="font-mono text-xs" />
                     <CopyButton text={markdownSnippet}>
                       <CopyIcon class="size-4" />
                     </CopyButton>
@@ -437,9 +456,9 @@
 
                 <!-- HTML -->
                 <div class="space-y-2">
-                  <Label>{$adminT("HTML")}</Label>
+                  <Label for="badge-html">{$adminT("HTML")}</Label>
                   <div class="flex gap-2">
-                    <Input value={htmlSnippet} readonly class="font-mono text-xs" />
+                    <Input id="badge-html" value={htmlSnippet} readonly class="font-mono text-xs" />
                     <CopyButton text={htmlSnippet}>
                       <CopyIcon class="size-4" />
                     </CopyButton>

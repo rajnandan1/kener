@@ -202,7 +202,12 @@
           <div class="flex items-center gap-2">
             <Input bind:value={header.key} placeholder={$adminT("Header Key")} class="flex-1" />
             <Input bind:value={header.value} placeholder={$adminT("Header Value")} class="flex-1" />
-            <Button variant="ghost" size="icon" onclick={() => removeHeader(index)}>
+            <Button
+              aria-label={$adminT("Remove header")}
+              variant="ghost"
+              size="icon"
+              onclick={() => removeHeader(index)}
+            >
               <X class="size-4" />
             </Button>
           </div>

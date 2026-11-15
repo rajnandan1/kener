@@ -131,7 +131,7 @@
     PING: "Ping",
     TCP: "TCP Port",
     DNS: "DNS",
-    NONE: "Manual",
+    NONE: "Manual monitor",
     GROUP: "Group",
     SSL: "SSL Certificate",
     SQL: "Database",

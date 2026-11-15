@@ -193,7 +193,9 @@
   <div class="flex items-center gap-3">
     <Select.Root type="single" value={statusFilter} onValueChange={handleStatusChange}>
       <Select.Trigger class="w-36">
-        {statusFilter === "ALL" ? $adminT("All Status") : statusFilter}
+        {statusFilter === "ALL"
+          ? $adminT("All Status")
+          : $adminT(statusFilter === "TRIGGERED" ? "Triggered" : "Resolved")}
       </Select.Trigger>
       <Select.Content>
         <Select.Item value="ALL">{$adminT("All Status")}</Select.Item>
@@ -213,9 +215,11 @@
       <div class="space-y-2">
         <h3 class="text-lg font-semibold">{$adminT("No alert logs")}</h3>
         <p class="text-muted-foreground text-sm">
-          {statusFilter !== "ALL"
-            ? $adminT("No {value1} alerts found.", { value1: statusFilter.toLowerCase() })
-            : $adminT("This alert has not been triggered yet.")}
+          {statusFilter === "TRIGGERED"
+            ? $adminT("No triggered alerts found.")
+            : statusFilter === "RESOLVED"
+              ? $adminT("No resolved alerts found.")
+              : $adminT("This alert has not been triggered yet.")}
         </p>
       </div>
     </div>
@@ -300,7 +304,13 @@
       >
       {#if totalPages > 1}
         <div class="flex items-center gap-2">
-          <Button variant="outline" size="icon" disabled={pageNo === 1} onclick={() => goToPage(pageNo - 1)}>
+          <Button
+            aria-label={$adminT("Previous page")}
+            variant="outline"
+            size="icon"
+            disabled={pageNo === 1}
+            onclick={() => goToPage(pageNo - 1)}
+          >
             <ChevronLeftIcon class="size-4" />
           </Button>
           <div class="flex items-center gap-1">
@@ -314,7 +324,13 @@
               {/if}
             {/each}
           </div>
-          <Button variant="outline" size="icon" disabled={pageNo === totalPages} onclick={() => goToPage(pageNo + 1)}>
+          <Button
+            aria-label={$adminT("Next page")}
+            variant="outline"
+            size="icon"
+            disabled={pageNo === totalPages}
+            onclick={() => goToPage(pageNo + 1)}
+          >
             <ChevronRightIcon class="size-4" />
           </Button>
         </div>

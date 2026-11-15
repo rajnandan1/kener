@@ -335,6 +335,7 @@
               />
             </div>
             <Button
+              aria-label={$adminT("Move monitor up")}
               variant="ghost"
               size="icon"
               class="h-7 w-7"
@@ -344,6 +345,7 @@
               <ArrowUp class="h-3.5 w-3.5" />
             </Button>
             <Button
+              aria-label={$adminT("Move monitor down")}
               variant="ghost"
               size="icon"
               class="h-7 w-7"

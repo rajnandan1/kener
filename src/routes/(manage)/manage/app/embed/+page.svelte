@@ -214,7 +214,7 @@
                     if (v) embedConfig.embedType = v as "status" | "latency" | "events";
                   }}
                 >
-                  <Select.Trigger id="embed-type" class="w-full capitalize">
+                  <Select.Trigger id="embed-type" class="w-full">
                     {embedConfig.embedType === "status"
                       ? $adminT("Status Bar")
                       : embedConfig.embedType === "latency"
@@ -399,7 +399,7 @@
                       if (v) embedConfig.metric = v as "average" | "maximum" | "minimum";
                     }}
                   >
-                    <Select.Trigger id="metric-select" class="w-full capitalize">
+                    <Select.Trigger id="metric-select" class="w-full">
                       {embedConfig.metric === "average"
                         ? $adminT("Average")
                         : embedConfig.metric === "maximum"
@@ -453,7 +453,12 @@
                 <div>
                   <p class="flex items-center justify-between">
                     <span class="text-sm font-semibold">{$adminT("Preview")}</span>
-                    <Button variant="ghost" size="icon-sm" onclick={refreshPreview}>
+                    <Button
+                      aria-label={$adminT("Refresh preview")}
+                      variant="ghost"
+                      size="icon-sm"
+                      onclick={refreshPreview}
+                    >
                       <RefreshCwIcon class="h-4 w-4" />
                     </Button>
                   </p>

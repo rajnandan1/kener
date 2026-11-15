@@ -263,7 +263,7 @@
 
   function getRoleName(roleId: string): string {
     const role = roles.find((r) => r.id === roleId);
-    return role?.role_name || roleId;
+    return role ? (role.readonly === 1 ? $adminT(role.role_name) : role.role_name) : roleId;
   }
 
   // ============ Lifecycle ============
@@ -314,8 +314,9 @@
                 placeholder={$adminT("e.g. Keycloak, Azure AD, Authentik")}
               />
               <p class="text-muted-foreground text-xs">
-                {$adminT('Displayed on the login button: "Sign in with')}
-                {settings.provider_name || "..."}"
+                {$adminT('Displayed on the login button: "Sign in with {provider}"', {
+                  provider: settings.provider_name || "..."
+                })}
               </p>
             </div>
 
@@ -328,9 +329,9 @@
                 placeholder="https://keycloak.example.com/realms/myrealm"
               />
               <p class="text-muted-foreground text-xs">
-                {$adminT("The base URL of the OIDC provider. Must support")}
-                <code>.well-known/openid-configuration</code>
-                {$adminT("discovery.")}
+                {$adminT("The base URL of the OIDC provider. Must support discovery through {path}.", {
+                  path: ".well-known/openid-configuration"
+                })}
               </p>
             </div>
 
@@ -351,6 +352,7 @@
                   placeholder="••••••••"
                 />
                 <Button
+                  aria-label={showSecret ? $adminT("Hide client secret") : $adminT("Show client secret")}
                   variant="ghost"
                   size="icon"
                   class="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2"
@@ -417,7 +419,7 @@
 
             <!-- Default Role -->
             <div class="grid gap-2">
-              <Label>{$adminT("Default Role")}</Label>
+              <Label for="oidc-default-role">{$adminT("Default Role")}</Label>
               <Select.Root
                 type="single"
                 value={settings.default_role_id}
@@ -425,13 +427,13 @@
                   if (val) settings.default_role_id = val;
                 }}
               >
-                <Select.Trigger class="w-full">
+                <Select.Trigger id="oidc-default-role" class="w-full">
                   {getRoleName(settings.default_role_id) || $adminT("Select a role...")}
                 </Select.Trigger>
                 <Select.Content>
                   {#each roles as role (role.id)}
                     <Select.Item value={role.id}>
-                      {role.role_name}
+                      {role.readonly === 1 ? $adminT(role.role_name) : role.role_name}
                     </Select.Item>
                   {/each}
                 </Select.Content>
@@ -525,7 +527,7 @@
               <Input id="new_group" bind:value={newMappingGroup} placeholder={$adminT("e.g. Windows-Admins")} />
             </div>
             <div class="grid flex-1 gap-2">
-              <Label>{$adminT("Kener Role")}</Label>
+              <Label for="oidc-mapping-role">{$adminT("Kener Role")}</Label>
               <Select.Root
                 type="single"
                 value={newMappingRoleId}
@@ -533,13 +535,13 @@
                   if (val) newMappingRoleId = val;
                 }}
               >
-                <Select.Trigger class="w-full">
+                <Select.Trigger id="oidc-mapping-role" class="w-full">
                   {newMappingRoleId ? getRoleName(newMappingRoleId) : $adminT("Select a role...")}
                 </Select.Trigger>
                 <Select.Content>
                   {#each roles as role (role.id)}
                     <Select.Item value={role.id}>
-                      {role.role_name}
+                      {role.readonly === 1 ? $adminT(role.role_name) : role.role_name}
                     </Select.Item>
                   {/each}
                 </Select.Content>
@@ -584,7 +586,12 @@
                       <Badge variant="outline">{getRoleName(mapping.role_id)}</Badge>
                     </Table.Cell>
                     <Table.Cell class="pr-4 text-right">
-                      <Button variant="destructive" size="sm" onclick={() => openDeleteMappingDialog(mapping)}>
+                      <Button
+                        aria-label={$adminT("Delete Group Mapping")}
+                        variant="destructive"
+                        size="sm"
+                        onclick={() => openDeleteMappingDialog(mapping)}
+                      >
                         <TrashIcon class="h-4 w-4" />
                       </Button>
                     </Table.Cell>
@@ -604,25 +611,21 @@
         <Card.Content>
           <div class="text-muted-foreground space-y-3 text-sm">
             <p>
-              <strong>{$adminT("On every OIDC login")}</strong>{$adminT(
-                ", Kener reads the user's group memberships from the ID token (using the claim name configured above) and updates their roles accordingly."
-              )}
-            </p>
-            <p>
-              <strong>{$adminT("Roles from OIDC mappings")}</strong>
               {$adminT(
-                "are fully synchronized: if a user is removed from an OIDC group, they lose the corresponding Kener role on next login."
+                "On every OIDC login, Kener reads the user's group memberships from the ID token (using the claim name configured above) and updates their roles accordingly."
               )}
             </p>
             <p>
-              <strong>{$adminT("Manually assigned roles")}</strong>
-              {$adminT("(roles that don't appear in any mapping above) are preserved and not affected by OIDC sync.")}
-            </p>
-            <p>
-              <strong>{$adminT("If no groups match")}</strong>{$adminT(
-                ", the default role (configured above) is assigned."
+              {$adminT(
+                "Roles from OIDC mappings are fully synchronized: if a user is removed from an OIDC group, they lose the corresponding Kener role on next login."
               )}
             </p>
+            <p>
+              {$adminT(
+                "Manually assigned roles (roles that don't appear in any mapping above) are preserved and not affected by OIDC sync."
+              )}
+            </p>
+            <p>{$adminT("If no groups match, the default role (configured above) is assigned.")}</p>
             <p>
               <strong>{$adminT("Callback URL")}</strong>
               {$adminT("to configure in your OIDC provider:")}<br />
@@ -645,9 +648,13 @@
     <AlertDialog.Header>
       <AlertDialog.Title>{$adminT("Delete Group Mapping")}</AlertDialog.Title>
       <AlertDialog.Description>
-        {$adminT('Remove the mapping for OIDC group "')}{mappingToDelete?.oidc_group}{$adminT(
-          '"? Users in this group will no longer receive the "'
-        )}{mappingToDelete ? getRoleName(mappingToDelete.role_id) : ""}{$adminT('" role on their next login.')}
+        {$adminT(
+          'Remove the mapping for OIDC group "{group}"? Users in this group will no longer receive the "{role}" role on their next login.',
+          {
+            group: mappingToDelete?.oidc_group ?? "",
+            role: mappingToDelete ? getRoleName(mappingToDelete.role_id) : ""
+          }
+        )}
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer>

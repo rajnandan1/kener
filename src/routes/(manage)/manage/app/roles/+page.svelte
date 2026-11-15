@@ -464,10 +464,16 @@
                       </Button>
                     {/if}
                     {#if role.readonly !== 1 && hasPermission("roles.write")}
-                      <Button variant="ghost" size="sm" onclick={() => openEditDialog(role)}>
+                      <Button
+                        aria-label={$adminT("Edit Role")}
+                        variant="ghost"
+                        size="sm"
+                        onclick={() => openEditDialog(role)}
+                      >
                         <PencilIcon class="h-4 w-4" />
                       </Button>
                       <Button
+                        aria-label={$adminT("Delete Role")}
                         variant="ghost"
                         size="sm"
                         onclick={() => {
@@ -497,8 +503,7 @@
     <Dialog.Header>
       <Dialog.Title>{$adminT("Edit Role")}</Dialog.Title>
       <Dialog.Description>
-        {$adminT("Update")} <span class="font-semibold">{displayRoleName(roleToEdit)}</span>
-        {$adminT("role.")}
+        {$adminT('Update the "{role}" role.', { role: displayRoleName(roleToEdit) })}
       </Dialog.Description>
     </Dialog.Header>
     <div class="grid gap-4 py-4">
@@ -609,7 +614,7 @@
     <Dialog.Header>
       <Dialog.Title>{$adminT("Delete Role")}</Dialog.Title>
       <Dialog.Description>
-        {$adminT("Are you sure you want to delete")} <span class="font-semibold">{displayRoleName(roleToDelete)}</span>?
+        {$adminT('Are you sure you want to delete the role "{role}"?', { role: displayRoleName(roleToDelete) })}
       </Dialog.Description>
     </Dialog.Header>
     <div class="grid gap-4 py-4">
@@ -692,7 +697,7 @@
               <Accordion.Item value={group.group}>
                 <Accordion.Trigger class="px-4">
                   <div>
-                    <span class="capitalize">{$adminT(String(group.label ?? ""))}</span>
+                    <span>{$adminT(String(group.label ?? ""))}</span>
                     <Badge
                       variant={granted === group.permissions.length ? "default" : granted > 0 ? "secondary" : "outline"}
                       class="ml-2"
@@ -774,6 +779,7 @@
                 </div>
                 {#if hasPermission("roles.assign_users")}
                   <Button
+                    aria-label={$adminT("Remove user from role")}
                     variant="ghost"
                     size="sm"
                     disabled={removingUserId === user.id}
@@ -809,6 +815,7 @@
                     <span class="text-muted-foreground text-xs">{user.email}</span>
                   </div>
                   <Button
+                    aria-label={$adminT("Add user to role")}
                     variant="ghost"
                     size="sm"
                     disabled={addingUserId === user.id}

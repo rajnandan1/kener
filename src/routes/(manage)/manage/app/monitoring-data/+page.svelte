@@ -318,7 +318,7 @@
           <span class="text-muted-foreground text-xs font-medium">{$adminT("Status")}</span>
           <Select.Root type="single" value={statusFilter} onValueChange={handleStatusChange}>
             <Select.Trigger class="w-36" aria-label={$adminT("Status")}>
-              {statusFilter === "ALL" ? $adminT("All Statuses") : statusFilter}
+              {statusFilter === "ALL" ? $adminT("All Statuses") : $adminT(statusFilter)}
             </Select.Trigger>
             <Select.Content>
               <Select.Item value="ALL">{$adminT("All Statuses")}</Select.Item>
@@ -443,7 +443,13 @@
       >
       {#if totalPages > 1}
         <div class="flex items-center gap-2">
-          <Button variant="outline" size="icon" disabled={pageNo === 1} onclick={() => goToPage(pageNo - 1)}>
+          <Button
+            aria-label={$adminT("Previous page")}
+            variant="outline"
+            size="icon"
+            disabled={pageNo === 1}
+            onclick={() => goToPage(pageNo - 1)}
+          >
             <ChevronLeftIcon class="size-4" />
           </Button>
           <div class="flex items-center gap-1">
@@ -457,7 +463,13 @@
               {/if}
             {/each}
           </div>
-          <Button variant="outline" size="icon" disabled={pageNo === totalPages} onclick={() => goToPage(pageNo + 1)}>
+          <Button
+            aria-label={$adminT("Next page")}
+            variant="outline"
+            size="icon"
+            disabled={pageNo === totalPages}
+            onclick={() => goToPage(pageNo + 1)}
+          >
             <ChevronRightIcon class="size-4" />
           </Button>
         </div>
@@ -471,19 +483,27 @@
     <AlertDialog.Header>
       <AlertDialog.Title>{$adminT("Delete Monitoring Data")}</AlertDialog.Title>
       <AlertDialog.Description>
-        {$adminT("This will delete monitoring data for")}
         {#if monitorTagFilter === "ALL"}
-          <strong>{$adminT("all monitors")}</strong>
+          {statusFilter === "ALL"
+            ? $adminT(
+                "This will delete monitoring data for all monitors from {start} to {end}. This action cannot be undone.",
+                { start: startDateTime, end: endDateTime }
+              )
+            : $adminT(
+                "This will delete monitoring data for all monitors with status {status} from {start} to {end}. This action cannot be undone.",
+                { status: $adminT(statusFilter), start: startDateTime, end: endDateTime }
+              )}
         {:else}
-          <strong>{monitorTagFilter}</strong>
+          {statusFilter === "ALL"
+            ? $adminT(
+                'This will delete monitoring data for monitor "{monitor}" from {start} to {end}. This action cannot be undone.',
+                { monitor: monitorTagFilter, start: startDateTime, end: endDateTime }
+              )
+            : $adminT(
+                'This will delete monitoring data for monitor "{monitor}" with status {status} from {start} to {end}. This action cannot be undone.',
+                { monitor: monitorTagFilter, status: $adminT(statusFilter), start: startDateTime, end: endDateTime }
+              )}
         {/if}
-        {#if statusFilter !== "ALL"}
-          {$adminT("with status")} <strong>{$adminT(String(statusFilter ?? ""))}</strong>
-        {/if}
-        {$adminT("from")}
-        {startDateTime}
-        {$adminT("to")}
-        {endDateTime}{$adminT(". This action cannot be undone.")}
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer>

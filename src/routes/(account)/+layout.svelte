@@ -10,8 +10,7 @@
 
   let { children, data } = $props();
   const { locale, t: adminT } = createAdminI18n(untrack(() => data.adminLocale));
-  import LanguageSwitcher from "$lib/admin-i18n/LanguageSwitcher.svelte";
-  import KenerNav from "$lib/components/KenerNav.svelte";
+  import AccountHeader from "$lib/components/AccountHeader.svelte";
 </script>
 
 <ModeWatcher defaultMode={data.defaultSiteTheme as "light" | "dark" | "system"} />
@@ -48,8 +47,7 @@
 </svelte:head>
 <main lang={$locale}>
   <!-- Nav -->
-  <KenerNav />
-  <div class="mx-auto flex max-w-5xl justify-end px-4 py-3"><LanguageSwitcher /></div>
+  <AccountHeader />
   <!-- Body -->
   <div class="mx-auto max-w-5xl">
     {@render children()}

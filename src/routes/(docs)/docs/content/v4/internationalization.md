@@ -31,7 +31,9 @@ This fork adds a separate **Panel language** selector to the management header a
 
 The choice is stored for one year in the `kener_admin_locale` cookie, scoped to the application base path. An existing cookie takes priority; otherwise the panel follows a supported browser language and falls back to Polish. This is a browser preference, not a user-account setting.
 
-**Internationalization → Languages** continues to control the public status page independently. Panel localization does not translate saved incident text, monitor names, editable email bodies, code examples, or protocol identifiers.
+**Internationalization → Languages** continues to control the public status page independently. Panel localization does not translate saved incident text, monitor names, editable email bodies, code examples, or protocol identifiers. On account pages, the built-in Documentation and Login links follow the panel language only when their original labels and destinations still match the defaults. Custom navigation labels and URLs remain unchanged.
+
+Built-in editor controls, editor loading text, color-picker labels, and notification accessibility labels also follow the panel language. Date-format previews use the selected default public locale, so changing the panel language does not change those previews. Public locale names in the management form follow the panel language without changing the stored locale codes.
 
 Panel catalogues are `src/lib/admin-i18n/en.json` and `pl.json`. Check them with `node scripts/admin-i18n/audit.mjs`. The public-page translation scripts below do not audit the management panel.
 

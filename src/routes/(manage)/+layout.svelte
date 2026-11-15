@@ -113,7 +113,7 @@
   <Sidebar.Provider style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);">
     <AppSidebar variant="inset" {navItems} />
     <Sidebar.Inset>
-      <SiteHeader title={$adminT(String(pageTitle ?? ""))} />
+      <SiteHeader title={pageTitle} />
       <div class="p-4">
         <div class="@container/main flex flex-1">
           <Tooltip.Provider>

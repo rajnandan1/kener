@@ -96,7 +96,7 @@
         <Card.Description>{$adminT("Last 10 monitoring data points")}</Card.Description>
       </div>
       <div class="flex items-center gap-2">
-        <Button variant="ghost" size="icon" onclick={fetchLogs} disabled={loading}>
+        <Button aria-label={$adminT("Refresh logs")} variant="ghost" size="icon" onclick={fetchLogs} disabled={loading}>
           <RefreshCwIcon class="size-4 {loading ? 'animate-spin' : ''}" />
         </Button>
         <Button variant="outline" size="sm" href={clientResolver(resolve, "/manage/app/monitoring-data")}>

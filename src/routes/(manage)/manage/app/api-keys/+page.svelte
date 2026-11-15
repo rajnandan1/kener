@@ -200,6 +200,7 @@
                 {newKeyResp.apiKey}
               </code>
               <Button
+                aria-label={copied ? $adminT("Copied") : $adminT("Copy API key")}
                 size="icon"
                 variant="ghost"
                 class="absolute top-1/2 right-2 h-7 w-7 -translate-y-1/2"

@@ -349,7 +349,12 @@
               {#each form.monitor_tags as tag (tag)}
                 <Badge variant="secondary" class="gap-1 pr-1">
                   {monitors.find((m) => m.tag === tag)?.name || tag}
-                  <button type="button" class="hover:bg-muted rounded-sm p-0.5" onclick={() => toggleMonitor(tag)}>
+                  <button
+                    aria-label={$adminT("Remove monitor from alert")}
+                    type="button"
+                    class="hover:bg-muted rounded-sm p-0.5"
+                    onclick={() => toggleMonitor(tag)}
+                  >
                     <XIcon class="size-3" />
                   </button>
                 </Badge>
@@ -516,9 +521,7 @@
                       <p class="text-muted-foreground text-xs">{trigger.trigger_desc}</p>
                     {/if}
                   </div>
-                  <Badge variant="outline" class="text-xs capitalize"
-                    >{$adminT(String(trigger.trigger_type ?? ""))}</Badge
-                  >
+                  <Badge variant="outline" class="text-xs">{$adminT(String(trigger.trigger_type ?? ""))}</Badge>
                 </label>
               {/each}
             </div>
@@ -527,9 +530,8 @@
           <p class="text-muted-foreground text-sm">
             {$adminT("No notification triggers available.")}
             <a href={clientResolver(resolve, "/manage/app/triggers")} class="text-primary underline"
-              >{$adminT("Create a trigger")}</a
+              >{$adminT("Create a trigger to receive notifications.")}</a
             >
-            {$adminT("to receive notifications.")}
           </p>
         {/if}
       </Card.Content>

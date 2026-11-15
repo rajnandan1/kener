@@ -216,7 +216,7 @@
               disabled={uploadingImage}
             />
             {#if monitor.image}
-              <Button variant="ghost" size="icon" onclick={clearImage}>
+              <Button aria-label={$adminT("Remove monitor image")} variant="ghost" size="icon" onclick={clearImage}>
                 <XIcon class="h-4 w-4" />
               </Button>
             {/if}

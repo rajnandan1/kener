@@ -21,11 +21,11 @@
   import constants from "$lib/global-constants";
 
   import { EditorState } from "@codemirror/state";
-  import CodeMirror from "svelte-codemirror-editor";
+  import CodeMirror from "$lib/components/manage/CodeEditor.svelte";
   import { html } from "@codemirror/lang-html";
   import { css } from "@codemirror/lang-css";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
-  import ColorPicker from "svelte-awesome-color-picker";
+  import ColorPicker from "$lib/components/manage/ColorPicker.svelte";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import type { SiteAnnouncement, PageOrderingSettings } from "$lib/types/site.js";
@@ -695,7 +695,7 @@
         <Card.Title class="flex items-center gap-2">
           {$adminT("Font")}
           <Tooltip.Root>
-            <Tooltip.Trigger>
+            <Tooltip.Trigger aria-label={$adminT("Font")}>
               <Info class="text-muted-foreground h-4 w-4" />
             </Tooltip.Trigger>
             <Tooltip.Content class="max-w-xs">
@@ -948,6 +948,7 @@
                 {#if pageOrderingEnabled}
                   <div class="flex items-center gap-1">
                     <Button
+                      aria-label={$adminT("Move page up")}
                       variant="ghost"
                       size="icon"
                       class="h-8 w-8"
@@ -957,6 +958,7 @@
                       <ArrowUp class="h-4 w-4" />
                     </Button>
                     <Button
+                      aria-label={$adminT("Move page down")}
                       variant="ghost"
                       size="icon"
                       class="h-8 w-8"

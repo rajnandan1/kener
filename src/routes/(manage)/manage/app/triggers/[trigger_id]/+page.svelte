@@ -32,7 +32,7 @@
   import { mode } from "mode-watcher";
   import { IsValidURL } from "$lib/clientTools";
   import { EditorState } from "@codemirror/state";
-  import CodeMirror from "svelte-codemirror-editor";
+  import CodeMirror from "$lib/components/manage/CodeEditor.svelte";
   import { html } from "@codemirror/lang-html";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
   import type { TriggerMeta } from "$lib/server/types/db";
@@ -327,9 +327,7 @@
               if (value) trigger.trigger_type = value;
             }}
           >
-            <Select.Trigger class="w-full max-w-sm capitalize"
-              >{$adminT(String(trigger.trigger_type ?? ""))}</Select.Trigger
-            >
+            <Select.Trigger class="w-full max-w-sm">{$adminT(String(trigger.trigger_type ?? ""))}</Select.Trigger>
             <Select.Content>
               <Select.Item value="webhook">{$adminT("Webhook")}</Select.Item>
               <Select.Item value="discord">{$adminT("Discord")}</Select.Item>
@@ -386,7 +384,12 @@
                 <div class="flex gap-2">
                   <Input bind:value={header.key} placeholder={$adminT("Header Key")} class="flex-1" />
                   <Input bind:value={header.value} placeholder={$adminT("Header Value")} class="flex-1" />
-                  <Button variant="ghost" size="icon" onclick={() => removeHeader(index)}>
+                  <Button
+                    aria-label={$adminT("Remove header")}
+                    variant="ghost"
+                    size="icon"
+                    onclick={() => removeHeader(index)}
+                  >
                     <XIcon class="size-4" />
                   </Button>
                 </div>
@@ -533,8 +536,7 @@
           {:else}
             <SaveIcon class="size-4" />
           {/if}
-          {isNew ? $adminT("Create") : $adminT("Save")}
-          {$adminT("Trigger")}
+          {isNew ? $adminT("Create Trigger") : $adminT("Save Trigger")}
         </Button>
       </Card.Footer>
     </Card.Root>

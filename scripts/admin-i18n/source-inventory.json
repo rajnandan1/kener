@@ -11204,6 +11204,18 @@
       {
         "file": "src/routes/(manage)/manage/app/triggers/[trigger_id]/+page.svelte",
         "kind": "text"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/pages/[page_id]/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/monitors/[tag]/components/DangerZoneCard.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/incidents/[incident_id]/+page.svelte",
+        "kind": "translation-call"
       }
     ],
     "to confirm:": [
@@ -13684,24 +13696,40 @@
       {
         "kind": "error/a11y",
         "review": "frontend final audit"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/triggers/[trigger_id]/+page.svelte",
+        "kind": "translation-call"
       }
     ],
     "Open navigation menu": [
       {
         "kind": "error/a11y",
         "review": "frontend final audit"
+      },
+      {
+        "file": "src/lib/components/KenerNav.svelte",
+        "kind": "translation-call"
       }
     ],
     "Toggle status for {name}": [
       {
         "kind": "error/a11y",
         "review": "frontend final audit"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/monitors/+page.svelte",
+        "kind": "translation-call"
       }
     ],
     "Toggle status page visibility for {name}": [
       {
         "kind": "error/a11y",
         "review": "frontend final audit"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/monitors/+page.svelte",
+        "kind": "translation-call"
       }
     ],
     "Hide password": [
@@ -13896,12 +13924,24 @@
       {
         "kind": "plural-neutral",
         "review": "count labels"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/pages/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/incidents/+page.svelte",
+        "kind": "translation-call"
       }
     ],
     "Notification channels: {length}": [
       {
         "kind": "plural-neutral",
         "review": "count labels"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/alerts/+page.svelte",
+        "kind": "translation-call"
       }
     ],
     "Find": [
@@ -13914,6 +13954,10 @@
       {
         "file": "src/lib/components/CopyButton.svelte",
         "kind": "public-admin-bridge"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/api-keys/+page.svelte",
+        "kind": "translation-call"
       }
     ],
     "Add all matching monitors ({length})": [
@@ -16752,6 +16796,542 @@
         "line": 251,
         "category": "derived-template-name",
         "values": []
+      }
+    ],
+    "Login": [
+      {
+        "file": "src/lib/components/KenerNav.svelte",
+        "kind": "account-default-navigation"
+      }
+    ],
+    "Panel language": [
+      {
+        "file": "src/lib/admin-i18n/LanguageSwitcher.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Notifications": [
+      {
+        "file": "src/lib/components/ui/sonner/sonner.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Close toast": [
+      {
+        "file": "src/lib/components/ui/sonner/sonner.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Open user settings": [
+      {
+        "file": "src/routes/(manage)/manage/app/users/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Previous page": [
+      {
+        "file": "src/routes/(manage)/manage/app/users/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/triggers/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/subscriptions/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/monitors/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/monitoring-data/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/maintenances/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/incidents/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/alerts/logs/[alert_config_id]/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/alerts/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Next page": [
+      {
+        "file": "src/routes/(manage)/manage/app/users/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/triggers/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/subscriptions/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/monitors/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/monitoring-data/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/maintenances/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/incidents/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/alerts/logs/[alert_config_id]/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/alerts/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Remove header": [
+      {
+        "file": "src/routes/(manage)/manage/app/triggers/[trigger_id]/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/monitors/[tag]/types/monitor-prometheus.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/monitors/[tag]/types/monitor-api.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Create Trigger": [
+      {
+        "file": "src/routes/(manage)/manage/app/triggers/[trigger_id]/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Save Trigger": [
+      {
+        "file": "src/routes/(manage)/manage/app/triggers/[trigger_id]/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Loading editor...": [
+      {
+        "file": "src/lib/components/manage/CodeEditor.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Remove logo": [
+      {
+        "file": "src/routes/(manage)/manage/app/site-configurations/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Remove favicon": [
+      {
+        "file": "src/routes/(manage)/manage/app/site-configurations/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Remove social preview image": [
+      {
+        "file": "src/routes/(manage)/manage/app/site-configurations/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/pages/[page_id]/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Remove navigation icon": [
+      {
+        "file": "src/routes/(manage)/manage/app/site-configurations/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Upload navigation icon": [
+      {
+        "file": "src/routes/(manage)/manage/app/site-configurations/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Remove navigation link": [
+      {
+        "file": "src/routes/(manage)/manage/app/site-configurations/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Remove sitemap URL": [
+      {
+        "file": "src/routes/(manage)/manage/app/site-configurations/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Update the \"{role}\" role.": [
+      {
+        "file": "src/routes/(manage)/manage/app/roles/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Are you sure you want to delete the role \"{role}\"?": [
+      {
+        "file": "src/routes/(manage)/manage/app/roles/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Remove user from role": [
+      {
+        "file": "src/routes/(manage)/manage/app/roles/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Add user to role": [
+      {
+        "file": "src/routes/(manage)/manage/app/roles/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Remove page logo": [
+      {
+        "file": "src/routes/(manage)/manage/app/pages/[page_id]/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Move monitor up": [
+      {
+        "file": "src/routes/(manage)/manage/app/pages/[page_id]/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/monitors/[tag]/types/monitor-group.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Move monitor down": [
+      {
+        "file": "src/routes/(manage)/manage/app/pages/[page_id]/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/monitors/[tag]/types/monitor-group.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Remove monitor from page": [
+      {
+        "file": "src/routes/(manage)/manage/app/pages/[page_id]/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Displayed on the login button: \"Sign in with {provider}\"": [
+      {
+        "file": "src/routes/(manage)/manage/app/oidc/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "The base URL of the OIDC provider. Must support discovery through {path}.": [
+      {
+        "file": "src/routes/(manage)/manage/app/oidc/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Hide client secret": [
+      {
+        "file": "src/routes/(manage)/manage/app/oidc/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Show client secret": [
+      {
+        "file": "src/routes/(manage)/manage/app/oidc/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "On every OIDC login, Kener reads the user's group memberships from the ID token (using the claim name configured above) and updates their roles accordingly.": [
+      {
+        "file": "src/routes/(manage)/manage/app/oidc/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Roles from OIDC mappings are fully synchronized: if a user is removed from an OIDC group, they lose the corresponding Kener role on next login.": [
+      {
+        "file": "src/routes/(manage)/manage/app/oidc/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Manually assigned roles (roles that don't appear in any mapping above) are preserved and not affected by OIDC sync.": [
+      {
+        "file": "src/routes/(manage)/manage/app/oidc/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "If no groups match, the default role (configured above) is assigned.": [
+      {
+        "file": "src/routes/(manage)/manage/app/oidc/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Remove the mapping for OIDC group \"{group}\"? Users in this group will no longer receive the \"{role}\" role on their next login.": [
+      {
+        "file": "src/routes/(manage)/manage/app/oidc/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Remove host": [
+      {
+        "file": "src/routes/(manage)/manage/app/monitors/[tag]/types/monitor-tcp.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/monitors/[tag]/types/monitor-ping.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Refresh logs": [
+      {
+        "file": "src/routes/(manage)/manage/app/monitors/[tag]/components/MonitorRecentLogs.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Remove monitor image": [
+      {
+        "file": "src/routes/(manage)/manage/app/monitors/[tag]/components/GeneralSettingsCard.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "This will delete monitoring data for all monitors from {start} to {end}. This action cannot be undone.": [
+      {
+        "file": "src/routes/(manage)/manage/app/monitoring-data/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "This will delete monitoring data for all monitors with status {status} from {start} to {end}. This action cannot be undone.": [
+      {
+        "file": "src/routes/(manage)/manage/app/monitoring-data/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "This will delete monitoring data for monitor \"{monitor}\" from {start} to {end}. This action cannot be undone.": [
+      {
+        "file": "src/routes/(manage)/manage/app/monitoring-data/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "This will delete monitoring data for monitor \"{monitor}\" with status {status} from {start} to {end}. This action cannot be undone.": [
+      {
+        "file": "src/routes/(manage)/manage/app/monitoring-data/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Monitors affected by maintenance": [
+      {
+        "file": "src/routes/(manage)/manage/app/maintenances/[id]/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Delete event": [
+      {
+        "file": "src/routes/(manage)/manage/app/maintenances/[id]/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "More monitor actions": [
+      {
+        "file": "src/routes/(manage)/manage/app/incidents/[incident_id]/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Edit update": [
+      {
+        "file": "src/routes/(manage)/manage/app/incidents/[incident_id]/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Delete update": [
+      {
+        "file": "src/routes/(manage)/manage/app/incidents/[incident_id]/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Refresh preview": [
+      {
+        "file": "src/routes/(manage)/manage/app/embed/+page.svelte",
+        "kind": "translation-call"
+      },
+      {
+        "file": "src/routes/(manage)/manage/app/badges/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Move page up": [
+      {
+        "file": "src/routes/(manage)/manage/app/customizations/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Move page down": [
+      {
+        "file": "src/routes/(manage)/manage/app/customizations/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Choose a color": [
+      {
+        "file": "src/lib/components/manage/ColorPicker.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "hue channel": [
+      {
+        "file": "src/lib/components/manage/ColorPicker.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "saturation channel": [
+      {
+        "file": "src/lib/components/manage/ColorPicker.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "brightness channel": [
+      {
+        "file": "src/lib/components/manage/ColorPicker.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "red channel": [
+      {
+        "file": "src/lib/components/manage/ColorPicker.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "green channel": [
+      {
+        "file": "src/lib/components/manage/ColorPicker.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "blue channel": [
+      {
+        "file": "src/lib/components/manage/ColorPicker.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "alpha channel": [
+      {
+        "file": "src/lib/components/manage/ColorPicker.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "hex color": [
+      {
+        "file": "src/lib/components/manage/ColorPicker.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "without color": [
+      {
+        "file": "src/lib/components/manage/ColorPicker.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Change color format to": [
+      {
+        "file": "src/lib/components/manage/ColorPicker.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Contrast:": [
+      {
+        "file": "src/lib/components/manage/ColorPicker.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Failed contrast checks: {count}": [
+      {
+        "file": "src/lib/components/manage/ColorPicker.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Contrast information": [
+      {
+        "file": "src/lib/components/manage/ColorPicker.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Learn more:": [
+      {
+        "file": "src/lib/components/manage/ColorPicker.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "WebAIM contrast guide": [
+      {
+        "file": "src/lib/components/manage/ColorPicker.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Color picker": [
+      {
+        "file": "src/lib/components/manage/ColorPickerDialog.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Enabled": [
+      {
+        "file": "src/lib/components/manage/ProviderSettingsPanel.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Disabled": [
+      {
+        "file": "src/lib/components/manage/ProviderSettingsPanel.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Copy API key": [
+      {
+        "file": "src/routes/(manage)/manage/app/api-keys/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "No triggered alerts found.": [
+      {
+        "file": "src/routes/(manage)/manage/app/alerts/logs/[alert_config_id]/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "No resolved alerts found.": [
+      {
+        "file": "src/routes/(manage)/manage/app/alerts/logs/[alert_config_id]/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Remove monitor from alert": [
+      {
+        "file": "src/routes/(manage)/manage/app/alerts/[alert_config_id]/+page.svelte",
+        "kind": "translation-call"
+      }
+    ],
+    "Create a trigger to receive notifications.": [
+      {
+        "file": "src/routes/(manage)/manage/app/alerts/[alert_config_id]/+page.svelte",
+        "kind": "translation-call"
       }
     ]
   }

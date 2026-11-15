@@ -18,7 +18,7 @@
   import { toast } from "svelte-sonner";
   import { mode } from "mode-watcher";
   import { EditorState } from "@codemirror/state";
-  import CodeMirror from "svelte-codemirror-editor";
+  import CodeMirror from "$lib/components/manage/CodeEditor.svelte";
   import { html } from "@codemirror/lang-html";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
   import { onMount } from "svelte";

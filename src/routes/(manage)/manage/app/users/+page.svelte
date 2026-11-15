@@ -284,7 +284,7 @@
         manualUpdateError = result.error;
       } else {
         users = users.map((user) => (user.id === toEditUser!.id ? result : user));
-        manualSuccess = `User ${updateType} updated successfully`;
+        manualSuccess = "User details updated successfully";
 
         // Update toEditUser with the result
         toEditUser = {
@@ -457,7 +457,13 @@
               </Table.Cell>
               <Table.Cell class="text-center">
                 {#if hasPermission("users.write") && currentUser.id !== user.id}
-                  <Button variant="ghost" size="icon" class="h-8 w-8" onclick={() => openSettingsSheet(user)}>
+                  <Button
+                    aria-label={$adminT("Open user settings")}
+                    variant="ghost"
+                    size="icon"
+                    class="h-8 w-8"
+                    onclick={() => openSettingsSheet(user)}
+                  >
                     <SettingsIcon class="h-4 w-4" />
                   </Button>
                 {:else if currentUser.id === user.id && !!!currentUser.is_verified}
@@ -495,7 +501,13 @@
       >
       {#if totalPages > 1}
         <div class="flex items-center gap-2">
-          <Button variant="outline" size="icon" disabled={page === 1} onclick={() => goToPage(page - 1)}>
+          <Button
+            aria-label={$adminT("Previous page")}
+            variant="outline"
+            size="icon"
+            disabled={page === 1}
+            onclick={() => goToPage(page - 1)}
+          >
             <ChevronLeftIcon class="size-4" />
           </Button>
           <div class="flex items-center gap-1">
@@ -509,7 +521,13 @@
               {/if}
             {/each}
           </div>
-          <Button variant="outline" size="icon" disabled={page === totalPages} onclick={() => goToPage(page + 1)}>
+          <Button
+            aria-label={$adminT("Next page")}
+            variant="outline"
+            size="icon"
+            disabled={page === totalPages}
+            onclick={() => goToPage(page + 1)}
+          >
             <ChevronRightIcon class="size-4" />
           </Button>
         </div>

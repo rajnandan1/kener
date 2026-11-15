@@ -27,7 +27,7 @@
   import type { PageRecord, MonitorRecord, PageSettingsType } from "$lib/server/types/db.js";
   import { mode } from "mode-watcher";
   import { EditorState } from "@codemirror/state";
-  import CodeMirror from "svelte-codemirror-editor";
+  import CodeMirror from "$lib/components/manage/CodeEditor.svelte";
   import { onMount } from "svelte";
   import { markdown } from "@codemirror/lang-markdown";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
@@ -694,7 +694,7 @@
                   disabled={uploadingLogo}
                 />
                 {#if formData.page_logo}
-                  <Button variant="ghost" size="sm" onclick={clearLogo}>
+                  <Button aria-label={$adminT("Remove page logo")} variant="ghost" size="sm" onclick={clearLogo}>
                     <XIcon class="h-4 w-4" />
                   </Button>
                 {/if}
@@ -768,6 +768,7 @@
                     </div>
                     <div class="flex items-center gap-1">
                       <Button
+                        aria-label={$adminT("Move monitor up")}
                         variant="ghost"
                         size="sm"
                         onclick={() => moveMonitor(i, "up")}
@@ -776,6 +777,7 @@
                         <ArrowUpIcon class="h-4 w-4" />
                       </Button>
                       <Button
+                        aria-label={$adminT("Move monitor down")}
                         variant="ghost"
                         size="sm"
                         onclick={() => moveMonitor(i, "down")}
@@ -784,6 +786,7 @@
                         <ArrowDownIcon class="h-4 w-4" />
                       </Button>
                       <Button
+                        aria-label={$adminT("Remove monitor from page")}
                         variant="ghost"
                         size="sm"
                         onclick={() => removeMonitorFromPage(monitorTag)}
@@ -952,7 +955,12 @@
                   disabled={uploadingSocialPreview}
                 />
                 {#if pageSettings.socialPagePreviewImage}
-                  <Button variant="ghost" size="sm" onclick={clearSocialPreview}>
+                  <Button
+                    aria-label={$adminT("Remove social preview image")}
+                    variant="ghost"
+                    size="sm"
+                    onclick={clearSocialPreview}
+                  >
                     <XIcon class="h-4 w-4" />
                   </Button>
                 {/if}
@@ -1013,9 +1021,8 @@
                 {$adminT("Once you delete a page, there is no going back. Please be certain.")}
               </p>
               <p class="text-muted-foreground text-sm">
-                {$adminT("Type")}
+                {$adminT("To confirm, type")}
                 <code class="bg-muted rounded px-1 font-mono">delete {currentPage.page_path || "home"}</code>
-                {$adminT("to confirm:")}
               </p>
               <Input
                 id="delete-confirm"

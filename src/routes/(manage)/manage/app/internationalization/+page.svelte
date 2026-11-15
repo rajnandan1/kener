@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getAdminI18n } from "$lib/admin-i18n/context";
-  const { t: adminT } = getAdminI18n();
+  const { t: adminT, locale: adminLocale } = getAdminI18n();
 
   import { Button } from "$lib/components/ui/button/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
@@ -21,6 +21,7 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { format } from "date-fns";
+  import { getDateFnsLocale } from "$lib/stores/datetime";
 
   interface Locale {
     code: string;
@@ -57,6 +58,7 @@
 
   // Computed: available locales for default selection (only selected ones)
   const availableDefaultLocales = $derived(i18n.locales.filter((locale) => locale.selected));
+  const defaultLanguage = $derived(i18n.locales.find((language) => language.code === i18n.defaultLocale));
 
   async function fetchSettings() {
     loading = true;
@@ -201,9 +203,21 @@
     { value: "hh:mm", label: "12h no period" }
   ];
 
+  const languageNames = $derived(new Intl.DisplayNames([$adminLocale], { type: "language" }));
+
+  function displayLanguage(language: Locale): string {
+    try {
+      const code = language.code === "dk" ? "da" : language.code;
+      const name = languageNames.of(code);
+      return name && name.toLowerCase() !== code.toLowerCase() ? name : language.name;
+    } catch {
+      return language.name;
+    }
+  }
+
   function formatPreview(fmt: string): string {
     try {
-      return format(previewDate, fmt);
+      return format(previewDate, fmt, { locale: getDateFnsLocale(i18n.defaultLocale) });
     } catch {
       return $adminT("Invalid format");
     }
@@ -279,7 +293,7 @@
                   for="locale-{locale.code}"
                   class="text-sm font-normal {i18n.defaultLocale === locale.code ? 'text-muted-foreground' : ''}"
                 >
-                  {locale.name}
+                  {displayLanguage(locale)}
                   {#if i18n.defaultLocale === locale.code}
                     <span class="text-muted-foreground text-xs">{$adminT("(default)")}</span>
                   {/if}
@@ -291,7 +305,7 @@
 
         <!-- Default Language -->
         <div class="space-y-3">
-          <Label class="text-sm font-medium">{$adminT("Default Language")}</Label>
+          <Label for="default-language" class="text-sm font-medium">{$adminT("Default Language")}</Label>
           <p class="text-muted-foreground text-xs">
             {$adminT("The default language will be shown when users first visit your status page.")}
           </p>
@@ -302,12 +316,12 @@
               if (v) setDefaultLocale(v);
             }}
           >
-            <Select.Trigger class="w-[200px]">
-              {i18n.locales.find((l) => l.code === i18n.defaultLocale)?.name || $adminT("Select language")}
+            <Select.Trigger id="default-language" class="w-[200px]">
+              {defaultLanguage ? displayLanguage(defaultLanguage) : $adminT("Select language")}
             </Select.Trigger>
             <Select.Content>
               {#each availableDefaultLocales as locale (locale.code)}
-                <Select.Item value={locale.code}>{locale.name}</Select.Item>
+                <Select.Item value={locale.code}>{displayLanguage(locale)}</Select.Item>
               {/each}
             </Select.Content>
           </Select.Root>
@@ -384,10 +398,11 @@
       <Card.Content class="space-y-6">
         <!-- Date + Time -->
         <div class="space-y-2">
-          <Label class="text-sm font-medium">{$adminT("Date + Time")}</Label>
+          <Label for="format-date-time" class="text-sm font-medium">{$adminT("Date + Time")}</Label>
           <Input
             class="font-mono text-sm"
             placeholder={$adminT("e.g. PPpp")}
+            id="format-date-time"
             value={dateAndTimeFormat.datePlusTime}
             oninput={(e) => {
               dateAndTimeFormat.datePlusTime = e.currentTarget.value;
@@ -414,10 +429,11 @@
 
         <!-- Date Only -->
         <div class="space-y-2">
-          <Label class="text-sm font-medium">{$adminT("Date Only")}</Label>
+          <Label for="format-date-only" class="text-sm font-medium">{$adminT("Date Only")}</Label>
           <Input
             class="font-mono text-sm"
             placeholder={$adminT("e.g. PP")}
+            id="format-date-only"
             value={dateAndTimeFormat.dateOnly}
             oninput={(e) => {
               dateAndTimeFormat.dateOnly = e.currentTarget.value;
@@ -444,10 +460,11 @@
 
         <!-- Time Only -->
         <div class="space-y-2">
-          <Label class="text-sm font-medium">{$adminT("Time Only")}</Label>
+          <Label for="format-time-only" class="text-sm font-medium">{$adminT("Time Only")}</Label>
           <Input
             class="font-mono text-sm"
             placeholder={$adminT("e.g. pp")}
+            id="format-time-only"
             value={dateAndTimeFormat.timeOnly}
             oninput={(e) => {
               dateAndTimeFormat.timeOnly = e.currentTarget.value;

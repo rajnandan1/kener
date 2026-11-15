@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "svelte/compiler";
+import ts from "typescript";
 import { extractServerStrings } from "./extract-server-strings.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
@@ -10,6 +11,22 @@ const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const english = JSON.parse(read("src/lib/admin-i18n/en.json"));
 const polish = JSON.parse(read("src/lib/admin-i18n/pl.json"));
 const baseline = JSON.parse(read("scripts/admin-i18n/source-inventory.json"));
+const constantsAst = ts.createSourceFile(
+  "global-constants.ts",
+  read("src/lib/global-constants.ts"),
+  ts.ScriptTarget.Latest,
+  true,
+);
+const globalLabels = new Map();
+for (const statement of constantsAst.statements) {
+  if (!ts.isExportAssignment(statement) || !ts.isObjectLiteralExpression(statement.expression)) continue;
+  for (const item of statement.expression.properties) {
+    if (ts.isPropertyAssignment(item) && ts.isStringLiteralLike(item.initializer)) {
+      globalLabels.set(item.name.getText(constantsAst).replace(/["']/g, ""), item.initializer.text);
+    }
+  }
+}
+
 const exceptions = JSON.parse(read("scripts/admin-i18n/technical-exceptions.json"));
 const normalize = (value) => value.replace(/\s+/g, " ").trim();
 const canonical = (value) => normalize(value).replace(/\{[a-zA-Z]\w*\}/g, "{}");
@@ -115,8 +132,20 @@ function inspect(node, source, file, ancestors = []) {
   ) {
     checkMessage(node.value.value, file, "display-property", line());
   }
+  if (
+    node.type === "Property" &&
+    uiProperties.has(node.key?.name ?? node.key?.value) &&
+    node.value?.type === "MemberExpression" &&
+    node.value.object?.name === "GC" &&
+    !node.value.computed &&
+    globalLabels.has(node.value.property?.name)
+  ) {
+    checkMessage(globalLabels.get(node.value.property.name), file, "display-constant", line());
+  }
   const inMarkup = ancestors.some((parent) => parent.type === "Fragment");
-  const inCode = ancestors.some((parent) => ["code", "pre", "script", "style"].includes(parent.name));
+  const inCode = ancestors.some(
+    (parent) => parent.type === "StyleDirective" || ["code", "pre", "script", "style"].includes(parent.name),
+  );
   if (node.type === "Text" && inMarkup && !inCode && !ancestors.some((parent) => parent.type === "Attribute")) {
     const value = normalize(node.data);
     if (!technical(value) && !["Polski", "English"].includes(value))
