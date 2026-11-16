@@ -1,6 +1,7 @@
 import { getContext, setContext } from "svelte";
 import { derived, readable, writable, type Readable, type Writable } from "svelte/store";
 import { base } from "$app/paths";
+import { isAdminLocale } from "./languages";
 import { translateAdmin, type AdminLocale, type AdminMessageValues } from "./messages";
 
 export type { AdminLocale } from "./messages";
@@ -71,7 +72,7 @@ export function createAdminI18n(initialLocale: AdminLocale): AdminI18nContext {
     t,
     editorPhrases: derived(t, ($t) => phrases($t)),
     setLocale(value) {
-      if (value !== "pl" && value !== "en") return;
+      if (!isAdminLocale(value)) return;
       locale.set(value);
       if (typeof document !== "undefined") {
         const secure = window.location.protocol === "https:" ? "; Secure" : "";

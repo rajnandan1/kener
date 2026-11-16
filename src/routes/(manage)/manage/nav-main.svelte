@@ -13,7 +13,10 @@
     <Sidebar.Menu>
       {#each items as item (item.title)}
         <Sidebar.MenuItem>
-          <Sidebar.MenuButton tooltipContent={item.title} isActive={page.url.pathname.startsWith(item.url)}>
+          <Sidebar.MenuButton
+            tooltipContent={$adminT(String(item.title ?? ""))}
+            isActive={page.url.pathname.startsWith(item.url)}
+          >
             {#snippet child({ props })}
               <a href={item.url} {...props}>
                 <item.icon />

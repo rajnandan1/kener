@@ -22,7 +22,7 @@
 
 <script lang="ts">
   import { getAdminI18n } from "$lib/admin-i18n/context";
-  const { t: adminT } = getAdminI18n();
+  const { t: adminT, active: adminActive, locale: adminLocale } = getAdminI18n();
 
   import { Dialog as SheetPrimitive } from "bits-ui";
   import XIcon from "@lucide/svelte/icons/x";
@@ -51,6 +51,7 @@
   <SheetPrimitive.Content
     bind:ref
     data-slot="sheet-content"
+    lang={adminActive ? $adminLocale : undefined}
     class={cn(sheetVariants({ side }), className)}
     {...restProps}
   >

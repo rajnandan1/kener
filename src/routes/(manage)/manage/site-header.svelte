@@ -12,15 +12,15 @@
   let { title = "" }: { title?: string } = $props();
 </script>
 
-<header
-  class="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)"
->
-  <div class="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
-    <Sidebar.Trigger class="-ms-1" />
-    <Separator orientation="vertical" class="mx-2 data-[orientation=vertical]:h-4" />
-    <h1 class="text-base font-medium">{$adminT(String(title ?? ""))}</h1>
-    <div class="ms-auto flex items-center gap-2">
-      <LanguageSwitcher />
+<header class="flex min-h-(--header-height) shrink-0 items-center border-b">
+  <div class="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 px-4 py-1.5 lg:flex lg:px-6">
+    <div class="flex min-w-0 items-center gap-1 lg:flex-1">
+      <Sidebar.Trigger class="-ms-1 shrink-0" />
+      <Separator orientation="vertical" class="mx-2 shrink-0 data-[orientation=vertical]:h-4" />
+      <h1 class="min-w-0 text-base font-medium break-words">{$adminT(String(title ?? ""))}</h1>
+    </div>
+    <LanguageSwitcher />
+    <div class="col-span-2 flex flex-wrap items-center justify-end gap-2">
       <Button
         href={clientResolver(resolve, "/")}
         variant="secondary"

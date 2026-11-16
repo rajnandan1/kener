@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getAdminI18n, type AdminLocale } from "./context";
+  import { adminLanguages } from "./languages";
 
   const { locale, t: adminT, setLocale } = getAdminI18n();
 </script>
@@ -12,7 +13,8 @@
     value={$locale}
     onchange={(event) => setLocale(event.currentTarget.value as AdminLocale)}
   >
-    <option value="pl" lang="pl">Polski</option>
-    <option value="en" lang="en">English</option>
+    {#each adminLanguages as language (language.code)}
+      <option value={language.code} lang={language.code}>{language.label}</option>
+    {/each}
   </select>
 </label>

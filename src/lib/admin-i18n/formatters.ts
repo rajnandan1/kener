@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from "date-fns";
-import { enGB, pl } from "date-fns/locale";
+import { getAdminLanguage } from "./languages";
 import { adminLocaleTag, type AdminLocale } from "./messages";
 
 /** Display-only duration formatting; source timestamps and stored values remain unchanged. */
@@ -22,7 +22,7 @@ export function formatAdminDuration(seconds: number, locale: AdminLocale, useDay
 }
 
 export function formatAdminRelative(date: Date, locale: AdminLocale): string {
-  return formatDistanceToNow(date, { addSuffix: false, locale: locale === "pl" ? pl : enGB });
+  return formatDistanceToNow(date, { addSuffix: false, locale: getAdminLanguage(locale).dateLocale });
 }
 
 export function formatAdminDate(date: Date, locale: AdminLocale, timeZone?: string): string {

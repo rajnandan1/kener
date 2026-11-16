@@ -6,10 +6,20 @@ import { parse } from "svelte/compiler";
 import ts from "typescript";
 import { extractServerStrings } from "./extract-server-strings.mjs";
 
-const root = fileURLToPath(new URL("../../", import.meta.url));
+const rootIndex = process.argv.indexOf("--root");
+if (rootIndex >= 0 && !process.argv[rootIndex + 1]) throw new Error("--root requires a directory");
+const root =
+  rootIndex < 0 ? fileURLToPath(new URL("../../", import.meta.url)) : path.resolve(process.argv[rootIndex + 1]);
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
-const english = JSON.parse(read("src/lib/admin-i18n/en.json"));
-const polish = JSON.parse(read("src/lib/admin-i18n/pl.json"));
+const catalogues = Object.fromEntries(
+  fs
+    .readdirSync(path.join(root, "src/lib/admin-i18n"))
+    .filter((file) => file.endsWith(".json"))
+    .sort()
+    .map((file) => [file.slice(0, -5), JSON.parse(read(`src/lib/admin-i18n/${file}`))]),
+);
+const english = catalogues.en;
+if (!english) throw new Error("The English panel catalogue is required");
 const baseline = JSON.parse(read("scripts/admin-i18n/source-inventory.json"));
 const constantsAst = ts.createSourceFile(
   "global-constants.ts",
@@ -32,7 +42,9 @@ const normalize = (value) => value.replace(/\s+/g, " ").trim();
 const canonical = (value) => normalize(value).replace(/\{[a-zA-Z]\w*\}/g, "{}");
 const tokens = (value) => [...value.matchAll(/\{([a-zA-Z]\w*)\}/g)].map((match) => match[1]).sort();
 const known = new Set(Object.keys(english).map(canonical));
+const exactKeys = new Set(Object.keys(english).map(normalize));
 const findings = [];
+const warnings = [];
 const occurrences = [];
 function record(text, file, kind, line) {
   text = normalize(text);
@@ -40,7 +52,8 @@ function record(text, file, kind, line) {
 }
 function checkMessage(text, file, kind, line) {
   record(text, file, kind, line);
-  if (!known.has(canonical(text))) findings.push({ kind: "missing-message", text, file, line });
+  const exists = kind === "translation-call" ? exactKeys.has(normalize(text)) : known.has(canonical(text));
+  if (!exists) findings.push({ kind: "missing-message", text, file, line });
 }
 function walk(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -181,16 +194,24 @@ for (const [text, origins] of Object.entries(baseline.messages)) {
     if (origin.file && !fs.existsSync(path.join(root, origin.file)))
       findings.push({ kind: "stale-inventory-path", text, file: origin.file });
 }
-for (const key of new Set([...Object.keys(english), ...Object.keys(polish)])) {
-  if (!english[key]?.trim() || !polish[key]?.trim()) findings.push({ kind: "empty-or-missing-translation", text: key });
-  else if (JSON.stringify(tokens(english[key])) !== JSON.stringify(tokens(polish[key])))
-    findings.push({ kind: "placeholder-mismatch", text: key });
-  else if (english[key] === polish[key] && !Object.hasOwn(exceptions, key))
-    findings.push({ kind: "unreviewed-identical-translation", text: key });
+for (const [locale, catalogue] of Object.entries(catalogues)) {
+  for (const key of new Set([...Object.keys(english), ...Object.keys(catalogue)])) {
+    if (
+      typeof english[key] !== "string" ||
+      !english[key].trim() ||
+      typeof catalogue[key] !== "string" ||
+      !catalogue[key].trim()
+    )
+      findings.push({ kind: "empty-or-missing-translation", locale, text: key });
+    else if (JSON.stringify(tokens(english[key])) !== JSON.stringify(tokens(catalogue[key])))
+      findings.push({ kind: "placeholder-mismatch", locale, text: key });
+    else if (locale !== "en" && english[key] === catalogue[key] && !Object.hasOwn(exceptions, key))
+      findings.push({ kind: "unreviewed-identical-translation", locale, text: key });
+  }
 }
 const version = JSON.parse(read("package.json")).version;
 if (version !== baseline.upstream.version)
-  findings.push({ kind: "upstream-version-changed", expected: baseline.upstream.version, actual: version });
+  warnings.push({ kind: "upstream-version-changed", reviewed: baseline.upstream.version, current: version });
 const uniqueFindings = [...new Map(findings.map((item) => [JSON.stringify(item), item])).values()];
 const report = {
   schemaVersion: 1,
@@ -200,8 +221,11 @@ const report = {
     componentsScanned: components.length,
     sourceOccurrences: occurrences.length,
     findings: uniqueFindings.length,
+    warnings: warnings.length,
+    languages: Object.keys(catalogues),
   },
   findings: uniqueFindings,
+  warnings,
   occurrences,
 };
 const reportIndex = process.argv.indexOf("--report");
@@ -211,5 +235,5 @@ if (reportIndex >= 0) {
   fs.mkdirSync(path.dirname(path.resolve(output)), { recursive: true });
   fs.writeFileSync(output, JSON.stringify(report, null, 2) + "\n");
 }
-console.log(JSON.stringify({ summary: report.summary, findings: uniqueFindings }, null, 2));
+console.log(JSON.stringify({ summary: report.summary, findings: uniqueFindings, warnings }, null, 2));
 if (uniqueFindings.length) process.exitCode = 1;
