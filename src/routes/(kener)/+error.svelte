@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import Home from "@lucide/svelte/icons/home";
@@ -17,13 +17,13 @@
       </div>
 
       <div class="space-y-2">
-        <h1 class="text-4xl font-bold">{$page.status}</h1>
+        <h1 class="text-4xl font-bold">{page.status}</h1>
         <p class="text-muted-foreground text-lg">
-          {#if $page.error?.message}
-            {$page.error.message}
-          {:else if $page.status === 404}
+          {#if page.error?.message}
+            {page.error.message}
+          {:else if page.status === 404}
             The page you're looking for doesn't exist or has been moved.
-          {:else if $page.status === 500}
+          {:else if page.status === 500}
             Something went wrong on our end. Please try again later.
           {:else}
             An unexpected error occurred.

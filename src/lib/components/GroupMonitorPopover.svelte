@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { browser } from "$app/environment";
+  import { browser } from "$app/env";
   import type { Snippet } from "svelte";
   import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
   import * as Drawer from "$lib/components/ui/drawer/index.js";

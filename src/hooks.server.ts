@@ -1,4 +1,5 @@
-import { json, type Handle, type RequestEvent } from "@sveltejs/kit";
+import { json, type RequestEvent } from "@sveltejs/kit";
+import type { Handle } from "@sveltejs/kit/hooks";
 import { sequence } from "@sveltejs/kit/hooks";
 import { VerifyAPIKey } from "$lib/server/controllers/apiController";
 import db from "$lib/server/db/db";

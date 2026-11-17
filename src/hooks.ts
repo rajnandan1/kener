@@ -1,4 +1,4 @@
-import type { Reroute } from "@sveltejs/kit";
+import type { Reroute } from "@sveltejs/kit/hooks";
 
 // Back-compat for issue #759: heartbeat URLs used to be `/ext/heartbeat/<tag>:<secret>`,
 // one path segment joined by a colon. A `:` is illegal in Windows file paths, so the

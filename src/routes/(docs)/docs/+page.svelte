@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { DocsConfig, DocsPage } from "$lib/types/docs";
-  import { base, resolve } from "$app/paths";
+  import { asset, resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import ArrowRight from "@lucide/svelte/icons/arrow-right";
   import Github from "@lucide/svelte/icons/github";
@@ -177,24 +177,24 @@
 
   function getHref(path: string): string {
     if (!path.startsWith("/docs") || !data.config.activeVersion) {
-      return `${base}${path}`;
+      return clientResolver(resolve, path);
     }
 
     if (path.startsWith("/docs/spec/")) {
-      return `${base}${path}`;
+      return clientResolver(resolve, path);
     }
 
     const suffix = path.replace(/^\/docs\/?/, "");
 
     if (suffix.startsWith(`${data.config.activeVersion}/`)) {
-      return `${base}/docs/${suffix}`;
+      return clientResolver(resolve, `/docs/${suffix}`);
     }
 
     const versionedPath = suffix
       ? `/docs/${data.config.activeVersion}/${suffix}`
       : `/docs/${data.config.activeVersion}`;
 
-    return `${base}${versionedPath}`;
+    return clientResolver(resolve, versionedPath);
   }
 
   const comparisonRows: { feature: string; kener: string; others: [string, string, string] }[] = [
@@ -220,14 +220,7 @@
     name="keywords"
     content="open source status page, docker status page, self-hosted status page, uptime monitor, incident management, status page tool, free status page, kener, status page docker compose, open source uptime monitoring"
   />
-  <link
-    rel="icon"
-    href={
-      data.config.favicon
-        ? clientResolver(resolve, data.config.favicon)
-        : data.config.favicon
-    }
-  />
+  <link rel="icon" href={data.config.favicon ? clientResolver(resolve, data.config.favicon) : data.config.favicon} />
   <link rel="canonical" href="https://kener.ing/docs" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://kener.ing/docs" />
@@ -370,7 +363,7 @@
   <header class="border-border/60 bg-background fixed top-0 right-0 left-0 z-40 border-b">
     <div class="mx-auto flex h-14 max-w-[1080px] items-center justify-between px-5 md:px-8">
       <a href={getHref("/docs")} class="text-foreground group flex items-center gap-2.5 no-underline">
-        <img src="{base}/logo96.png" alt="" class="h-6 w-6 rounded-md" />
+        <img src={asset("logo96.png")} alt="" class="h-6 w-6 rounded-md" />
         <span class="text-[15px] font-semibold tracking-tight">{data.config.name}</span>
       </a>
       <div class="flex items-center gap-1">
@@ -470,7 +463,7 @@
             <span class="shot-url">status.your-company.com</span>
           </div>
           <img
-            src="{base}/xt_white.webp"
+            src={asset("xt_white.webp")}
             alt="Kener open source status page dashboard: uptime monitoring, incident management, and Docker deployment"
             class="bg-muted h-auto w-full object-cover dark:hidden"
             loading="eager"
@@ -480,7 +473,7 @@
             height="1146"
           />
           <img
-            src="{base}/xt_black.webp"
+            src={asset("xt_black.webp")}
             alt="Kener open source status page dashboard: uptime monitoring, incident management, and Docker deployment"
             class="bg-muted hidden h-auto w-full object-cover dark:block"
             loading="eager"
