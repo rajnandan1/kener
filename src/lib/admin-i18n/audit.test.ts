@@ -80,4 +80,23 @@ describe("panel translation audit", () => {
       expect.objectContaining({ kind: "placeholder-mismatch", locale: "fr", text: "{days} Days" }),
     );
   });
+  it("limits reviewed identical wording to its registered language", () => {
+    const root = fixture();
+    const french = { "{days} Days": "{days} Days", "Eval error: {diagnostic}": "Erreur: {diagnostic}" };
+    writeFileSync(path.join(root, "src/lib/admin-i18n/fr.json"), JSON.stringify(french));
+    writeFileSync(
+      path.join(root, "scripts/admin-i18n/locale-exceptions.json"),
+      JSON.stringify({ fr: { "{days} Days": "Reviewed fixture wording for French only" } }),
+    );
+    expect(audit(root).status).toBe(0);
+    writeFileSync(
+      path.join(root, "src/lib/admin-i18n/pl.json"),
+      JSON.stringify({ ...french, "Eval error: {diagnostic}": "Błąd: {diagnostic}" }),
+    );
+    const { status, report } = audit(root);
+    expect(status).toBe(1);
+    expect(report.findings).toContainEqual(
+      expect.objectContaining({ kind: "unreviewed-identical-translation", locale: "pl", text: "{days} Days" }),
+    );
+  });
 });

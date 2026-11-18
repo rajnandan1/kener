@@ -24,6 +24,16 @@ describe("administrative language catalogues", () => {
     expect(translateAdmin("pl", "Uptime")).toBe("Dostępność");
     expect(translateAdmin("pl", "Triggers")).toBe("Kanały powiadomień");
   });
+  it("provides Czech interface terminology while preserving values and diagnostics", () => {
+    expect(translateAdmin("cs", "Save")).toBe("Uložit");
+    expect(translateAdmin("cs", "Latency")).toBe("Odezva");
+    expect(translateAdmin("cs", "Uptime")).toBe("Dostupnost");
+    const name = "<script>$&</script>";
+    expect(translateAdmin("cs", "Welcome, {name}!", { name })).toContain(name);
+    const diagnostic = "bad  value\nat line 2";
+    expect(translateAdmin("cs", `Eval error: ${diagnostic}`)).toContain(diagnostic);
+    expect(translateAdmin("cs", "External diagnostic 721")).toBe("External diagnostic 721");
+  });
   it("keeps fallback English and independent calls intact", () => {
     expect(translateAdmin("pl", "  Save \n")).toBe("Zapisz");
     expect(translateAdmin("en", "Save")).toBe("Save");
@@ -102,6 +112,13 @@ describe("administrative locale resolution", () => {
     expect(resolveAdminLocale(undefined, "de-DE,en-GB;q=0.8,pl;q=0.3")).toBe("en");
     expect(resolveAdminLocale(undefined, "en;q=0,pl;q=0.1")).toBe("pl");
     expect(resolveAdminLocale(undefined, "en;q=invalid,pl;q=0.5")).toBe("pl");
+  });
+  it("resolves Czech cookies and weighted browser preferences independently", () => {
+    expect(resolveAdminLocale("cs", "pl-PL,en;q=0.9")).toBe("cs");
+    expect(resolveAdminLocale(undefined, "en-US;q=0.4,cs-CZ;q=0.9,pl;q=0.7")).toBe("cs");
+    expect(resolveAdminLocale("en", "cs-CZ")).toBe("en");
+    expect(resolveAdminLocale(undefined, "cs;q=0,en;q=0.9")).toBe("en");
+    expect(adminLocaleTag("cs")).toBe("cs-CZ");
   });
   it("rejects unsupported preferences and falls back to English", () => {
     expect(resolveAdminLocale("../en", null)).toBe("en");

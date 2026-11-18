@@ -38,6 +38,14 @@ for (const statement of constantsAst.statements) {
 }
 
 const exceptions = JSON.parse(read("scripts/admin-i18n/technical-exceptions.json"));
+const localeExceptionFile = path.join(root, "scripts/admin-i18n/locale-exceptions.json");
+const localeExceptions = fs.existsSync(localeExceptionFile)
+  ? JSON.parse(fs.readFileSync(localeExceptionFile, "utf8"))
+  : {};
+function reviewedIdentical(locale, key) {
+  const reason = localeExceptions[locale]?.[key];
+  return Object.hasOwn(exceptions, key) || (typeof reason === "string" && reason.trim().length > 0);
+}
 const normalize = (value) => value.replace(/\s+/g, " ").trim();
 const canonical = (value) => normalize(value).replace(/\{[a-zA-Z]\w*\}/g, "{}");
 const tokens = (value) => [...value.matchAll(/\{([a-zA-Z]\w*)\}/g)].map((match) => match[1]).sort();
@@ -205,7 +213,7 @@ for (const [locale, catalogue] of Object.entries(catalogues)) {
       findings.push({ kind: "empty-or-missing-translation", locale, text: key });
     else if (JSON.stringify(tokens(english[key])) !== JSON.stringify(tokens(catalogue[key])))
       findings.push({ kind: "placeholder-mismatch", locale, text: key });
-    else if (locale !== "en" && english[key] === catalogue[key] && !Object.hasOwn(exceptions, key))
+    else if (locale !== "en" && english[key] === catalogue[key] && !reviewedIdentical(locale, key))
       findings.push({ kind: "unreviewed-identical-translation", locale, text: key });
   }
 }

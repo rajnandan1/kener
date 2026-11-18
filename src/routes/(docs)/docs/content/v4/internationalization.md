@@ -1,6 +1,6 @@
 ---
 title: Internationalization
-description: Configure language localization, timezone behavior, and date/time formats for your Kener status page.
+description: Configure public and management panel languages, timezone behavior, and date/time formats.
 ---
 
 Kener internationalization has three parts:
@@ -27,7 +27,7 @@ Use this page to configure all three from the admin UI.
 
 ## Management panel language {#admin-panel-language}
 
-Use the separate **Panel language** selector in the management header or on account pages to choose **English** or **Polski**. Labels change immediately.
+Use the separate **Panel language** selector in the management header or on account pages to choose **English**, **Polski**, or **Čeština**. Labels change immediately.
 
 The choice is stored for one year in the `kener_admin_locale` cookie, scoped to the application base path. An existing cookie takes priority; otherwise the panel follows a supported browser language and falls back to English. This is a browser preference, not a user-account setting.
 
@@ -35,7 +35,7 @@ The choice is stored for one year in the `kener_admin_locale` cookie, scoped to 
 
 Built-in editor controls, editor loading text, color-picker labels, and notification accessibility labels also follow the panel language. Date-format previews use the selected default public locale, so changing the panel language does not change those previews. Public locale names in the management form follow the panel language without changing the stored locale codes.
 
-Panel catalogues live in `src/lib/admin-i18n/`. The shared registry in `languages.ts` supplies the selector, supported browser languages, translations, and date formats. English is the fallback for every registered language. The public-page translation scripts below do not audit the management panel.
+Panel catalogues live in `src/lib/admin-i18n/`. The shared registry in `languages.ts` supplies the selector, supported browser languages, translations, and date formats, including `LocalTime` timestamps in incident comments and user lists. English is the fallback for every registered language. The public-page translation scripts below do not audit the management panel.
 
 ### Contribute a panel language {#admin-panel-contribute}
 
@@ -53,7 +53,7 @@ Panel catalogues live in `src/lib/admin-i18n/`. The shared registry in `language
 
     No other selector, cookie, resolver, or formatting changes are required. The native label is shown without translating it into other panel languages.
 
-4. Run `node scripts/admin-i18n/audit.mjs`, `npm run check`, and `npm test`. The audit checks every catalogue for missing values and mismatched placeholders. Review any intentionally unchanged technical text in `scripts/admin-i18n/technical-exceptions.json` with a reason.
+4. Run `node scripts/admin-i18n/audit.mjs`, `npm run check`, and `npm test`. The audit checks every catalogue for missing values and mismatched placeholders. Review intentionally unchanged technical text in `scripts/admin-i18n/technical-exceptions.json` with a reason. Valid native words that happen to match English, such as Czech “Role”, belong under that language code in `scripts/admin-i18n/locale-exceptions.json`; these exceptions do not exempt other languages.
 5. Select the language and review account pages, forms, errors, dialogs, collapsed-menu tooltips, editor controls, dates, and a narrow mobile layout. Submit a pull request with screenshots and the checks performed. Language variants written right-to-left also need a layout review; registering a language does not add RTL layout support.
 
 ### Follow upstream releases {#admin-panel-upstream-updates}

@@ -1,8 +1,8 @@
 <script lang="ts">
   import { getAdminI18n } from "$lib/admin-i18n/context";
-  import { enGB, pl } from "date-fns/locale";
+  import { getAdminLanguage } from "$lib/admin-i18n/languages";
   const { locale, active } = getAdminI18n();
-  const dateLocale = $derived(active ? ($locale === "pl" ? pl : enGB) : undefined);
+  const dateLocale = $derived(active ? getAdminLanguage($locale).dateLocale : undefined);
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import { format as fmt, isValid } from "date-fns";
   import { formatInTimeZone } from "date-fns-tz";

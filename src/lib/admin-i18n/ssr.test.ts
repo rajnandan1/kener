@@ -42,4 +42,19 @@ describe("administrative SSR context", () => {
     expect(get(polish.t)("Save")).toBe("Save");
     expect(get(english.t)("Save")).toBe("Zapisz");
   });
+  it("renders Czech server-side and keeps a retained English context independent", () => {
+    const contexts: AdminI18nContext[] = [];
+    for (const initialLocale of ["cs", "en"] as const) {
+      const result = render(Harness, {
+        props: { initialLocale, userText: "<script>test</script>", onContext: (context) => contexts.push(context) },
+      });
+      expect(result.body).toContain(initialLocale === "cs" ? "Uložit" : "Save");
+      expect(result.body).toContain("&lt;script>");
+    }
+    contexts[0].setLocale("pl");
+    expect(get(contexts[1].t)("Save")).toBe("Save");
+    contexts[1].setLocale("cs");
+    expect(get(contexts[0].t)("Save")).toBe("Zapisz");
+    expect(get(contexts[1].t)("Save")).toBe("Uložit");
+  });
 });
