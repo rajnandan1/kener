@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
@@ -78,7 +81,7 @@
       if (result.error) {
         modifyDataError = result.error;
       } else {
-        toast.success("Monitoring data updated successfully");
+        toast.success($adminT("Monitoring data updated successfully"));
         modifyDataForm = { start: "", end: "", newStatus: "UP", latency: 0, deviation: 0 };
       }
     } catch (e) {
@@ -93,25 +96,25 @@
   <Card.Header>
     <Card.Title class="flex items-center gap-2">
       <DatabaseIcon class="size-5" />
-      Modify Monitoring Data
+      {$adminT("Modify Monitoring Data")}
     </Card.Title>
-    <Card.Description>Change the status of monitoring data for a given time range</Card.Description>
+    <Card.Description>{$adminT("Change the status of monitoring data for a given time range")}</Card.Description>
   </Card.Header>
   <Card.Content>
     <div class="grid gap-4">
       <div class="grid grid-cols-2 gap-4">
         <div class="space-y-2">
-          <Label for="start_date">Start Date & Time <span class="text-destructive">*</span></Label>
+          <Label for="start_date">{$adminT("Start Date & Time")} <span class="text-destructive">*</span></Label>
           <Input id="start_date" type="datetime-local" bind:value={modifyDataForm.start} />
         </div>
         <div class="space-y-2">
-          <Label for="end_date">End Date & Time <span class="text-destructive">*</span></Label>
+          <Label for="end_date">{$adminT("End Date & Time")} <span class="text-destructive">*</span></Label>
           <Input id="end_date" type="datetime-local" bind:value={modifyDataForm.end} min={modifyDataForm.start} />
         </div>
       </div>
       <div class="grid grid-cols-3 gap-4">
         <div class="space-y-2">
-          <Label for="new_status">New Status</Label>
+          <Label for="new_status">{$adminT("New Status")}</Label>
           <Select.Root
             type="single"
             value={modifyDataForm.newStatus}
@@ -120,30 +123,31 @@
             }}
           >
             <Select.Trigger id="new_status" class="w-full">
-              {modifyDataForm.newStatus}
+              {$adminT(String(modifyDataForm.newStatus ?? ""))}
             </Select.Trigger>
             <Select.Content>
-              <Select.Item value="UP">UP</Select.Item>
-              <Select.Item value="DEGRADED">DEGRADED</Select.Item>
-              <Select.Item value="DOWN">DOWN</Select.Item>
+              <Select.Item value="UP">{$adminT("UP")}</Select.Item>
+              <Select.Item value="DEGRADED">{$adminT("DEGRADED")}</Select.Item>
+              <Select.Item value="DOWN">{$adminT("DOWN")}</Select.Item>
             </Select.Content>
           </Select.Root>
         </div>
         <div class="space-y-2">
-          <Label for="latency">Latency (ms)</Label>
+          <Label for="latency">{$adminT("Latency (ms)")}</Label>
           <Input id="latency" type="number" min="0" bind:value={modifyDataForm.latency} placeholder="100" />
         </div>
         <div class="space-y-2">
-          <Label for="deviation">Deviation (ms)</Label>
+          <Label for="deviation">{$adminT("Deviation (ms)")}</Label>
           <Input id="deviation" type="number" min="0" bind:value={modifyDataForm.deviation} placeholder="0" />
         </div>
       </div>
       <p class="text-muted-foreground text-xs">
-        Latency will be randomly generated as latency ± deviation for each data point. Set deviation to 0 for a fixed
-        latency value.
+        {$adminT(
+          "Latency will be randomly generated as latency ± deviation for each data point. Set deviation to 0 for a fixed latency value."
+        )}
       </p>
       {#if modifyDataError}
-        <p class="text-destructive text-sm">{modifyDataError}</p>
+        <p class="text-destructive text-sm">{$adminT(String(modifyDataError ?? ""))}</p>
       {/if}
     </div>
   </Card.Content>
@@ -151,10 +155,10 @@
     <Button onclick={modifyMonitoringData} disabled={modifyingData}>
       {#if modifyingData}
         <Loader class="size-4 animate-spin" />
-        Saving...
+        {$adminT("Saving...")}
       {:else}
         <SaveIcon class="size-4" />
-        Save Changes
+        {$adminT("Save Changes")}
       {/if}
     </Button>
   </Card.Footer>

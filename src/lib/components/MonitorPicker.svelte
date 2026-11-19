@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import * as Command from "$lib/components/ui/command/index.js";
   import * as Popover from "$lib/components/ui/popover/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
@@ -52,16 +55,16 @@
         aria-expanded={open}
         class="w-full justify-between font-normal"
       >
-        <span class="text-muted-foreground">{placeholder}</span>
+        <span class="text-muted-foreground">{$adminT(String(placeholder ?? ""))}</span>
         <ChevronsUpDownIcon class="text-muted-foreground size-4 shrink-0" />
       </Button>
     {/snippet}
   </Popover.Trigger>
   <Popover.Content class="w-[var(--bits-popover-trigger-width)] p-0" align="start">
     <Command.Root shouldFilter={false}>
-      <Command.Input {placeholder} bind:value={search} />
+      <Command.Input placeholder={$adminT(String(placeholder ?? ""))} bind:value={search} />
       <Command.List class="max-h-64">
-        <Command.Empty>No monitors found.</Command.Empty>
+        <Command.Empty>{$adminT("No monitors found.")}</Command.Empty>
         <Command.Group>
           {#each filteredMonitors as monitor (monitor.tag)}
             {@const selected = selectedTags.includes(monitor.tag)}
@@ -88,7 +91,7 @@
           <Command.Group>
             <Command.Item value="__add-all-matching__" onSelect={addAllMatching}>
               <ListPlusIcon class="size-4" />
-              Add all {unselectedMatches.length} matching
+              {$adminT("Add all matching monitors ({length})", { length: unselectedMatches.length })}
             </Command.Item>
           </Command.Group>
         {/if}

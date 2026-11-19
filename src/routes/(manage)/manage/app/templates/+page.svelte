@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT, editorPhrases: adminEditorPhrases } = getAdminI18n();
+  const editorLocale = $derived(EditorState.phrases.of($adminEditorPhrases));
+
   import { Button } from "$lib/components/ui/button/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
@@ -13,7 +17,8 @@
   import Loader from "@lucide/svelte/icons/loader";
   import { toast } from "svelte-sonner";
   import { mode } from "mode-watcher";
-  import CodeMirror from "svelte-codemirror-editor";
+  import { EditorState } from "@codemirror/state";
+  import CodeMirror from "$lib/components/manage/CodeEditor.svelte";
   import { html } from "@codemirror/lang-html";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
   import { onMount } from "svelte";
@@ -74,7 +79,7 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
         templates = result;
         // Auto-select first template if available
@@ -84,7 +89,7 @@
       }
     } catch (error) {
       console.error("Error fetching templates:", error);
-      toast.error("Failed to load templates");
+      toast.error($adminT("Failed to load templates"));
     } finally {
       loading = false;
     }
@@ -92,7 +97,7 @@
 
   async function updateTemplate() {
     if (!selectedTemplateId) {
-      toast.error("Please select a template");
+      toast.error($adminT("Please select a template"));
       return;
     }
 
@@ -113,9 +118,9 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Template updated successfully");
+        toast.success($adminT("Template updated successfully"));
         // Update local state
         const index = templates.findIndex((t) => t.template_id === selectedTemplateId);
         if (index !== -1) {
@@ -129,7 +134,7 @@
       }
     } catch (error) {
       console.error("Error updating template:", error);
-      toast.error("Failed to update template");
+      toast.error($adminT("Failed to update template"));
     } finally {
       saving = false;
     }
@@ -150,8 +155,8 @@
     <Card.Root>
       <Card.Content class="flex flex-col items-center justify-center py-12">
         <MailIcon class="text-muted-foreground mb-4 size-12" />
-        <h3 class="mb-2 text-lg font-semibold">No Templates Found</h3>
-        <p class="text-muted-foreground text-center">There are no email templates configured yet.</p>
+        <h3 class="mb-2 text-lg font-semibold">{$adminT("No Templates Found")}</h3>
+        <p class="text-muted-foreground text-center">{$adminT("There are no email templates configured yet.")}</p>
       </Card.Content>
     </Card.Root>
   {:else}
@@ -159,14 +164,16 @@
       <Card.Header>
         <Card.Title class="flex items-center gap-2">
           <FileTextIcon class="size-5" />
-          Edit Template
+          {$adminT("Edit Template")}
         </Card.Title>
-        <Card.Description>Select a template from the dropdown to view and edit its content</Card.Description>
+        <Card.Description
+          >{$adminT("Select a template from the dropdown to view and edit its content")}</Card.Description
+        >
       </Card.Header>
       <Card.Content class="space-y-6">
         <!-- Template Selector -->
         <div class="space-y-2">
-          <Label for="template-select">Select Template</Label>
+          <Label for="template-select">{$adminT("Select Template")}</Label>
           <Select.Root
             type="single"
             value={selectedTemplateId}
@@ -176,15 +183,15 @@
           >
             <Select.Trigger class="w-full md:w-[400px]">
               {#if selectedTemplateId}
-                {formatTemplateId(selectedTemplateId)}
+                {$adminT(String(formatTemplateId(selectedTemplateId)))}
               {:else}
-                Select a template...
+                {$adminT("Select a template...")}
               {/if}
             </Select.Trigger>
             <Select.Content>
               {#each templates as template (template.template_id)}
                 <Select.Item value={template.template_id}>
-                  {formatTemplateId(template.template_id)}
+                  {$adminT(String(formatTemplateId(template.template_id)))}
                 </Select.Item>
               {/each}
             </Select.Content>
@@ -194,23 +201,23 @@
         {#if selectedTemplateId}
           <!-- Subject -->
           <div class="space-y-2">
-            <Label for="template-subject">Subject</Label>
-            <Input id="template-subject" bind:value={templateSubject} placeholder="Email subject line" />
+            <Label for="template-subject">{$adminT("Subject")}</Label>
+            <Input id="template-subject" bind:value={templateSubject} placeholder={$adminT("Email subject line")} />
             <p class="text-muted-foreground text-xs">
-              The subject line for the email. You can use Mustache variables like <code class="bg-muted rounded px-1"
-                >{"{{variable}}"}</code
-              >
+              {$adminT("The subject line for the email. You can use Mustache variables like")}
+              <code class="bg-muted rounded px-1">{"{{variable}}"}</code>
             </p>
           </div>
 
           <!-- HTML Body -->
           <div class="space-y-2">
-            <Label>HTML Body</Label>
+            <Label>{$adminT("HTML Body")}</Label>
             <p class="text-muted-foreground text-xs">
-              The HTML content of the email. Use Mustache variables for dynamic content.
+              {$adminT("The HTML content of the email. Use Mustache variables for dynamic content.")}
             </p>
             <div class="overflow-hidden rounded-md border">
               <CodeMirror
+                extensions={[editorLocale]}
                 bind:value={templateHtmlBody}
                 lang={html()}
                 theme={mode.current === "dark" ? githubDark : githubLight}
@@ -221,14 +228,14 @@
 
           <!-- Text Body -->
           <div class="space-y-2">
-            <Label for="template-text-body">Text Body</Label>
+            <Label for="template-text-body">{$adminT("Text Body")}</Label>
             <p class="text-muted-foreground text-xs">
-              Plain text version of the email for clients that don't support HTML
+              {$adminT("Plain text version of the email for clients that don't support HTML")}
             </p>
             <Textarea
               id="template-text-body"
               bind:value={templateTextBody}
-              placeholder="Plain text email content"
+              placeholder={$adminT("Plain text email content")}
               rows={8}
             />
           </div>
@@ -242,7 +249,7 @@
             {:else}
               <SaveIcon class="size-4" />
             {/if}
-            Update Template
+            {$adminT("Update Template")}
           </Button>
         </Card.Footer>
       {/if}

@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { active: adminActive, locale: adminLocale } = getAdminI18n();
+
 	import { Popover as PopoverPrimitive } from "bits-ui";
 	import PopoverPortal from "./popover-portal.svelte";
 	import { cn, type WithoutChildrenOrChild } from "$lib/utils.js";
@@ -20,6 +23,7 @@
 	<PopoverPrimitive.Content
 		bind:ref
 		data-slot="popover-content"
+		lang={adminActive ? $adminLocale : undefined}
 		{sideOffset}
 		{align}
 		class={cn(

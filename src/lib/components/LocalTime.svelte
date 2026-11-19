@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  import { getAdminLanguage } from "$lib/admin-i18n/languages";
+  const { locale, active } = getAdminI18n();
+  const dateLocale = $derived(active ? getAdminLanguage($locale).dateLocale : undefined);
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import { format as fmt, isValid } from "date-fns";
   import { formatInTimeZone } from "date-fns-tz";
@@ -15,7 +19,7 @@
   let { value, format = "yyyy-MM-dd HH:mm:ss", class: className }: Props = $props();
 
   const date = $derived(parseDateInput(value));
-  const local = $derived(isValid(date) ? `${fmt(date, format)} ${fmt(date, "O")}` : null);
+  const local = $derived(isValid(date) ? `${fmt(date, format, { locale: dateLocale })} ${fmt(date, "O")}` : null);
 </script>
 
 <!-- Needs a Tooltip.Provider above it; the (manage) and (kener) layouts supply one. -->
@@ -23,7 +27,7 @@
   <Tooltip.Root>
     <Tooltip.Trigger class={className}>{local}</Tooltip.Trigger>
     <Tooltip.Content>
-      {formatInTimeZone(date, "UTC", "yyyy-MM-dd HH:mm:ss 'UTC'")}
+      {formatInTimeZone(date, "UTC", "yyyy-MM-dd HH:mm:ss 'UTC'", { locale: dateLocale })}
     </Tooltip.Content>
   </Tooltip.Root>
 {:else}

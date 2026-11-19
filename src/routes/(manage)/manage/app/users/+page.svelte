@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Table from "$lib/components/ui/table/index.js";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
@@ -122,7 +125,7 @@
       }
     } catch (error) {
       console.error("Error fetching users:", error);
-      toast.error("Failed to load users");
+      toast.error($adminT("Failed to load users"));
     } finally {
       loading = false;
     }
@@ -183,7 +186,7 @@
         users = [...users, result];
         showAddUserDialog = false;
         resetNewUser();
-        toast.success("User invited successfully");
+        toast.success($adminT("User invited successfully"));
       }
     } catch (error) {
       creatingUserError = "Error while creating user";
@@ -228,9 +231,9 @@
           data: { email }
         })
       });
-      toast.success("Invitation email resent");
+      toast.success($adminT("Invitation email resent"));
     } catch (error) {
-      toast.error("Failed to resend invitation email");
+      toast.error($adminT("Failed to resend invitation email"));
     }
   }
 
@@ -250,10 +253,10 @@
       if (!res.ok || result.error) {
         throw new Error(result.error || "Failed to send verification email");
       }
-      toast.success("Verification email sent");
+      toast.success($adminT("Verification email sent"));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to send verification email";
-      toast.error(message);
+      toast.error($adminT(message));
     } finally {
       sendingSelfVerification = false;
     }
@@ -281,7 +284,7 @@
         manualUpdateError = result.error;
       } else {
         users = users.map((user) => (user.id === toEditUser!.id ? result : user));
-        manualSuccess = `User ${updateType} updated successfully`;
+        manualSuccess = "User details updated successfully";
 
         // Update toEditUser with the result
         toEditUser = {
@@ -323,7 +326,7 @@
         roles = result;
       }
     } catch {
-      toast.error("Failed to load roles");
+      toast.error($adminT("Failed to load roles"));
     }
   }
 
@@ -355,7 +358,7 @@
           fetchUsers();
         }}
       >
-        Active
+        {$adminT("Active")}
       </Button>
       <Button
         variant={statusFilter === "INACTIVE" ? "default" : "outline"}
@@ -366,7 +369,7 @@
           fetchUsers();
         }}
       >
-        Inactive
+        {$adminT("Inactive")}
       </Button>
     </div>
     <div class="flex items-center gap-2">
@@ -376,16 +379,15 @@
       {#if hasPermission("users.write")}
         {#if !canSendEmail}
           <p class="text-muted-foreground max-w-xs text-xs">
-            Email service not configured. Cannot invite new users. Please go to
+            {$adminT("Email service not configured. Cannot invite new users.")}
             <a href={`${GC.DOCS_URL}/v4/setup/email-setup`} target="_blank" class="text-blue-500 underline">
-              setup email
-            </a>
-            for more info.
+              {$adminT("Read the email setup documentation")}</a
+            >.
           </p>
         {/if}
         <Button onclick={() => (showAddUserDialog = true)} disabled={!canSendEmail}>
           <PlusIcon class="h-4 w-4" />
-          Add User
+          {$adminT("Add User")}
         </Button>
       {/if}
     </div>
@@ -396,13 +398,13 @@
     <Table.Root>
       <Table.Header>
         <Table.Row>
-          <Table.Head>Name</Table.Head>
-          <Table.Head>Email</Table.Head>
-          <Table.Head class="text-center">Auth</Table.Head>
-          <Table.Head class="text-center">Verified</Table.Head>
-          <Table.Head>Role</Table.Head>
-          <Table.Head>Status</Table.Head>
-          <Table.Head class="w-20 text-center">Actions</Table.Head>
+          <Table.Head>{$adminT("Name")}</Table.Head>
+          <Table.Head>{$adminT("Email")}</Table.Head>
+          <Table.Head class="text-center">{$adminT("Auth")}</Table.Head>
+          <Table.Head class="text-center">{$adminT("Verified")}</Table.Head>
+          <Table.Head>{$adminT("Role")}</Table.Head>
+          <Table.Head>{$adminT("Status")}</Table.Head>
+          <Table.Head class="w-20 text-center">{$adminT("Actions")}</Table.Head>
         </Table.Row>
       </Table.Header>
       <Table.Body>
@@ -411,25 +413,27 @@
             <Table.Cell colspan={7} class="py-8 text-center">
               <div class="flex items-center justify-center gap-2">
                 <Spinner class="size-4" />
-                <span class="text-muted-foreground text-sm">Loading users...</span>
+                <span class="text-muted-foreground text-sm">{$adminT("Loading users...")}</span>
               </div>
             </Table.Cell>
           </Table.Row>
         {:else if users.length === 0}
           <Table.Row>
-            <Table.Cell colspan={7} class="text-muted-foreground py-8 text-center">No users found.</Table.Cell>
+            <Table.Cell colspan={7} class="text-muted-foreground py-8 text-center"
+              >{$adminT("No users found.")}</Table.Cell
+            >
           </Table.Row>
         {:else}
           {#each users as user (user.id)}
             <Table.Row class={currentUser.id === user.id ? "bg-muted/50" : ""}>
               <Table.Cell class="font-medium"
                 >{user.name}{#if currentUser.id === user.id}
-                  <Badge variant="outline" class="ml-1 text-[10px]">You</Badge>{/if}</Table.Cell
+                  <Badge variant="outline" class="ml-1 text-[10px]">{$adminT("You")}</Badge>{/if}</Table.Cell
               >
               <Table.Cell>{user.email}</Table.Cell>
               <Table.Cell class="text-center">
                 <Badge variant={user.auth_provider === GC.AUTH_PROVIDER_OIDC ? "default" : "outline"}>
-                  {user.auth_provider === GC.AUTH_PROVIDER_OIDC ? "OIDC" : "Local"}
+                  {user.auth_provider === GC.AUTH_PROVIDER_OIDC ? "OIDC" : $adminT("Local")}
                 </Badge>
               </Table.Cell>
               <Table.Cell class="text-center">
@@ -446,14 +450,20 @@
               </Table.Cell>
               <Table.Cell>
                 {#if user.is_active}
-                  <span class="text-sm font-semibold text-green-500">ACTIVE</span>
+                  <span class="text-sm font-semibold text-green-500">{$adminT("ACTIVE")}</span>
                 {:else}
-                  <span class="text-sm font-semibold text-pink-500">INACTIVE</span>
+                  <span class="text-sm font-semibold text-pink-500">{$adminT("INACTIVE")}</span>
                 {/if}
               </Table.Cell>
               <Table.Cell class="text-center">
                 {#if hasPermission("users.write") && currentUser.id !== user.id}
-                  <Button variant="ghost" size="icon" class="h-8 w-8" onclick={() => openSettingsSheet(user)}>
+                  <Button
+                    aria-label={$adminT("Open user settings")}
+                    variant="ghost"
+                    size="icon"
+                    class="h-8 w-8"
+                    onclick={() => openSettingsSheet(user)}
+                  >
                     <SettingsIcon class="h-4 w-4" />
                   </Button>
                 {:else if currentUser.id === user.id && !!!currentUser.is_verified}
@@ -466,7 +476,7 @@
                     {#if sendingSelfVerification}
                       <Spinner class="size-4" />
                     {/if}
-                    Verify Email
+                    {$adminT("Verify Email")}
                   </Button>
                 {/if}
               </Table.Cell>
@@ -482,10 +492,22 @@
     {@const startItem = (page - 1) * limit + 1}
     {@const endItem = Math.min(page * limit, total)}
     <div class="flex items-center justify-between">
-      <span class="text-muted-foreground text-sm">Showing {startItem}-{endItem} of {total}</span>
+      <span class="text-muted-foreground text-sm"
+        >{$adminT("Showing {startItem}-{endItem} of {total}", {
+          startItem: startItem,
+          endItem: endItem,
+          total: total
+        })}</span
+      >
       {#if totalPages > 1}
         <div class="flex items-center gap-2">
-          <Button variant="outline" size="icon" disabled={page === 1} onclick={() => goToPage(page - 1)}>
+          <Button
+            aria-label={$adminT("Previous page")}
+            variant="outline"
+            size="icon"
+            disabled={page === 1}
+            onclick={() => goToPage(page - 1)}
+          >
             <ChevronLeftIcon class="size-4" />
           </Button>
           <div class="flex items-center gap-1">
@@ -499,7 +521,13 @@
               {/if}
             {/each}
           </div>
-          <Button variant="outline" size="icon" disabled={page === totalPages} onclick={() => goToPage(page + 1)}>
+          <Button
+            aria-label={$adminT("Next page")}
+            variant="outline"
+            size="icon"
+            disabled={page === totalPages}
+            onclick={() => goToPage(page + 1)}
+          >
             <ChevronRightIcon class="size-4" />
           </Button>
         </div>
@@ -512,8 +540,8 @@
 <Dialog.Root bind:open={showAddUserDialog}>
   <Dialog.Content class="sm:max-w-md">
     <Dialog.Header>
-      <Dialog.Title>Add New User</Dialog.Title>
-      <Dialog.Description>Add a new user to your project</Dialog.Description>
+      <Dialog.Title>{$adminT("Add New User")}</Dialog.Title>
+      <Dialog.Description>{$adminT("Add a new user to your project")}</Dialog.Description>
     </Dialog.Header>
     <form
       onsubmit={(e) => {
@@ -523,16 +551,22 @@
     >
       <div class="space-y-4 py-4">
         <div class="space-y-2">
-          <Label for="name">Name</Label>
-          <Input id="name" type="text" placeholder="John Doe" bind:value={newUser.name} required />
+          <Label for="name">{$adminT("Name")}</Label>
+          <Input id="name" type="text" placeholder={$adminT("John Doe")} bind:value={newUser.name} required />
         </div>
         <div class="space-y-2">
-          <Label for="email">Email</Label>
-          <Input id="email" type="email" placeholder="email@example.com" bind:value={newUser.email} required />
+          <Label for="email">{$adminT("Email")}</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder={$adminT("email@example.com")}
+            bind:value={newUser.email}
+            required
+          />
         </div>
 
         <div class="space-y-2">
-          <Label>Roles</Label>
+          <Label>{$adminT("Roles")}</Label>
           <div class="space-y-2">
             {#each activeRoles as role (role.id)}
               <label class="flex items-center gap-2">
@@ -542,25 +576,25 @@
                     newUser.role_ids = toggleRole(role.id, newUser.role_ids);
                   }}
                 />
-                <span class="text-sm uppercase">{role.role_name}</span>
+                <span class="text-sm uppercase">{role.readonly === 1 ? $adminT(role.role_name) : role.role_name}</span>
               </label>
             {/each}
             {#if activeRoles.length === 0}
-              <p class="text-muted-foreground text-sm">No roles available</p>
+              <p class="text-muted-foreground text-sm">{$adminT("No roles available")}</p>
             {/if}
           </div>
         </div>
         {#if creatingUserError}
-          <p class="text-destructive text-sm font-medium">{creatingUserError}</p>
+          <p class="text-destructive text-sm font-medium">{$adminT(String(creatingUserError ?? ""))}</p>
         {/if}
       </div>
       <Dialog.Footer>
-        <Button type="button" variant="outline" onclick={() => (showAddUserDialog = false)}>Cancel</Button>
+        <Button type="button" variant="outline" onclick={() => (showAddUserDialog = false)}>{$adminT("Cancel")}</Button>
         <Button type="submit" disabled={creatingUser}>
           {#if creatingUser}
             <Spinner class="size-4" />
           {/if}
-          Add User
+          {$adminT("Add User")}
         </Button>
       </Dialog.Footer>
     </form>
@@ -571,8 +605,8 @@
 <Sheet.Root bind:open={showSettingsSheet}>
   <Sheet.Content side="right" class="w-full overflow-y-auto sm:max-w-xl">
     <Sheet.Header>
-      <Sheet.Title>Settings - {toEditUser?.name}</Sheet.Title>
-      <Sheet.Description>Manage user settings and permissions</Sheet.Description>
+      <Sheet.Title>{$adminT("Settings - {value1}", { value1: toEditUser?.name ?? "" })}</Sheet.Title>
+      <Sheet.Description>{$adminT("Manage user settings and permissions")}</Sheet.Description>
     </Sheet.Header>
     <div class="px-4">
       {#if toEditUser}
@@ -580,15 +614,15 @@
           <!-- User Info -->
           <div class="space-y-2 text-sm">
             <p>
-              <strong>Created At:</strong>
+              <strong>{$adminT("Created At:")}</strong>
               <LocalTime value={toEditUser.created_at} format="MMM dd, yyyy HH:mm" />
             </p>
             <p>
-              <strong>Updated At:</strong>
+              <strong>{$adminT("Updated At:")}</strong>
               <LocalTime value={toEditUser.updated_at} format="MMM dd, yyyy HH:mm" />
             </p>
             <p>
-              <strong>Name:</strong>
+              <strong>{$adminT("Name:")}</strong>
               {toEditUser.name}
             </p>
           </div>
@@ -597,11 +631,15 @@
             <Card.Root>
               <Card.Content class="">
                 <p class="mb-3 text-sm">
-                  This user hasn't set their password yet. Resend the invitation email to {toEditUser.email}.
+                  {$adminT("This user hasn't set their password yet. Resend the invitation email to {email}.", {
+                    email: toEditUser.email
+                  })}
                 </p>
                 {#if !canSendEmail}
                   <Alert.Root variant="destructive" class="mb-4">
-                    <Alert.Description>Email service not configured. Cannot resend invitation email.</Alert.Description>
+                    <Alert.Description
+                      >{$adminT("Email service not configured. Cannot resend invitation email.")}</Alert.Description
+                    >
                   </Alert.Root>
                 {/if}
                 <Button
@@ -618,7 +656,7 @@
                   {#if toEditUser.actions.resendingInvitation}
                     <Spinner class="size-4" />
                   {/if}
-                  Resend Invitation
+                  {$adminT("Resend Invitation")}
                 </Button>
               </Card.Content>
             </Card.Root>
@@ -628,7 +666,9 @@
           <Card.Root>
             <Card.Content class="p-4">
               <p class="mb-3 text-sm">
-                Change the roles of the user. The user will have different permissions based on assigned roles.
+                {$adminT(
+                  "Change the roles of the user. The user will have different permissions based on assigned roles."
+                )}
               </p>
               <div class="space-y-2">
                 {#each activeRoles as role (role.id)}
@@ -640,11 +680,13 @@
                         toEditUser!.role_ids = toggleRole(role.id, toEditUser!.role_ids);
                       }}
                     />
-                    <span class="text-sm uppercase">{role.role_name}</span>
+                    <span class="text-sm uppercase"
+                      >{role.readonly === 1 ? $adminT(role.role_name) : role.role_name}</span
+                    >
                   </label>
                 {/each}
                 {#if activeRoles.length === 0}
-                  <p class="text-muted-foreground text-sm">No roles available</p>
+                  <p class="text-muted-foreground text-sm">{$adminT("No roles available")}</p>
                 {/if}
               </div>
               <Button
@@ -661,7 +703,7 @@
                 {#if toEditUser.actions.updatingRole}
                   <Spinner class="size-4" />
                 {/if}
-                Update Roles
+                {$adminT("Update Roles")}
               </Button>
             </Card.Content>
           </Card.Root>
@@ -671,7 +713,9 @@
             <Card.Root class="border-destructive">
               <Card.Content class="p-4">
                 <p class="mb-3 text-sm">
-                  Deactivate User. The user will not be able to login. Existing session will get invalidated.
+                  {$adminT(
+                    "Deactivate User. The user will not be able to login. Existing session will get invalidated."
+                  )}
                 </p>
                 <Button
                   variant="destructive"
@@ -687,14 +731,14 @@
                   {#if toEditUser.actions.deactivatingUser}
                     <Spinner class="size-4" />
                   {/if}
-                  Deactivate User
+                  {$adminT("Deactivate User")}
                 </Button>
               </Card.Content>
             </Card.Root>
           {:else}
             <Card.Root>
               <Card.Content class="p-4">
-                <p class="mb-3 text-sm">Activate User. The user will be able to login.</p>
+                <p class="mb-3 text-sm">{$adminT("Activate User. The user will be able to login.")}</p>
                 <Button
                   variant="secondary"
                   disabled={toEditUser.actions.activatingUser}
@@ -709,7 +753,7 @@
                   {#if toEditUser.actions.activatingUser}
                     <Spinner class="size-4" />
                   {/if}
-                  Activate User
+                  {$adminT("Activate User")}
                 </Button>
               </Card.Content>
             </Card.Root>
@@ -718,12 +762,12 @@
           <!-- Status Messages -->
           {#if manualUpdateError}
             <Alert.Root variant="destructive">
-              <Alert.Description>{manualUpdateError}</Alert.Description>
+              <Alert.Description>{$adminT(String(manualUpdateError ?? ""))}</Alert.Description>
             </Alert.Root>
           {/if}
           {#if manualSuccess}
             <Alert.Root class="border-green-500 text-green-500">
-              <Alert.Description>{manualSuccess}</Alert.Description>
+              <Alert.Description>{$adminT(String(manualSuccess ?? ""))}</Alert.Description>
             </Alert.Root>
           {/if}
         </div>

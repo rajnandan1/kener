@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { active: adminActive, locale: adminLocale } = getAdminI18n();
+
 	import { LinkPreview as HoverCardPrimitive } from "bits-ui";
 	import { cn, type WithoutChildrenOrChild } from "$lib/utils.js";
 	import HoverCardPortal from "./hover-card-portal.svelte";
@@ -20,6 +23,7 @@
 	<HoverCardPrimitive.Content
 		bind:ref
 		data-slot="hover-card-content"
+		lang={adminActive ? $adminLocale : undefined}
 		{align}
 		{sideOffset}
 		class={cn(

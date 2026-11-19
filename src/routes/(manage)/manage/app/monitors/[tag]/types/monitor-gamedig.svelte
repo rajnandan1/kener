@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT, editorPhrases: adminEditorPhrases } = getAdminI18n();
+  const editorLocale = $derived(EditorState.phrases.of($adminEditorPhrases));
+
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Textarea } from "$lib/components/ui/textarea/index.js";
@@ -7,7 +11,8 @@
   import { DefaultGamedigEval, GAMEDIG_TIMEOUT } from "$lib/anywhere.js";
   import AllGamesListRaw from "$lib/all-games-list.json?raw";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
-  import CodeMirror from "svelte-codemirror-editor";
+  import { EditorState } from "@codemirror/state";
+  import CodeMirror from "$lib/components/manage/CodeEditor.svelte";
   import { javascript } from "@codemirror/lang-javascript";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
   import { mode } from "mode-watcher";
@@ -38,7 +43,7 @@
 
 <div class="space-y-4">
   <div class="flex flex-col gap-2">
-    <Label for="gamedig-game">Game <span class="text-destructive">*</span></Label>
+    <Label for="gamedig-game">{$adminT("Game")} <span class="text-destructive">*</span></Label>
     <Select.Root
       type="single"
       value={data.gameId}
@@ -51,13 +56,13 @@
       </Select.Trigger>
       <Select.Content class="max-h-75">
         <div class="p-2">
-          <Input bind:value={searchQuery} placeholder="Search games..." class="mb-2" />
+          <Input bind:value={searchQuery} placeholder={$adminT("Search games...")} class="mb-2" />
         </div>
         {#each filteredGames as game}
           <Select.Item value={game.id}>{game.name}</Select.Item>
         {/each}
         {#if filteredGames.length === 0}
-          <p class="text-muted-foreground p-2 text-sm">No games found</p>
+          <p class="text-muted-foreground p-2 text-sm">{$adminT("No games found")}</p>
         {/if}
       </Select.Content>
     </Select.Root>
@@ -65,15 +70,15 @@
 
   <div class="grid grid-cols-3 gap-4">
     <div class="flex flex-col gap-2">
-      <Label for="gamedig-host">Host <span class="text-destructive">*</span></Label>
-      <Input id="gamedig-host" bind:value={data.host} placeholder="game.example.com" />
+      <Label for="gamedig-host">{$adminT("Host")} <span class="text-destructive">*</span></Label>
+      <Input id="gamedig-host" bind:value={data.host} placeholder={$adminT("game.example.com")} />
     </div>
     <div class="flex flex-col gap-2">
-      <Label for="gamedig-port">Port</Label>
+      <Label for="gamedig-port">{$adminT("Port")}</Label>
       <Input id="gamedig-port" type="number" bind:value={data.port} placeholder="27015" />
     </div>
     <div class="flex flex-col gap-2">
-      <Label for="gamedig-timeout">Timeout (ms)</Label>
+      <Label for="gamedig-timeout">{$adminT("Timeout (ms)")}</Label>
       <Input id="gamedig-timeout" type="number" bind:value={data.timeout} placeholder="10000" />
     </div>
   </div>
@@ -83,12 +88,13 @@
       <Tooltip.Root>
         <Tooltip.Trigger class="flex items-center space-x-2">
           <Switch id="gamedig-guessport" bind:checked={data.guessPort} />
-          <Label for="gamedig-guessport">Guess Port</Label>
+          <Label for="gamedig-guessport">{$adminT("Guess Port")}</Label>
         </Tooltip.Trigger>
         <Tooltip.Content class="max-w-xs">
           <p class="text-wrap">
-            Used port can be different from client port, depending on queried game. Try this if you have unsuccessful
-            responses
+            {$adminT(
+              "Used port can be different from client port, depending on queried game. Try this if you have unsuccessful responses"
+            )}
           </p>
         </Tooltip.Content>
       </Tooltip.Root>
@@ -97,12 +103,13 @@
       <Tooltip.Root>
         <Tooltip.Trigger class="flex items-center space-x-2">
           <Switch id="gamedig-rules" bind:checked={data.requestRules} />
-          <Label for="gamedig-rules">Request Rules</Label>
+          <Label for="gamedig-rules">{$adminT("Request Rules")}</Label>
         </Tooltip.Trigger>
         <Tooltip.Content class="max-w-xs">
           <p class="text-wrap">
-            Valve games can provide additional 'rules' to Gamedig monitors. If checked, they will be available in
-            `reponseRaw.raw`, beware that it may increase query time.
+            {$adminT(
+              "Valve games can provide additional 'rules' to Gamedig monitors. If checked, they will be available in `reponseRaw.raw`, beware that it may increase query time."
+            )}
           </p>
         </Tooltip.Content>
       </Tooltip.Root>
@@ -110,9 +117,10 @@
   </div>
 
   <div class="flex flex-col gap-2">
-    <Label for="gamedig-eval">Custom Eval Function</Label>
+    <Label for="gamedig-eval">{$adminT("Custom Eval Function")}</Label>
     <div class="rounded-md border">
       <CodeMirror
+        extensions={[editorLocale]}
         bind:value={data.eval}
         lang={javascript()}
         theme={mode.current === "dark" ? githubDark : githubLight}
@@ -125,8 +133,8 @@
       />
     </div>
     <p class="text-muted-foreground mt-1 text-xs">
-      Function receives (responseTime, responseRaw) and should return {`{ status, latency }`}. It runs in a sandbox with
-      no Node.js features such as fetch or process.
+      {$adminT("Function receives (responseTime, responseRaw) and should return")}
+      {"{ status, latency }"}{$adminT(". It runs in a sandbox with no Node.js features such as fetch or process.")}
     </p>
   </div>
 </div>

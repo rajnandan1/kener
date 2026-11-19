@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT, active: adminActive } = getAdminI18n();
   import { page } from "$app/state";
   import * as NavigationMenu from "$lib/components/ui/navigation-menu/index.js";
   import * as Dropdown from "$lib/components/ui/dropdown-menu/index.js";
@@ -8,6 +10,13 @@
   import clientResolver from "$lib/client/resolver.js";
   import trackEvent from "$lib/beacon";
   import MenuIcon from "@lucide/svelte/icons/menu";
+
+  interface Props {
+    fixed?: boolean;
+    localizeDefaultLinks?: boolean;
+  }
+
+  let { fixed = true, localizeDefaultLinks = false }: Props = $props();
 
   let { data } = page;
   const navItems: { name: string; url: string; iconURL: string }[] = data.navItems || [];
@@ -21,6 +30,16 @@
     return "/";
   });
 
+  /** Only account screens opt in; custom navigation content stays unchanged. */
+  function navigationLabel(item: { name: string; url: string }): string {
+    if (!localizeDefaultLinks || !adminActive) return item.name;
+    const isDefaultDocumentation =
+      item.name === "Documentation" &&
+      (item.url === "https://kener.ing/docs" || item.url === "https://kener.ing/docs/");
+    const isDefaultLogin = item.name === "Login" && item.url === "/account/signin";
+    return isDefaultDocumentation || isDefaultLogin ? $adminT(item.name) : item.name;
+  }
+
   function trackBrandClick() {
     trackEvent("nav_brand_clicked", { name: siteName });
   }
@@ -30,7 +49,7 @@
   }
 </script>
 
-<div class="fixed inset-x-0 top-0 z-10 py-2">
+<div data-slot="kener-nav" class={fixed ? "fixed inset-x-0 top-0 z-10 py-2" : "relative w-full py-2"}>
   <div class="mx-auto max-w-5xl px-4">
     <div
       class="bg-background/80 dark:bg-background/70 flex items-center justify-between rounded-3xl border p-1 backdrop-blur-md"
@@ -67,11 +86,11 @@
                     {#if item.iconURL}
                       <img
                         src={clientResolver(resolve, item.iconURL)}
-                        alt={item.name}
+                        alt={navigationLabel(item)}
                         class="mr-2 h-4 w-4 object-cover"
                       />
                     {/if}
-                    {item.name}
+                    {navigationLabel(item)}
                   </a>
                 {/snippet}
               </NavigationMenu.Link>
@@ -90,7 +109,7 @@
                 type="button"
                 class="{navigationMenuTriggerStyle()} hover:border-border border border-transparent bg-transparent text-xs hover:bg-transparent sm:hidden"
                 style="border-radius: var(--radius-3xl)"
-                aria-label="Open navigation menu"
+                aria-label={$adminT("Open navigation menu")}
               >
                 <MenuIcon class="h-4 w-4" />
               </button>
@@ -108,9 +127,13 @@
                 onclick={() => trackNavClick(item)}
               >
                 {#if item.iconURL}
-                  <img src={clientResolver(resolve, item.iconURL)} alt={item.name} class="mr-2 h-4 w-4 object-cover" />
+                  <img
+                    src={clientResolver(resolve, item.iconURL)}
+                    alt={navigationLabel(item)}
+                    class="mr-2 h-4 w-4 object-cover"
+                  />
                 {/if}
-                {item.name}
+                {navigationLabel(item)}
               </Button>
             {/each}
           </Dropdown.Content>

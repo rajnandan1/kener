@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { untrack } from "svelte";
+  import { createAdminI18n } from "$lib/admin-i18n/context";
   import "../layout.css";
   import "../kener.css";
   import "../manage.css";
@@ -36,6 +38,7 @@
   import { ROUTE_PERMISSION_MAP } from "$lib/allPerms.js";
 
   let { children, data } = $props();
+  const { locale, t: adminT } = createAdminI18n(untrack(() => data.adminLocale));
 
   // Navigation items - single source of truth
   const allNavItems = [
@@ -75,12 +78,12 @@
   let pageTitle = $derived(navItems.find((item) => page.url.pathname.startsWith(item.url))?.title || "Dashboard");
 </script>
 
-<ModeWatcher defaultMode={data.defaultSiteTheme as 'light' | 'dark' | 'system'} />
+<ModeWatcher defaultMode={data.defaultSiteTheme as "light" | "dark" | "system"} />
 <Toaster />
 
 <svelte:head>
   <meta name="robots" content="noindex, nofollow" />
-  <title>{pageTitle} | Kener</title>
+  <title>{$adminT("{pageTitle} | Kener", { pageTitle: $adminT(pageTitle) })}</title>
   <link rel="icon" href={clientResolver(resolve, "/logo96.png")} />
   {#if data.font?.cssSrc}
     <link rel="stylesheet" href={data.font.cssSrc} />
@@ -106,7 +109,7 @@
 		}
 	</style>`}
 </svelte:head>
-<main class="kener-manage">
+<main class="kener-manage" lang={$locale}>
   <Sidebar.Provider style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);">
     <AppSidebar variant="inset" {navItems} />
     <Sidebar.Inset>

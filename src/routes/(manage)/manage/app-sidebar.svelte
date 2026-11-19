@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import InnerShadowTopIcon from "@lucide/svelte/icons/user";
   import NavMain from "./nav-main.svelte";
   import NavUser from "./nav-user.svelte";
@@ -24,9 +27,11 @@
               {...props}
               class="justify-start-safe flex items-center gap-2"
             >
-              <img src={clientResolver(resolve, "/logo96.png")} class="size-5!" alt="Kener Logo" />
-              <span class="text-base font-semibold"> Kener </span>
-              <span class="text-muted-foreground pt-0.5 text-xs font-medium"> v{appVersion} </span>
+              <img src={clientResolver(resolve, "/logo96.png")} class="size-5!" alt={$adminT("Kener Logo")} />
+              <span class="text-base font-semibold"> {$adminT("Kener")} </span>
+              <span class="text-muted-foreground pt-0.5 text-xs font-medium">
+                {$adminT("v{appVersion}", { appVersion: appVersion })}
+              </span>
             </a>
           {/snippet}
         </Sidebar.MenuButton>

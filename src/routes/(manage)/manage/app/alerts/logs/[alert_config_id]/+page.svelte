@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button/index.js";
@@ -101,13 +104,13 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success(`Status updated to ${newStatus}`);
+        toast.success($adminT("Status updated to {newStatus}", { newStatus: newStatus }));
         await fetchAlerts();
       }
     } catch (error) {
-      toast.error("Failed to update status");
+      toast.error($adminT("Failed to update status"));
     }
   }
 
@@ -137,13 +140,13 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Alert deleted successfully");
+        toast.success($adminT("Alert deleted successfully"));
         await fetchAlerts();
       }
     } catch (error) {
-      toast.error("Failed to delete alert");
+      toast.error($adminT("Failed to delete alert"));
     } finally {
       deleteDialogOpen = false;
       alertToDelete = null;
@@ -175,11 +178,11 @@
   <Breadcrumb.Root>
     <Breadcrumb.List>
       <Breadcrumb.Item>
-        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/alerts")}>Alerts</Breadcrumb.Link>
+        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/alerts")}>{$adminT("Alerts")}</Breadcrumb.Link>
       </Breadcrumb.Item>
       <Breadcrumb.Separator />
       <Breadcrumb.Item>
-        <Breadcrumb.Page>Alert Logs</Breadcrumb.Page>
+        <Breadcrumb.Page>{$adminT("Alert Logs")}</Breadcrumb.Page>
       </Breadcrumb.Item>
     </Breadcrumb.List>
   </Breadcrumb.Root>
@@ -190,12 +193,14 @@
   <div class="flex items-center gap-3">
     <Select.Root type="single" value={statusFilter} onValueChange={handleStatusChange}>
       <Select.Trigger class="w-36">
-        {statusFilter === "ALL" ? "All Status" : statusFilter}
+        {statusFilter === "ALL"
+          ? $adminT("All Status")
+          : $adminT(statusFilter === "TRIGGERED" ? "Triggered" : "Resolved")}
       </Select.Trigger>
       <Select.Content>
-        <Select.Item value="ALL">All Status</Select.Item>
-        <Select.Item value="TRIGGERED">Triggered</Select.Item>
-        <Select.Item value="RESOLVED">Resolved</Select.Item>
+        <Select.Item value="ALL">{$adminT("All Status")}</Select.Item>
+        <Select.Item value="TRIGGERED">{$adminT("Triggered")}</Select.Item>
+        <Select.Item value="RESOLVED">{$adminT("Resolved")}</Select.Item>
       </Select.Content>
     </Select.Root>
     {#if loading}
@@ -208,11 +213,13 @@
     <div class="flex flex-col items-center gap-4 py-16 text-center">
       <BellOffIcon class="text-muted-foreground size-16" />
       <div class="space-y-2">
-        <h3 class="text-lg font-semibold">No alert logs</h3>
+        <h3 class="text-lg font-semibold">{$adminT("No alert logs")}</h3>
         <p class="text-muted-foreground text-sm">
-          {statusFilter !== "ALL"
-            ? `No ${statusFilter.toLowerCase()} alerts found.`
-            : "This alert has not been triggered yet."}
+          {statusFilter === "TRIGGERED"
+            ? $adminT("No triggered alerts found.")
+            : statusFilter === "RESOLVED"
+              ? $adminT("No resolved alerts found.")
+              : $adminT("This alert has not been triggered yet.")}
         </p>
       </div>
     </div>
@@ -222,13 +229,13 @@
       <Table.Root>
         <Table.Header>
           <Table.Row>
-            <Table.Head class="w-16">ID</Table.Head>
-            <Table.Head class="w-40">Monitor</Table.Head>
-            <Table.Head class="w-40">Status</Table.Head>
-            <Table.Head class="w-32">Incident</Table.Head>
-            <Table.Head class="w-44">Created At</Table.Head>
-            <Table.Head class="w-44">Updated At</Table.Head>
-            <Table.Head class="w-20 text-right">Actions</Table.Head>
+            <Table.Head class="w-16">{$adminT("ID")}</Table.Head>
+            <Table.Head class="w-40">{$adminT("Monitor")}</Table.Head>
+            <Table.Head class="w-40">{$adminT("Status")}</Table.Head>
+            <Table.Head class="w-32">{$adminT("Incident")}</Table.Head>
+            <Table.Head class="w-44">{$adminT("Created At")}</Table.Head>
+            <Table.Head class="w-44">{$adminT("Updated At")}</Table.Head>
+            <Table.Head class="w-20 text-right">{$adminT("Actions")}</Table.Head>
           </Table.Row>
         </Table.Header>
         <Table.Body>
@@ -248,10 +255,10 @@
                   value={alert.alert_status}
                   onValueChange={(v) => v && updateAlertStatus(alert.id, v as "TRIGGERED" | "RESOLVED")}
                 >
-                  <Select.Trigger class="h-8 w-32">{alert.alert_status}</Select.Trigger>
+                  <Select.Trigger class="h-8 w-32">{$adminT(String(alert.alert_status ?? ""))}</Select.Trigger>
                   <Select.Content>
-                    <Select.Item value="TRIGGERED">TRIGGERED</Select.Item>
-                    <Select.Item value="RESOLVED">RESOLVED</Select.Item>
+                    <Select.Item value="TRIGGERED">{$adminT("TRIGGERED")}</Select.Item>
+                    <Select.Item value="RESOLVED">{$adminT("RESOLVED")}</Select.Item>
                   </Select.Content>
                 </Select.Root>
               </Table.Cell>
@@ -272,7 +279,8 @@
               <Table.Cell class="text-muted-foreground text-sm"><LocalTime value={alert.updated_at} /></Table.Cell>
               <Table.Cell class="text-right">
                 <Button variant="destructive" size="sm" class="text-xs" onclick={() => openDeleteDialog(alert)}>
-                  <TrashIcon class="size-3" /> Delete
+                  <TrashIcon class="size-3" />
+                  {$adminT("Delete")}
                 </Button>
               </Table.Cell>
             </Table.Row>
@@ -287,10 +295,22 @@
     {@const startItem = (pageNo - 1) * limit + 1}
     {@const endItem = Math.min(pageNo * limit, totalCount)}
     <div class="flex items-center justify-between">
-      <span class="text-muted-foreground text-sm">Showing {startItem}-{endItem} of {totalCount}</span>
+      <span class="text-muted-foreground text-sm"
+        >{$adminT("Showing {startItem}-{endItem} of {totalCount}", {
+          startItem: startItem,
+          endItem: endItem,
+          totalCount: totalCount
+        })}</span
+      >
       {#if totalPages > 1}
         <div class="flex items-center gap-2">
-          <Button variant="outline" size="icon" disabled={pageNo === 1} onclick={() => goToPage(pageNo - 1)}>
+          <Button
+            aria-label={$adminT("Previous page")}
+            variant="outline"
+            size="icon"
+            disabled={pageNo === 1}
+            onclick={() => goToPage(pageNo - 1)}
+          >
             <ChevronLeftIcon class="size-4" />
           </Button>
           <div class="flex items-center gap-1">
@@ -304,7 +324,13 @@
               {/if}
             {/each}
           </div>
-          <Button variant="outline" size="icon" disabled={pageNo === totalPages} onclick={() => goToPage(pageNo + 1)}>
+          <Button
+            aria-label={$adminT("Next page")}
+            variant="outline"
+            size="icon"
+            disabled={pageNo === totalPages}
+            onclick={() => goToPage(pageNo + 1)}
+          >
             <ChevronRightIcon class="size-4" />
           </Button>
         </div>
@@ -317,9 +343,9 @@
 <AlertDialog.Root bind:open={deleteDialogOpen}>
   <AlertDialog.Content>
     <AlertDialog.Header>
-      <AlertDialog.Title>Delete Alert</AlertDialog.Title>
+      <AlertDialog.Title>{$adminT("Delete Alert")}</AlertDialog.Title>
       <AlertDialog.Description>
-        Are you sure you want to delete this alert? This action cannot be undone.
+        {$adminT("Are you sure you want to delete this alert? This action cannot be undone.")}
       </AlertDialog.Description>
     </AlertDialog.Header>
 
@@ -327,14 +353,15 @@
       <div class="flex items-center gap-3 py-2">
         <Checkbox id="delete-incident" bind:checked={deleteIncident} />
         <label for="delete-incident" class="text-sm">
-          Also delete associated incident <span class="text-primary font-medium">#{alertToDelete.incident_id}</span>
+          {$adminT("Also delete associated incident")}
+          <span class="text-primary font-medium">#{alertToDelete.incident_id}</span>
         </label>
       </div>
     {/if}
 
     <AlertDialog.Footer>
-      <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-      <AlertDialog.Action onclick={confirmDelete}>Delete</AlertDialog.Action>
+      <AlertDialog.Cancel>{$adminT("Cancel")}</AlertDialog.Cancel>
+      <AlertDialog.Action onclick={confirmDelete}>{$adminT("Delete")}</AlertDialog.Action>
     </AlertDialog.Footer>
   </AlertDialog.Content>
 </AlertDialog.Root>

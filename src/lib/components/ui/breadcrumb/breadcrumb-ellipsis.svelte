@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import EllipsisIcon from "@lucide/svelte/icons/ellipsis";
   import type { HTMLAttributes } from "svelte/elements";
   import { cn, type WithElementRef, type WithoutChildren } from "$lib/utils.js";
@@ -19,5 +22,5 @@
   {...restProps}
 >
   <EllipsisIcon class="size-4" />
-  <span class="sr-only">More</span>
+  <span class="sr-only">{$adminT("More")}</span>
 </span>

@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Label } from "$lib/components/ui/label/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import { Checkbox } from "$lib/components/ui/checkbox/index.js";
@@ -49,13 +52,13 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success(checked ? "Monitor added to page" : "Monitor removed from page");
+        toast.success($adminT(checked ? "Monitor added to page" : "Monitor removed from page"));
         onPagesUpdated();
       }
     } catch (e) {
-      toast.error("Failed to update page");
+      toast.error($adminT("Failed to update page"));
     } finally {
       savingPages = false;
     }
@@ -66,13 +69,13 @@
   <Card.Header>
     <Card.Title class="flex items-center gap-2">
       <FileTextIcon class="size-5" />
-      Page Visibility
+      {$adminT("Page Visibility")}
     </Card.Title>
-    <Card.Description>Select which pages this monitor should appear on</Card.Description>
+    <Card.Description>{$adminT("Select which pages this monitor should appear on")}</Card.Description>
   </Card.Header>
   <Card.Content>
     {#if allPages.length === 0}
-      <p class="text-muted-foreground text-sm">No pages available. Create a page first.</p>
+      <p class="text-muted-foreground text-sm">{$adminT("No pages available. Create a page first.")}</p>
     {:else}
       <div class="flex flex-row flex-wrap gap-2 space-y-3">
         {#each allPages as page (page.id)}
