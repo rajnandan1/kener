@@ -18,12 +18,12 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   if (!incident) {
     throw error(404, { message: "Incident not found" });
   }
-  // Fetch incident comments
-  const comments = await GetIncidentCommentsByIncidentId(incidentIdNum);
-
-  // Fetch affected monitors
   const { canSeeHiddenMonitors } = await parent();
   const affectedMonitors = await GetAffectedMonitorsByIncidentId(incidentIdNum, canSeeHiddenMonitors);
+  if (incident.is_global !== "YES" && affectedMonitors.length === 0) {
+    throw error(404, { message: "Incident not found" });
+  }
+  const comments = await GetIncidentCommentsByIncidentId(incidentIdNum);
 
   return {
     ...{ incident, comments, affectedMonitors },

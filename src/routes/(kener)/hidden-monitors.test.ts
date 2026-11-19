@@ -58,6 +58,8 @@ const sessionCookie = (token?: string) => ({ get: (name: string) => (name === "k
 let incidentId: number;
 let maintenanceId: number;
 let maintenanceEventId: number;
+let hiddenOnlyIncidentId: number;
+let hiddenOnlyMaintenanceId: number;
 
 beforeAll(async () => {
   await knex.migrate.latest({
@@ -117,7 +119,7 @@ beforeAll(async () => {
   ]);
 
   const now = GetNowTimestampUTC();
-  const [hiddenOnlyIncidentId] = (
+  [hiddenOnlyIncidentId] = (
     await knex("incidents").insert({ title: "Billing DB failover", start_date_time: now - 600, is_global: "NO" }, [
       "id",
     ])
@@ -127,7 +129,7 @@ beforeAll(async () => {
     monitor_tag: "billing-db",
     monitor_impact: "DOWN",
   });
-  const [hiddenOnlyMaintenanceId] = (
+  [hiddenOnlyMaintenanceId] = (
     await knex("maintenances").insert(
       {
         title: "Billing DB vacuum",
@@ -250,6 +252,58 @@ describe("hidden monitor billing-db, by viewer", () => {
     );
     expect(mentionsHidden(data)).toBe(expectedShows(viewer));
     expect(tags).toContain("api");
+  });
+
+  it.each(viewers)("incident page for an incident that affects only it, for %s", async (viewer) => {
+    const event = { params: { incident_id: String(hiddenOnlyIncidentId) }, parent: async () => layouts[viewer] };
+    const result = loadIncidentPage(event as unknown as Parameters<typeof loadIncidentPage>[0]);
+    if (expectedShows(viewer)) {
+      await expect(result).resolves.toMatchObject({ incident: { title: "Billing DB failover" } });
+    } else {
+      await expect(result).rejects.toMatchObject({ status: 404 });
+    }
+  });
+
+  it.each(viewers)("maintenance page for a maintenance that affects only it, for %s", async (viewer) => {
+    const hiddenOnlyEvent = await knex("maintenances_events")
+      .where({ maintenance_id: hiddenOnlyMaintenanceId })
+      .first();
+    const byEvent = { params: { maintenance_id: String(hiddenOnlyEvent.id) }, url: new URL("http://localhost/") };
+    const byMaintenance = {
+      params: { maintenance_id: String(hiddenOnlyMaintenanceId) },
+      url: new URL("http://localhost/?type=maintenance"),
+    };
+    for (const route of [byEvent, byMaintenance]) {
+      const event = { ...route, parent: async () => layouts[viewer] };
+      const result = loadMaintenancePage(event as unknown as Parameters<typeof loadMaintenancePage>[0]);
+      if (expectedShows(viewer)) {
+        await expect(result).resolves.toMatchObject({ maintenance: { title: "Billing DB vacuum" } });
+      } else {
+        await expect(result).rejects.toMatchObject({ status: 404 });
+      }
+    }
+  });
+
+  it.each(viewers)("incident and maintenance pages for a global event that affects only it, for %s", async (viewer) => {
+    await knex("incidents").where({ id: hiddenOnlyIncidentId }).update({ is_global: "YES" });
+    await knex("maintenances").where({ id: hiddenOnlyMaintenanceId }).update({ is_global: "YES" });
+    try {
+      const incident = { params: { incident_id: String(hiddenOnlyIncidentId) }, parent: async () => layouts[viewer] };
+      const maintenance = {
+        params: { maintenance_id: String(hiddenOnlyMaintenanceId) },
+        url: new URL("http://localhost/?type=maintenance"),
+        parent: async () => layouts[viewer],
+      };
+      await expect(
+        loadIncidentPage(incident as unknown as Parameters<typeof loadIncidentPage>[0]),
+      ).resolves.toMatchObject({ incident: { title: "Billing DB failover" } });
+      await expect(
+        loadMaintenancePage(maintenance as unknown as Parameters<typeof loadMaintenancePage>[0]),
+      ).resolves.toMatchObject({ maintenance: { title: "Billing DB vacuum" } });
+    } finally {
+      await knex("incidents").where({ id: hiddenOnlyIncidentId }).update({ is_global: "NO" });
+      await knex("maintenances").where({ id: hiddenOnlyMaintenanceId }).update({ is_global: "NO" });
+    }
   });
 
   it.each(viewers)("inline incidents on / hide it for %s", async (viewer) => {
