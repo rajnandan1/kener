@@ -634,8 +634,8 @@ export class MaintenancesRepository extends BaseRepository {
 
   /**
    * Get maintenance events within a date range for the events page
-   * Returns maintenance events that started within the given date range
-   * Includes all maintenances, but filters out hidden monitors from monitors array
+   * Returns maintenance events that started within the given date range and are global or affect a monitor that is not hidden
+   * With monitorTags, a non-global event must affect one of those monitors
    */
   async getMaintenanceEventsForEventsByDateRange(
     startTs: number,
@@ -663,13 +663,13 @@ export class MaintenancesRepository extends BaseRepository {
       .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
       .leftJoin("monitors", "maintenance_monitors.monitor_tag", "monitors.tag")
       .andWhere("maintenances_events.start_date_time", ">=", startTs)
-      .andWhere("maintenances_events.start_date_time", "<=", endTs);
-
-    if (monitorTags) {
-      query.andWhere(function () {
-        this.whereIn("maintenance_monitors.monitor_tag", monitorTags).orWhere("maintenances.is_global", "YES");
+      .andWhere("maintenances_events.start_date_time", "<=", endTs)
+      .andWhere(function () {
+        this.where((visible) => {
+          visible.where("monitors.is_hidden", "NO");
+          if (monitorTags) visible.whereIn("maintenance_monitors.monitor_tag", monitorTags);
+        }).orWhere("maintenances.is_global", "YES");
       });
-    }
 
     const rows = await query.orderBy("maintenances_events.start_date_time", "desc");
 

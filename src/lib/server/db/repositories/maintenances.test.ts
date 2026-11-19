@@ -68,7 +68,16 @@ describe("MaintenancesRepository public maintenance lists with a hidden monitor"
       { id: 18, maintenance_id: 4, start_date_time: 100, end_date_time: 200, status: "COMPLETED" },
       { id: 19, maintenance_id: 5, start_date_time: 100, end_date_time: 200, status: "COMPLETED" },
     ]);
+    await db("maintenances").insert([
+      { id: 6, title: "Not global, no monitors", is_global: "NO" },
+      { id: 7, title: "Not global, deleted monitor only", is_global: "NO" },
+    ]);
+    await db("maintenances_events").insert([
+      { id: 20, maintenance_id: 6, start_date_time: 300, end_date_time: 400, status: "COMPLETED" },
+      { id: 21, maintenance_id: 7, start_date_time: 300, end_date_time: 400, status: "COMPLETED" },
+    ]);
     await db("maintenance_monitors").insert([
+      { maintenance_id: 7, monitor_tag: "deleted-monitor", monitor_impact: "MAINTENANCE" },
       { maintenance_id: 2, monitor_tag: "billing-db", monitor_impact: "MAINTENANCE" },
       { maintenance_id: 3, monitor_tag: "api", monitor_impact: "MAINTENANCE" },
       { maintenance_id: 3, monitor_tag: "billing-db", monitor_impact: "MAINTENANCE" },
@@ -126,5 +135,25 @@ describe("MaintenancesRepository public maintenance lists with a hidden monitor"
     expect(summarize(await repo.getPastMaintenanceEventsForMonitorList(ts, tags, 5, 1))).toEqual([
       { id: 19, monitors: ["api"] },
     ]);
+  });
+
+  it("lists an event on the site-wide events page only when it is global or affects a monitor that is not hidden", async () => {
+    const events = await repo.getMaintenanceEventsForEventsByDateRange(0, 2000);
+    expect(summarize(events)).toEqual([
+      { id: 17, monitors: ["api"] },
+      { id: 11, monitors: [] },
+      { id: 12, monitors: [] },
+      { id: 13, monitors: ["api"] },
+      { id: 15, monitors: ["api"] },
+      { id: 19, monitors: ["api"] },
+    ]);
+  });
+
+  it("does not match an event on a page's events list through a hidden monitor", async () => {
+    expect(
+      summarize(await repo.getMaintenanceEventsForEventsByDateRange(0, 2000, ["api", "billing-db"])).map((e) => e.id),
+    ).toEqual([17, 11, 12, 13, 15, 19]);
+    const billingOnly = await repo.getMaintenanceEventsForEventsByDateRange(0, 2000, ["billing-db"]);
+    expect(billingOnly.map((event) => event.id)).toEqual([11, 12, 13]);
   });
 });

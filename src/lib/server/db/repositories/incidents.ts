@@ -835,8 +835,8 @@ export class IncidentsRepository extends BaseRepository {
 
   /**
    * Get incidents within a date range for the events page
-   * Returns incidents that started within the given date range
-   * Includes all incidents, but filters out hidden monitors from monitors array
+   * Returns incidents that started within the given date range and are global or affect a monitor that is not hidden
+   * With monitorTags, a non-global incident must affect one of those monitors
    */
   async getIncidentsForEventsByDateRange(
     startTs: number,
@@ -864,13 +864,13 @@ export class IncidentsRepository extends BaseRepository {
       .where("incidents.incident_type", GC.INCIDENT)
       .andWhere("incidents.status", "OPEN")
       .andWhere("incidents.start_date_time", ">=", startTs)
-      .andWhere("incidents.start_date_time", "<=", endTs);
-
-    if (monitorTags) {
-      query.andWhere(function () {
-        this.whereIn("incident_monitors.monitor_tag", monitorTags).orWhere("incidents.is_global", "YES");
+      .andWhere("incidents.start_date_time", "<=", endTs)
+      .andWhere(function () {
+        this.where((visible) => {
+          visible.where("monitors.is_hidden", "NO");
+          if (monitorTags) visible.whereIn("incident_monitors.monitor_tag", monitorTags);
+        }).orWhere("incidents.is_global", "YES");
       });
-    }
 
     const rows = await query.orderBy("incidents.start_date_time", "desc");
 
