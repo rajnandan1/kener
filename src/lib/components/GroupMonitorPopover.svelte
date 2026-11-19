@@ -8,10 +8,15 @@
   import type { GroupMemberDisplay } from "$lib/server/types/monitor";
   import MonitorBar from "$lib/components/MonitorBar.svelte";
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
+  import Lock from "@lucide/svelte/icons/lock";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
   import { t } from "$lib/stores/i18n";
 
   interface Props {
     tags: string[];
+    /** Hidden members this viewer cannot see. Only the count reaches the page. */
+    hiddenCount?: number;
     days: number;
     endOfDayTodayAtTz: number;
     display?: GroupMemberDisplay;
@@ -19,7 +24,15 @@
     children: Snippet;
   }
 
-  let { tags, days, endOfDayTodayAtTz, display = "DRAWER", compactMembers = false, children }: Props = $props();
+  let {
+    tags,
+    hiddenCount = 0,
+    days,
+    endOfDayTodayAtTz,
+    display = "DRAWER",
+    compactMembers = false,
+    children
+  }: Props = $props();
   const panelId = $props.id();
   let isOpen = $state(false);
   let openCount = $state(0);
@@ -36,7 +49,7 @@
 </script>
 
 {#snippet memberList(rowProps: { compact?: boolean; grid?: boolean } = {})}
-  {#if tags.length === 0}
+  {#if tags.length === 0 && hiddenCount === 0}
     <div class="text-muted-foreground p-4 text-sm">{$t("No monitors available.")}</div>
   {:else}
     {#each tags as tag, i (tag)}
@@ -54,6 +67,20 @@
         {/if}
       </div>
     {/each}
+    {#if hiddenCount > 0}
+      <div
+        class="{tags.length > 0 ? 'border-t' : ''} text-muted-foreground flex items-center gap-2 p-4 text-sm"
+        data-testid="group-hidden-members"
+      >
+        <Lock class="size-4 shrink-0" aria-hidden="true" />
+        <span>
+          {$t("%count private monitors.", { count: String(hiddenCount) })}
+          <a class="underline underline-offset-2" href={clientResolver(resolve, "/account/signin")}
+            >{$t("Sign in to see them.")}</a
+          >
+        </span>
+      </div>
+    {/if}
   {/if}
 {/snippet}
 
@@ -103,7 +130,7 @@
       </Drawer.Trigger>
       <Drawer.Content class="max-h-[80vh]">
         <Drawer.Header>
-          <Drawer.Title>{$t("Included Monitors (%count)", { count: String(tags.length) })}</Drawer.Title>
+          <Drawer.Title>{$t("Included Monitors (%count)", { count: String(tags.length + hiddenCount) })}</Drawer.Title>
         </Drawer.Header>
         <div class="scrollbar-hidden flex flex-col overflow-y-auto px-4 pb-4">
           {@render memberList()}
