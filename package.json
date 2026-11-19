@@ -131,7 +131,7 @@
     "axios": "^1.21.0",
     "badge-maker": "^5.0.2",
     "bcrypt": "^6.0.0",
-    "better-sqlite3": "^12.5.0",
+    "better-sqlite3": "^13.1.1",
     "bits-ui": "^2.14.4",
     "bullmq": "^5.66.2",
     "cheerio": "^1.1.2",
