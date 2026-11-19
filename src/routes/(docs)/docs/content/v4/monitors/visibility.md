@@ -57,6 +57,7 @@ You set them in the monitor's **Sharing Options** and in **Manage → Site Confi
 
 - The status pages `/` and `/{page_path}` list monitors that are on the page, `ACTIVE`, and not hidden. The page banner status counts only these monitors.
 - The monitor page `/monitors/{tag}` opens only for a monitor that is `ACTIVE` and not hidden. It does not check page membership.
+- The incident page `/incidents/{id}` and the maintenance page `/maintenances/{id}` leave hidden monitors out of the affected monitors. A page opens only when its event is global (`is_global = YES`) or affects a monitor that the viewer can see. For any other event, the page returns 404.
 - Badges at `/badge/{tag}/...` follow the same rule as the monitor page. For any other monitor, the badge shows an error. The `_` badge covers every `ACTIVE` monitor on the site that is not hidden.
 - Embeds at `/embed/monitor-{tag}` and `/embed/latency-{tag}` get their data from `/dashboard-apis/*`. That API returns 404 for a monitor that is hidden or `INACTIVE`.
 - The per-monitor RSS feed `/monitors/{tag}/rss.xml` returns 404 for a monitor that is hidden or `INACTIVE`.
@@ -78,7 +79,7 @@ A signed-in user whose role has `monitors.read` sees hidden monitors on the page
 | `/` and `/{page_path}`                                                             | Hides     | Hides                         | Shows, if the monitor is on the page |
 | `/monitors/{tag}`, with its status bars, charts, and day details                   | Hides     | Hides                         | Shows                                |
 | Group member list                                                                  | Hides     | Hides                         | Shows                                |
-| `/incidents/{id}` and `/maintenances/{id}` affected monitors                       | Hides     | Hides                         | Shows                                |
+| `/incidents/{id}` and `/maintenances/{id}`, with their affected monitors           | Hides     | Hides                         | Shows                                |
 | Inline events, notifications, and events pages ([rules](#where-each-rule-applies)) | Hides     | Hides                         | Hides                                |
 | Badges and embeds                                                                  | Hides     | Hides                         | Hides                                |
 | `/rss.xml`, `/{page_path}/rss.xml`, and `/monitors/{tag}/rss.xml`                  | Hides     | Hides                         | Hides                                |
