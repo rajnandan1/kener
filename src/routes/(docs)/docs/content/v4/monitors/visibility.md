@@ -57,7 +57,7 @@ You set them in the monitor's **Sharing Options** and in **Manage → Site Confi
 
 - The status pages `/` and `/{page_path}` list monitors that are on the page, `ACTIVE`, and not hidden. The page banner status counts only these monitors.
 - The monitor page `/monitors/{tag}` opens only for a monitor that is `ACTIVE` and not hidden. It does not check page membership.
-- The incident page `/incidents/{id}` and the maintenance page `/maintenances/{id}` leave hidden monitors out of the affected monitors. A page opens only when its event is global (`is_global = YES`) or affects a monitor that is not hidden. For any other event, the page returns 404, except for a [signed-in viewer](#signed-in-viewers) with `monitors.read`.
+- The incident page `/incidents/{id}` and the maintenance page `/maintenances/{id}` list the affected monitors that the viewer can see: monitors that are not hidden, plus hidden monitors for a [signed-in viewer](#signed-in-viewers) with `monitors.read`. A page opens only when its event is global (`is_global = YES`) or that list has at least one monitor. For any other event, the page returns 404.
 - Badges at `/badge/{tag}/...` follow the same rule as the monitor page. For any other monitor, the badge shows an error. The `_` badge covers every `ACTIVE` monitor on the site that is not hidden.
 - Embeds at `/embed/monitor-{tag}` and `/embed/latency-{tag}` get their data from `/dashboard-apis/*`. That API returns 404 for a monitor that is hidden or `INACTIVE`.
 - The per-monitor RSS feed `/monitors/{tag}/rss.xml` returns 404 for a monitor that is hidden or `INACTIVE`.
