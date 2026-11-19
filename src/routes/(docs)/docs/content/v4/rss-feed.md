@@ -26,7 +26,7 @@ The feed includes incidents and maintenance events from the last 90 days, capped
 Hidden monitors never appear in an item's list of affected monitors. Which items appear depends on the feed:
 
 - `/{page_path}/rss.xml`, and `/rss.xml` when `forceExclusivity` is on, include an item only when it is global (`is_global = YES`) or affects a monitor that is on the page, `ACTIVE`, and not hidden. See [Monitor Visibility](/docs/v4/monitors/visibility#where-each-rule-applies).
-- `/rss.xml` when `forceExclusivity` is off includes every incident and every maintenance event. An item tied only to hidden monitors stays listed and shows no affected monitors.
+- `/rss.xml` when `forceExclusivity` is off includes an item only when it is global (`is_global = YES`) or affects a monitor that is not hidden.
 - Unknown `page_path` returns `404`.
 - If `siteURL` is not configured, the feed returns `404`.
 
