@@ -55,7 +55,7 @@
             <p>Please make sure to set the below environment variables:</p>
             <ul class="list-inside list-disc text-sm">
               <li>KENER_SECRET_KEY</li>
-              <li>ORIGIN</li>
+              <li>ORIGIN (or HOST_HEADER for several domains)</li>
               <li>REDIS_URL</li>
             </ul>
             <Button

@@ -252,3 +252,57 @@ describe("route params fill event.locals", () => {
     },
   );
 });
+
+describe("form submissions from another origin", () => {
+  function postForm(origin: string) {
+    return send({
+      url: "https://app.up.railway.app/account/signin",
+      routeId: "/(account)/account/signin",
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded", origin },
+    });
+  }
+
+  it("rejects an origin whose host differs from the request host", async () => {
+    vi.stubEnv("CSRF_TRUSTED_ORIGINS", undefined);
+    const { response, resolve } = await postForm("https://status.example.com");
+
+    expect(response.status).toBe(403);
+    expect(await response.text()).toContain("add it to CSRF_TRUSTED_ORIGINS");
+    expect(resolve).not.toHaveBeenCalled();
+    vi.unstubAllEnvs();
+  });
+
+  it("accepts an origin listed in CSRF_TRUSTED_ORIGINS", async () => {
+    vi.stubEnv("CSRF_TRUSTED_ORIGINS", "https://status.example.com, https://other.example.com");
+    const { response, resolve } = await postForm("https://status.example.com");
+
+    expect(response.status).toBe(200);
+    expect(resolve).toHaveBeenCalledOnce();
+    vi.unstubAllEnvs();
+  });
+
+  it("accepts a bare host in CSRF_TRUSTED_ORIGINS", async () => {
+    vi.stubEnv("CSRF_TRUSTED_ORIGINS", "status.example.com");
+    const { response } = await postForm("https://status.example.com");
+
+    expect(response.status).toBe(200);
+    vi.unstubAllEnvs();
+  });
+
+  it("still rejects an origin that is not listed", async () => {
+    vi.stubEnv("CSRF_TRUSTED_ORIGINS", "https://status.example.com");
+    const { response } = await postForm("https://evil.example.com");
+
+    expect(response.status).toBe(403);
+    vi.unstubAllEnvs();
+  });
+
+  it("accepts the request host itself with no allowlist", async () => {
+    vi.stubEnv("CSRF_TRUSTED_ORIGINS", undefined);
+    const { response } = await postForm("https://app.up.railway.app");
+
+    expect(response.status).toBe(200);
+    vi.unstubAllEnvs();
+  });
+});
