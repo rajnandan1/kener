@@ -3,7 +3,8 @@
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
 
-  import { base } from "$app/paths";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   interface Props {
     config: DocsConfig;
@@ -98,14 +99,14 @@
 
   function getHref(slug: string): string {
     if (!config.activeVersion) {
-      return `${base}/docs/${slug}`;
+      return clientResolver(resolve, `/docs/${slug}`);
     }
 
     if (slug.startsWith(`${config.activeVersion}/`)) {
-      return `${base}/docs/${slug}`;
+      return clientResolver(resolve, `/docs/${slug}`);
     }
 
-    return `${base}/docs/${config.activeVersion}/${slug}`;
+    return clientResolver(resolve, `/docs/${config.activeVersion}/${slug}`);
   }
 </script>
 

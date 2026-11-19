@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Handle, RequestEvent, ResolveOptions } from "@sveltejs/kit";
+import type { RequestEvent } from "@sveltejs/kit";
+import type { Handle, ResolveOptions } from "@sveltejs/kit/hooks";
 
 const { db, GetMonitorsParsed } = vi.hoisted(() => ({
   db: {
@@ -17,8 +18,8 @@ vi.mock("@sveltejs/kit/hooks", () => ({
   sequence:
     (...handlers: Handle[]): Handle =>
     ({ event, resolve }) =>
-      handlers.reduceRight<(event: RequestEvent, opts?: ResolveOptions) => ReturnType<Handle>>(
-        (next, handle) => (event) => handle({ event, resolve: next }),
+      handlers.reduceRight<(event: RequestEvent, opts?: ResolveOptions) => Promise<Response>>(
+        (next, handle) => async (event) => handle({ event, resolve: next }),
         resolve,
       )(event),
 }));

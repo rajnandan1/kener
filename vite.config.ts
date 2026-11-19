@@ -1,6 +1,8 @@
 /// <reference types="vitest/config" />
 import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
+import adapter from "@sveltejs/adapter-node";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import version from "vite-plugin-package-version";
 import { defineConfig } from "vite";
 import devtoolsJson from "vite-plugin-devtools-json";
@@ -43,7 +45,46 @@ export default defineConfig(({ mode }) => {
         "@uiw/codemirror-theme-github",
       ],
     },
-    plugins: [tailwindcss(), sveltekit(), version(), devtoolsJson()],
+    plugins: [
+      tailwindcss(),
+      // SvelteKit 3 reads its configuration here; svelte.config.js is no longer used.
+      sveltekit({
+        adapter: adapter(),
+        // SvelteKit 3 replaced `$lib` with `#lib`; this keeps the existing imports working.
+        alias: { $lib: "src/lib" },
+        output: {
+          bundleStrategy: "single",
+        },
+        paths: {
+          base: (process.env.KENER_BASE_PATH || "") as "" | `/${string}`,
+        },
+        csrf: {
+          trustedOrigins: ["*"],
+        },
+        preprocess: [vitePreprocess({})],
+        compilerOptions: {
+          dev: !isProduction,
+        },
+        onwarn: (warning, handler) => {
+          // Suppress specific warnings in production
+          const ignoredWarnings = [
+            "a11y-",
+            "unused-export-let",
+            "empty-chunk",
+            "module-unused-import",
+            "conflicting-svelte-resolve",
+          ];
+
+          if (isProduction && warning.code && ignoredWarnings.some((w) => warning.code.startsWith(w))) {
+            return;
+          }
+
+          handler(warning);
+        },
+      }),
+      version(),
+      devtoolsJson(),
+    ],
     server: {
       allowedHosts: allowedHost ? [allowedHost] : undefined,
       port,

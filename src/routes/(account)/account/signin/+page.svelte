@@ -79,7 +79,7 @@
 
         {#if oidcEnabled && isAdminAccountCreated}
           <div class="mb-4">
-            <Button variant="outline" class="w-full" href={resolve("/account/oidc/login")}>
+            <Button variant="outline" class="w-full" href={resolve("account/oidc/login")}>
               <LogInIcon class="mr-2 h-4 w-4" />
               Sign in with {oidcProviderName}
             </Button>
@@ -157,7 +157,7 @@
                     variant="link"
                     size="sm"
                     class="text-muted-foreground absolute top-0 right-0 h-auto p-0 text-xs"
-                    href={resolve("/account/forgot")}
+                    href={resolve("account/forgot")}
                   >
                     Forgot?
                   </Button>

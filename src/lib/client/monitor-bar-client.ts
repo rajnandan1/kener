@@ -1,4 +1,4 @@
-import { browser } from "$app/environment";
+import { browser } from "$app/env";
 import { resolve } from "$app/paths";
 import clientResolver from "$lib/client/resolver.js";
 import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
