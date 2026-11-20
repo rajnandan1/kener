@@ -1,4 +1,4 @@
-import { getUnixTime, startOfDay } from "date-fns";
+import { addDays, getUnixTime, startOfDay } from "date-fns";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
 
 /**
@@ -26,5 +26,8 @@ export function getStartOfDayAtTz(timezone: string): number {
  * @returns End of day in the given timezone as Unix timestamp (seconds)
  */
 export function getEndOfDayAtTz(timezone: string): number {
-  return getStartOfDayAtTz(timezone) + 86400;
+  const tz = resolveTimezone(timezone);
+  // The next local midnight, not start + 86400: a daylight-saving day is 23 or 25 hours long.
+  const startOfNextZonedDay = addDays(startOfDay(toZonedTime(new Date(), tz)), 1);
+  return getUnixTime(fromZonedTime(startOfNextZonedDay, tz));
 }
