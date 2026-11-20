@@ -1,11 +1,11 @@
 /**
  * Documentation Search Service using FlexSearch
  * Provides full-text search across all documentation pages.
- * Search index is populated from Redis (use `npm run index-docs` to build it).
+ * Search index is populated from Redis when configured (use `npm run index-docs` to build it).
  */
 
 import FlexSearch from "flexsearch";
-import { redisConnection } from "$lib/server/redisConnector";
+import { isRedisConfigured, redisConnection } from "$lib/server/redisConnector";
 import type { DocsSearchDocument, DocsSearchResult, DocsSearchIndexData } from "$lib/types/docs-search";
 
 const REDIS_DOCS_KEY = "kener-docs:search:documents";
@@ -135,6 +135,8 @@ function getSearchIndex(): any {
  * The index must be built beforehand using `npm run index-docs`.
  */
 export async function loadSearchIndex(): Promise<boolean> {
+  if (!isRedisConfigured()) return false;
+
   try {
     const redis = redisConnection();
     const data = await redis.get(REDIS_DOCS_KEY);
@@ -166,7 +168,7 @@ export async function loadSearchIndex(): Promise<boolean> {
 export async function ensureSearchIndex(): Promise<void> {
   if (documentsMap.size === 0) {
     const loaded = await loadSearchIndex();
-    if (!loaded) {
+    if (!loaded && isRedisConfigured()) {
       console.warn("[docs-search] No search index found in Redis. Run `npm run index-docs` to build it.");
     }
   }

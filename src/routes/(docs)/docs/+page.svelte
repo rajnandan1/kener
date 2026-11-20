@@ -220,14 +220,7 @@
     name="keywords"
     content="open source status page, docker status page, self-hosted status page, uptime monitor, incident management, status page tool, free status page, kener, status page docker compose, open source uptime monitoring"
   />
-  <link
-    rel="icon"
-    href={
-      data.config.favicon
-        ? clientResolver(resolve, data.config.favicon)
-        : data.config.favicon
-    }
-  />
+  <link rel="icon" href={data.config.favicon ? clientResolver(resolve, data.config.favicon) : data.config.favicon} />
   <link rel="canonical" href="https://kener.ing/docs" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://kener.ing/docs" />
@@ -301,7 +294,7 @@
           name: "How do I deploy Kener with Docker?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Kener can be deployed with a single docker-compose.yml file. Run 'docker compose up -d' to start. It supports SQLite (default), PostgreSQL, and MySQL databases. You need Redis for the job queue. One-click deploy options are also available for Railway and Zeabur."
+            text: "Kener can be deployed with a single docker-compose.yml file. Run 'docker compose up -d' to start. It supports SQLite (default), PostgreSQL, and MySQL databases. Redis is optional: without it, queues and schedules run in-process in a single replica. One-click deploy options are also available for Railway and Zeabur."
           }
         },
         {

@@ -27,7 +27,7 @@ Kener is a SvelteKit application powered by an Express server, background schedu
 │  └───────────────────────────────────────────────────┘  │
 │                                                         │
 │  ┌───────────────────────────────────────────────────┐  │
-│  │              Redis (BullMQ backend)               │  │
+│  │       Redis (optional BullMQ backend/cache)       │  │
 │  └───────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -102,7 +102,7 @@ Schedulers live in `src/lib/server/schedulers/` and use BullMQ repeatable jobs:
 
 ### Queues {#queues}
 
-Queues live in `src/lib/server/queues/` and form a processing pipeline backed by Redis via BullMQ:
+Queues live in `src/lib/server/queues/` and form a processing pipeline. When `REDIS_URL` is configured they use BullMQ; otherwise the same pipeline runs in-process:
 
 ```
 Scheduler (cron trigger)
@@ -202,5 +202,5 @@ This ensures in-flight jobs complete and no data is lost during deployments or r
 
 - [Environment Variables](/docs/v4/setup/environment-variables) — required and optional configuration
 - [Database Setup](/docs/v4/setup/database-setup) — choosing and configuring your database
-- [Redis Setup](/docs/v4/setup/redis-setup) — configuring Redis for BullMQ queues
+- [Redis Setup](/docs/v4/setup/redis-setup) — optional shared queues, caches, and schedules
 - [Monitors](/docs/v4/monitors/overview) — understanding monitor types and configuration

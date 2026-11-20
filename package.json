@@ -35,7 +35,7 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "configure": "node build.js",
-    "dev": "npm-run-all --parallel devschedule development",
+    "dev": "vite dev",
     "development": "vite dev",
     "devschedule": "vite-node src/lib/server/startup.ts",
     "generate-readme": "node scripts/generate-readme.js",

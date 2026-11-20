@@ -1,9 +1,11 @@
 ---
 title: Redis Setup
-description: Configure Redis for queues, caching, and scheduling in Kener
+description: Configure optional Redis for durable queues, shared caching, and schedules in Kener
 ---
 
-Redis is **required**. Kener will not start without `REDIS_URL`.
+Redis is optional. Without `REDIS_URL`, Kener runs caches, queues, and schedules in-process. Use Redis when you need multiple replicas or want queued work to survive a restart.
+
+In in-process mode, run exactly one Kener replica. Queue state and caches are not shared between processes and pending work is lost on restart.
 
 ## Quick configuration {#quick-configuration}
 
@@ -67,7 +69,7 @@ Expected response: `PONG`
 
 ## Troubleshooting {#troubleshooting}
 
-- `REDIS_URL is not defined`: add `REDIS_URL` to `.env` and restart.
+- Redis is configured in `REDIS_URL` but Kener cannot connect: verify the URL and service.
 - `NOAUTH Authentication required`: include password in the URL.
 - Connection timeout: verify host/port/firewall and Redis service status.
 - `READONLY`: connect to primary/writer instance, not a read replica.
@@ -76,7 +78,7 @@ Expected response: `PONG`
 
 | Variable    | Description             | Default | Required |
 | ----------- | ----------------------- | ------- | -------- |
-| `REDIS_URL` | Redis connection string | None    | **Yes**  |
+| `REDIS_URL` | Redis connection string | None    | No       |
 
 ## Free Redis SaaS options (indie-friendly) {#free-redis-saas-options}
 

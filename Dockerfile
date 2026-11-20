@@ -16,6 +16,8 @@
 #     -e REDIS_URL=redis://<host>:6379 \
 #     -v kener_db:/app/database \
 #     kener
+#
+# REDIS_URL is optional. Omit it to run queues and schedules in-process.
 # =============================================================================
 
 ARG NODE_VERSION=24

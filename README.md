@@ -87,7 +87,7 @@ Get Kener running in minutes.
 git clone https://github.com/rajnandan1/kener.git
 cd kener
 
-# Uses docker-compose.yml (includes Redis + Kener)
+# Starts Kener with in-process queues; add the redis profile for Redis
 # Set a strong KENER_SECRET_KEY and ORIGIN in docker-compose.yml before first run
 docker compose up -d
 ```
@@ -131,7 +131,6 @@ docker run -d \
 	-v "$(pwd)/database:/app/database" \
 	-e "KENER_SECRET_KEY=replace_with_a_random_string" \
 	-e "ORIGIN=http://localhost:3000" \
-	-e "REDIS_URL=redis://host.docker.internal:6379" \
 	docker.io/rajnandan1/kener:latest
 ```
 
@@ -146,7 +145,6 @@ docker run -d \
 	-e "KENER_SECRET_KEY=replace_with_a_random_string" \
 	-e "ORIGIN=http://localhost:3000" \
 	-e "KENER_BASE_PATH=/status" \
-	-e "REDIS_URL=redis://host.docker.internal:6379" \
 	docker.io/rajnandan1/kener:latest-status
 ```
 
@@ -158,15 +156,12 @@ docker run -d \
 Requirements:
 
 - Node.js `>= 24.14`
-- Redis
+- Redis is optional; use it for multi-replica deployments and durable queues
 
 ```bash
 git clone https://github.com/rajnandan1/kener.git
 cd kener
 npm install
-
-# Start Redis (example)
-docker run -d --name kener-redis -p 6379:6379 redis:7-alpine
 
 npm run build
 npm run start
@@ -177,7 +172,8 @@ Create a `.env` with at least:
 ```dotenv
 KENER_SECRET_KEY=replace_with_a_random_string
 ORIGIN=http://localhost:3000
-REDIS_URL=redis://localhost:6379
+# Optional. Without it, queues and schedules run in-process in one replica.
+# REDIS_URL=redis://localhost:6379
 PORT=3000
 ```
 
