@@ -19,6 +19,8 @@ export interface MonitorBarResponse {
   name: string;
   description: string;
   image: string | null;
+  /** The monitor's Service URL, only when it is an http or https URL. */
+  externalUrl?: string | null;
   currentStatus: StatusType;
   uptime: string;
   avgLatency: string;

@@ -430,6 +430,15 @@ function GetInitials(name: string): string {
     .toUpperCase()
     .slice(0, 2);
 }
+// Short label for a monitor's Service URL link: host and path, no scheme or trailing slash
+function FormatServiceUrl(value: string): string {
+  try {
+    const url = new URL(value);
+    return url.host + url.pathname.replace(/\/$/, "");
+  } catch {
+    return value;
+  }
+}
 const EVENT_LIST_PLACEMENTS: EventListPlacement[] = ["button", "aside", "hidden"];
 
 function ResolveEventListPlacement(settings: Partial<EventDisplaySettings> | null | undefined): EventListPlacement {
@@ -458,5 +467,6 @@ export {
   SslSecurityTextClass,
   FormatSslRemaining,
   GetInitials,
+  FormatServiceUrl,
   ResolveEventListPlacement,
 };

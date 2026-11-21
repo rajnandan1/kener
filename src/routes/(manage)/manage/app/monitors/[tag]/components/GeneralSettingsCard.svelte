@@ -167,7 +167,10 @@
     </div>
     <div class="flex flex-col gap-2">
       <Label for="monitor-external_url">Service URL</Label>
-      <Input id="monitor-external_url" bind:value={monitor.external_url} placeholder="https://example.com/api/health" />
+      <Input id="monitor-external_url" bind:value={monitor.external_url} placeholder="https://example.com" />
+      <p class="text-muted-foreground text-xs">
+        The public address of the service. Shown as a link on the status page and the monitor page.
+      </p>
     </div>
 
     <div class="grid grid-cols-2 gap-4">

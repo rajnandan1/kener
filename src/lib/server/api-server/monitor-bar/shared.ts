@@ -91,6 +91,19 @@ export const buildMonitorBarResponse = async (
   );
 };
 
+/**
+ * Returns the Service URL for a public link, or null. Only absolute http and https URLs are linked.
+ */
+export const publicServiceUrl = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.href : null;
+  } catch {
+    return null;
+  }
+};
+
 export const buildMonitorBarResponseFromRawData = (
   monitor: MonitorRecord,
   rawUptimeData: TimestampStatusCount[],
@@ -112,6 +125,7 @@ export const buildMonitorBarResponseFromRawData = (
     name: monitor.name,
     description: monitor.description || "",
     image: monitor.image || null,
+    externalUrl: publicServiceUrl(monitor.external_url),
     currentStatus: latestStatus || GC.NO_DATA,
     uptime: uptimeCalculationResult.uptime,
     uptimeData: fillMissingUptimeData(rawUptimeData, startTime, days),
