@@ -1,5 +1,5 @@
-import { addDays, getUnixTime, startOfDay } from "date-fns";
-import { toZonedTime, fromZonedTime } from "date-fns-tz";
+import { getUnixTime } from "date-fns";
+import { toZonedTime, fromZonedTime, formatInTimeZone } from "date-fns-tz";
 
 /**
  * @param timezone - IANA timezone string (e.g., "America/New_York")
@@ -15,9 +15,7 @@ export function resolveTimezone(timezone: string): string {
  * @returns Start of day in the given timezone as Unix timestamp (seconds)
  */
 export function getStartOfDayAtTz(timezone: string): number {
-  const tz = resolveTimezone(timezone);
-  const startOfZonedDay = startOfDay(toZonedTime(new Date(), tz));
-  return getUnixTime(fromZonedTime(startOfZonedDay, tz));
+  return getZonedMidnight(resolveTimezone(timezone), 0);
 }
 
 /**
@@ -26,8 +24,17 @@ export function getStartOfDayAtTz(timezone: string): number {
  * @returns End of day in the given timezone as Unix timestamp (seconds)
  */
 export function getEndOfDayAtTz(timezone: string): number {
-  const tz = resolveTimezone(timezone);
   // The next local midnight, not start + 86400: a daylight-saving day is 23 or 25 hours long.
-  const startOfNextZonedDay = addDays(startOfDay(toZonedTime(new Date(), tz)), 1);
-  return getUnixTime(fromZonedTime(startOfNextZonedDay, tz));
+  return getZonedMidnight(resolveTimezone(timezone), 1);
+}
+
+/**
+ * Midnight of today + dayOffset in the given timezone, as Unix timestamp (seconds).
+ * The date is taken and shifted as a plain calendar date, and the midnight is read in `tz`
+ * from a wall-clock string, so the runtime's own timezone (and its DST days) never takes part.
+ */
+function getZonedMidnight(tz: string, dayOffset: number): number {
+  const [year, month, day] = formatInTimeZone(new Date(), tz, "yyyy-MM-dd").split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + dayOffset)).toISOString().slice(0, 10);
+  return getUnixTime(fromZonedTime(`${date}T00:00:00`, tz));
 }

@@ -3,7 +3,7 @@ import { getUnixTime } from "date-fns";
 import { get } from "svelte/store";
 import { i18n } from "$lib/stores/i18n";
 import { timezone, selectedTimezone } from "$lib/stores/timezone";
-import { getStartOfDayAtTz, resolveTimezone } from "./datetime";
+import { getEndOfDayAtTz, getStartOfDayAtTz, resolveTimezone } from "./datetime";
 
 export interface LayoutClientData {
   localTz: string;
@@ -38,6 +38,6 @@ export async function GetLayoutClientData(
     localTz,
     startOfDayTodayAtTz,
     nowAtTz,
-    endOfDayTodayAtTz: startOfDayTodayAtTz + 86400,
+    endOfDayTodayAtTz: getEndOfDayAtTz(tz),
   };
 }
