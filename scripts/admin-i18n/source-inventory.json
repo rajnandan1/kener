@@ -1,9 +1,9 @@
 {
   "upstream": {
-    "version": "4.2.1",
-    "tag": "v4.2.1",
-    "commit": "4079600afe3f6da59b17879df918a79932f30404",
-    "checkedAt": "2026-11-15"
+    "version": "4.2.2",
+    "tag": "v4.2.2",
+    "commit": "d052dbdd0a5d4fb3d3b33f8a05a940465652fe52",
+    "checkedAt": "2026-11-21"
   },
   "messages": {
     "-----BEGIN CERTIFICATE----- or $DOCKER_TLS_CA": [
@@ -11988,7 +11988,7 @@
         "kind": "sentence"
       }
     ],
-    "Valve games can provide additional 'rules' to Gamedig monitors. If checked, they will be available in `reponseRaw.raw`, beware that it may increase query time.": [
+    "Valve games can provide additional 'rules' to Gamedig monitors. If checked, they will be available in `responseRaw.raw`, beware that it may increase query time.": [
       {
         "file": "src/routes/(manage)/manage/app/monitors/[tag]/types/monitor-gamedig.svelte",
         "kind": "text"

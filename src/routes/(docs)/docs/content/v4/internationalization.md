@@ -53,7 +53,7 @@ Panel catalogues live in `src/lib/admin-i18n/`. The shared registry in `language
 
     No other selector, cookie, resolver, or formatting changes are required. The native label is shown without translating it into other panel languages.
 
-4. Run `node scripts/admin-i18n/audit.mjs`, `npm run check`, and `npm test`. The audit checks every catalogue for missing values and mismatched placeholders. Review intentionally unchanged technical text in `scripts/admin-i18n/technical-exceptions.json` with a reason. Valid native words that happen to match English, such as Czech “Role”, belong under that language code in `scripts/admin-i18n/locale-exceptions.json`; these exceptions do not exempt other languages.
+4. Run `node scripts/admin-i18n/audit.mjs`, `npm run check`, and `npm test`. The audit checks every catalogue for missing values and mismatched placeholders. Keep shared product names, protocol identifiers, examples, and exact confirmation phrases in `scripts/admin-i18n/technical-exceptions.json`. Record native wording that happens to match English, such as Polish “Host” or Czech “Role”, under its language code in `scripts/admin-i18n/locale-exceptions.json`. This keeps the audit strict for other languages.
 5. Select the language and review account pages, forms, errors, dialogs, collapsed-menu tooltips, editor controls, dates, and a narrow mobile layout. Submit a pull request with screenshots and the checks performed. Language variants written right-to-left also need a layout review; registering a language does not add RTL layout support.
 
 ### Follow upstream releases {#admin-panel-upstream-updates}

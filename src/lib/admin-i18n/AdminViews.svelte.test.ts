@@ -146,17 +146,16 @@ describe("administrative language review regressions", () => {
   it("localizes both empty alert-log branches and keeps filter values unchanged in requests", async () => {
     const screen = await render(Harness, { view: "alert-logs" });
     await expect.element(screen.getByText("Ten alert nie został jeszcze wyzwolony.")).toBeInTheDocument();
-    const filter = () =>
-      page.elementLocator(document.querySelector<HTMLButtonElement>('[data-slot="select-trigger"]')!);
-    await expect.element(filter()).toHaveTextContent("Wszystkie stany");
-    await filter().click();
+    const filter = screen.getByRole("button", { name: "Filtruj alerty według stanu", exact: true });
+    await expect.element(filter).toHaveTextContent("Wszystkie stany");
+    await filter.click();
     await page.getByRole("option", { name: "Wyzwolony", exact: true }).click();
     await expect.element(screen.getByText("Nie znaleziono wyzwolonych alertów.")).toBeInTheDocument();
-    await expect.element(filter()).toHaveTextContent("Wyzwolony");
-    await filter().click();
+    await expect.element(filter).toHaveTextContent("Wyzwolony");
+    await filter.click();
     await page.getByRole("option", { name: "Rozwiązany", exact: true }).click();
     await expect.element(screen.getByText("Nie znaleziono rozwiązanych alertów.")).toBeInTheDocument();
-    await expect.element(filter()).toHaveTextContent("Rozwiązany");
+    await expect.element(filter).toHaveTextContent("Rozwiązany");
     expect(
       requests.filter((request) => request.action === "getAllAlertsPaginated").map((request) => request.data?.status),
     ).toEqual(["ALL", "TRIGGERED", "RESOLVED"]);

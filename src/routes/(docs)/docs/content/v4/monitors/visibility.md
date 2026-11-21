@@ -57,10 +57,11 @@ You set them in the monitor's **Sharing Options** and in **Manage → Site Confi
 
 - The status pages `/` and `/{page_path}` list monitors that are on the page, `ACTIVE`, and not hidden. The page banner status counts only these monitors.
 - The monitor page `/monitors/{tag}` opens only for a monitor that is `ACTIVE` and not hidden. It does not check page membership.
+- The incident page `/incidents/{id}` and the maintenance page `/maintenances/{id}` list the affected monitors that the viewer can see: monitors that are not hidden, plus hidden monitors for a [signed-in viewer](#signed-in-viewers) with `monitors.read`. A page opens only when its event is global (`is_global = YES`) or that list has at least one monitor. For any other event, the page returns 404.
 - Badges at `/badge/{tag}/...` follow the same rule as the monitor page. For any other monitor, the badge shows an error. The `_` badge covers every `ACTIVE` monitor on the site that is not hidden.
 - Embeds at `/embed/monitor-{tag}` and `/embed/latency-{tag}` get their data from `/dashboard-apis/*`. That API returns 404 for a monitor that is hidden or `INACTIVE`.
 - The per-monitor RSS feed `/monitors/{tag}/rss.xml` returns 404 for a monitor that is hidden or `INACTIVE`.
-- On events pages, in inline events, in the notifications list, and in page RSS feeds, each event stays listed. Kener removes hidden monitors from the event's list of affected monitors. A page-scoped list shows an event only when the event is global (`is_global = YES`) or affects a monitor that is on the page, `ACTIVE`, and not hidden. On `/monitors/{tag}`, inline events and notifications follow the same rule for that one monitor, so a hidden monitor's page shows only global events. These rules are the same for every viewer, signed-in users included.
+- On events pages, in inline events, in the notifications list, and in RSS feeds, Kener removes hidden monitors from the event's list of affected monitors. A list shows an event only when the event is global (`is_global = YES`) or affects a monitor that is not hidden. A list on a status page also needs that monitor to be on that page and `ACTIVE`. On `/monitors/{tag}`, inline events and notifications follow the same rule for that one monitor, so a hidden monitor's page shows only global events. These rules are the same for every viewer, signed-in users included.
 - Subscriber emails do not name hidden monitors. Kener emails subscribers about an event only when the event is global (`is_global = YES`) or affects a monitor that is not hidden. The incident impact in the email, `DOWN` or `DEGRADED`, counts only monitors that are not hidden.
 - `sitemap.xml` includes every monitor that is `ACTIVE` and not hidden.
 - The REST API `/api/v4/*` needs an API key. It returns every monitor. To get only public monitors, add `?status=ACTIVE&is_hidden=NO`. See [API Reference](/docs/spec/v4/).
@@ -78,7 +79,7 @@ A signed-in user whose role has `monitors.read` sees hidden monitors on the page
 | `/` and `/{page_path}`                                                             | Hides     | Hides                         | Shows, if the monitor is on the page |
 | `/monitors/{tag}`, with its status bars, charts, and day details                   | Hides     | Hides                         | Shows                                |
 | Group member list                                                                  | Hides     | Hides                         | Shows                                |
-| `/incidents/{id}` and `/maintenances/{id}` affected monitors                       | Hides     | Hides                         | Shows                                |
+| `/incidents/{id}` and `/maintenances/{id}`, with their affected monitors           | Hides     | Hides                         | Shows                                |
 | Inline events, notifications, and events pages ([rules](#where-each-rule-applies)) | Hides     | Hides                         | Hides                                |
 | Badges and embeds                                                                  | Hides     | Hides                         | Hides                                |
 | `/rss.xml`, `/{page_path}/rss.xml`, and `/monitors/{tag}/rss.xml`                  | Hides     | Hides                         | Hides                                |

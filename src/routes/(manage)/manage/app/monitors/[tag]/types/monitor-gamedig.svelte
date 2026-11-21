@@ -108,7 +108,7 @@
         <Tooltip.Content class="max-w-xs">
           <p class="text-wrap">
             {$adminT(
-              "Valve games can provide additional 'rules' to Gamedig monitors. If checked, they will be available in `reponseRaw.raw`, beware that it may increase query time."
+              "Valve games can provide additional 'rules' to Gamedig monitors. If checked, they will be available in `responseRaw.raw`, beware that it may increase query time."
             )}
           </p>
         </Tooltip.Content>

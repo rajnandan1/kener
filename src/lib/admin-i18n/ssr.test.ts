@@ -50,6 +50,7 @@ describe("administrative SSR context", () => {
       });
       expect(result.body).toContain(initialLocale === "cs" ? "Uložit" : "Save");
       expect(result.body).toContain("&lt;script>");
+      expect(result.body).not.toContain("<script>test</script>");
     }
     contexts[0].setLocale("pl");
     expect(get(contexts[1].t)("Save")).toBe("Save");

@@ -76,6 +76,10 @@ export const load: PageServerLoad = async ({ params, url, parent }) => {
       }));
   }
 
+  if (maintenance.is_global !== "YES" && affectedMonitors.length === 0) {
+    throw error(404, { message: "Maintenance not found" });
+  }
+
   const visibleTags = new Set(affectedMonitors.map((m) => m.monitor_tag));
   return {
     ...{

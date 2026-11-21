@@ -2,7 +2,33 @@
   "cs": {
     "Editor": "Standard Czech noun for a text or code editor.",
     "Incident": "Standard Czech technical noun for a service incident.",
+    "Logo": "Reviewed Czech wording. Label for the site logo.",
     "Maximum": "Standard Czech term for an upper bound.",
-    "Role": "Standard Czech noun for an authorization role."
+    "Minimum": "Reviewed Czech wording. Label for a lower bound.",
+    "Monitor": "Reviewed Czech wording. Name for a status monitor.",
+    "Ping": "Reviewed Czech wording. Name of a ping check when used as a display label.",
+    "Port": "Reviewed Czech wording. Label for a network port.",
+    "Role": "Standard Czech noun for an authorization role.",
+    "Token:": "Reviewed Czech wording. Label for a credential token.",
+    "logo": "Reviewed Czech wording. Name for the site logo.",
+    "monitor": "Reviewed Czech wording. Noun for a monitored component.",
+    "webhook": "Reviewed Czech wording. Name for a webhook notification transport."
+  },
+  "pl": {
+    "Administrator": "Reviewed Polish wording. Name of the built-in administration role.",
+    "Host": "Reviewed Polish wording. Label for the server name or address.",
+    "Host {value1}": "Reviewed Polish wording. Diagnostic label for a server address.",
+    "Logo": "Reviewed Polish wording. Label for the site logo.",
+    "Minimum": "Reviewed Polish wording. Label for a lower bound.",
+    "Monitor": "Reviewed Polish wording. Name for a status monitor.",
+    "Operator": "Reviewed Polish wording. Name of a built-in operator role.",
+    "Ping": "Reviewed Polish wording. Name of a ping check when used as a display label.",
+    "Port": "Reviewed Polish wording. Label for a network port.",
+    "Tag": "Reviewed Polish wording. Label for a monitor identifier.",
+    "Token:": "Reviewed Polish wording. Label for a credential token.",
+    "Transport": "Reviewed Polish wording. Label for the transport protocol.",
+    "logo": "Reviewed Polish wording. Name for the site logo.",
+    "monitor": "Reviewed Polish wording. Noun for a monitored component.",
+    "webhook": "Reviewed Polish wording. Name for a webhook notification transport."
   }
 }

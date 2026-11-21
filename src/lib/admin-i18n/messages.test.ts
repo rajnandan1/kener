@@ -31,7 +31,7 @@ describe("administrative language catalogues", () => {
     const name = "<script>$&</script>";
     expect(translateAdmin("cs", "Welcome, {name}!", { name })).toContain(name);
     const diagnostic = "bad  value\nat line 2";
-    expect(translateAdmin("cs", `Eval error: ${diagnostic}`)).toContain(diagnostic);
+    expect(translateAdmin("cs", `Eval error: ${diagnostic}`)).toBe(`Chyba vyhodnocení: ${diagnostic}`);
     expect(translateAdmin("cs", "External diagnostic 721")).toBe("External diagnostic 721");
   });
   it("keeps fallback English and independent calls intact", () => {
@@ -142,6 +142,25 @@ describe("display-only dates and durations", () => {
     const stamp = value.getTime();
     expect(formatAdminDate(value, "pl", "Europe/Warsaw")).toContain("13:00");
     expect(value.getTime()).toBe(stamp);
+  });
+  it("uses grammatically independent countdown labels for Polish and Czech maintenance", () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date("2026-11-15T12:00:00Z"));
+      const start = new Date("2026-11-15T12:01:00Z");
+      const polishDistance = formatAdminRelative(start, "pl");
+      const czechDistance = formatAdminRelative(start, "cs");
+      expect(translateAdmin("pl", `In ${polishDistance}`)).toBe("Do rozpoczęcia: minuta");
+      expect(translateAdmin("pl", `Upcoming • starts in ${polishDistance}`)).toBe(
+        "Nadchodzące • do rozpoczęcia: minuta",
+      );
+      expect(translateAdmin("cs", `In ${czechDistance}`)).toBe("Čas do začátku: 1 minuta");
+      expect(translateAdmin("cs", `Upcoming • starts in ${czechDistance}`)).toBe(
+        "Nadcházející • čas do začátku: 1 minuta",
+      );
+    } finally {
+      vi.useRealTimers();
+    }
   });
   it("uses Polish and English relative units independently", () => {
     vi.useFakeTimers();

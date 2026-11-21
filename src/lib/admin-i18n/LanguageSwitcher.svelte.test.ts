@@ -21,13 +21,15 @@ describe("panel language switcher", () => {
   it("switches Czech, English and Polish without changing user-authored content", async () => {
     const screen = await render(Harness, { initialLocale: "en", userText: "Save" });
     await expect.element(screen.getByRole("option", { name: "Čeština" })).toHaveAttribute("lang", "cs");
-    await userEvent.selectOptions(screen.getByRole("combobox"), "cs");
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Panel language", exact: true }), "cs");
+    const czechSelector = screen.getByRole("combobox", { name: "Jazyk panelu", exact: true });
+    await expect.element(czechSelector).toHaveValue("cs");
     await expect.element(screen.getByTestId("translated")).toHaveTextContent("Uložit");
     expect(document.cookie).toContain("kener_admin_locale=cs");
     await expect.element(screen.getByTestId("user-text")).toHaveTextContent("Save");
-    await userEvent.selectOptions(screen.getByRole("combobox"), "pl");
+    await userEvent.selectOptions(czechSelector, "pl");
     await expect.element(screen.getByTestId("translated")).toHaveTextContent("Zapisz");
-    await userEvent.selectOptions(screen.getByRole("combobox"), "en");
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Język panelu", exact: true }), "en");
     await expect.element(screen.getByTestId("translated")).toHaveTextContent("Save");
   });
 });

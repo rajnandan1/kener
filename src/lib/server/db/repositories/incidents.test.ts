@@ -108,6 +108,8 @@ describe("IncidentsRepository public incident lists with a hidden monitor", () =
       { id: 3, title: "Global, visible and hidden monitors", start_date_time: 700, is_global: "YES" },
       { id: 4, title: "Not global, hidden monitor only", start_date_time: 600, is_global: "NO" },
       { id: 5, title: "Not global, visible monitor only", start_date_time: 500, is_global: "NO" },
+      { id: 7, title: "Not global, no monitors", start_date_time: 300, is_global: "NO" },
+      { id: 8, title: "Not global, deleted monitor only", start_date_time: 200, is_global: "NO" },
     ]);
     await db("incidents").insert({
       id: 6,
@@ -124,6 +126,11 @@ describe("IncidentsRepository public incident lists with a hidden monitor", () =
       { incident_id: 5, monitor_tag: "api", monitor_impact: "DOWN" },
       { incident_id: 6, monitor_tag: "api", monitor_impact: "DOWN" },
       { incident_id: 6, monitor_tag: "billing-db", monitor_impact: "DOWN" },
+      { incident_id: 8, monitor_tag: "deleted-monitor", monitor_impact: "DOWN" },
+    ]);
+    await db("incident_comments").insert([
+      { incident_id: 4, comment: "Rotated the billing-db password", commented_at: 650 },
+      { incident_id: 5, comment: "API is back", commented_at: 550 },
     ]);
 
     repo = new IncidentsRepository(db);
@@ -185,5 +192,30 @@ describe("IncidentsRepository public incident lists with a hidden monitor", () =
       { id: 5, monitors: ["api"] },
     ]);
     expect(await repo.getResolvedIncidentsForMonitorListWithComments(ts, ["billing-db"], 5, 1)).toEqual([]);
+  });
+
+  it("lists an incident on the site-wide events page only when it is global or affects a monitor that is not hidden", async () => {
+    const incidents = await repo.getIncidentsForEventsByDateRange(0, 2000);
+    expect(summarize(incidents)).toEqual([
+      { id: 1, monitors: [] },
+      { id: 2, monitors: [] },
+      { id: 3, monitors: ["api"] },
+      { id: 5, monitors: ["api"] },
+      { id: 6, monitors: ["api"] },
+    ]);
+    expect(JSON.stringify(incidents)).not.toContain("billing-db");
+    expect(incidents.find((incident) => incident.id === 5)?.comments.map((c) => c.comment)).toEqual(["API is back"]);
+  });
+
+  it("does not match an incident on a page's events list through a hidden monitor", async () => {
+    expect(summarize(await repo.getIncidentsForEventsByDateRange(0, 2000, ["api", "billing-db"]))).toEqual([
+      { id: 1, monitors: [] },
+      { id: 2, monitors: [] },
+      { id: 3, monitors: ["api"] },
+      { id: 5, monitors: ["api"] },
+      { id: 6, monitors: ["api"] },
+    ]);
+    const billingOnly = await repo.getIncidentsForEventsByDateRange(0, 2000, ["billing-db"]);
+    expect(billingOnly.map((incident) => incident.id)).toEqual([1, 2, 3]);
   });
 });

@@ -192,7 +192,7 @@
   <!-- Filter -->
   <div class="flex items-center gap-3">
     <Select.Root type="single" value={statusFilter} onValueChange={handleStatusChange}>
-      <Select.Trigger class="w-36">
+      <Select.Trigger class="w-36" aria-label={$adminT("Filter alerts by status")}>
         {statusFilter === "ALL"
           ? $adminT("All Status")
           : $adminT(statusFilter === "TRIGGERED" ? "Triggered" : "Resolved")}

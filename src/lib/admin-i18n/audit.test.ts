@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -79,6 +79,29 @@ describe("panel translation audit", () => {
     expect(report.findings).toContainEqual(
       expect.objectContaining({ kind: "placeholder-mismatch", locale: "fr", text: "{days} Days" }),
     );
+  });
+  it("accepts Polish Host and a shared command while requiring French wording for Host", () => {
+    const root = fixture();
+    for (const name of ["technical-exceptions.json", "locale-exceptions.json"]) {
+      copyFileSync(
+        new URL(`../../../scripts/admin-i18n/${name}`, import.meta.url),
+        path.join(root, "scripts/admin-i18n", name),
+      );
+    }
+    const common = { Host: "Host", "delete {monitorTag}": "delete {monitorTag}" };
+    for (const [locale, days, diagnostic] of [
+      ["en", "{days} Days", "Eval error: {diagnostic}"],
+      ["pl", "{days} dni", "Błąd: {diagnostic}"],
+      ["fr", "{days} jours", "Erreur : {diagnostic}"],
+    ]) {
+      writeFileSync(
+        path.join(root, `src/lib/admin-i18n/${locale}.json`),
+        JSON.stringify({ ...common, "{days} Days": days, "Eval error: {diagnostic}": diagnostic }),
+      );
+    }
+    const { status, report } = audit(root);
+    expect(status).toBe(1);
+    expect(report.findings).toEqual([{ kind: "unreviewed-identical-translation", locale: "fr", text: "Host" }]);
   });
   it("limits reviewed identical wording to its registered language", () => {
     const root = fixture();
