@@ -11,9 +11,19 @@ declare module "vitest/browser" {
 }
 
 const requests: Array<{ action: string; data?: Record<string, unknown> }> = [];
+let alertLog:
+  | {
+      id: number;
+      alert_status: "TRIGGERED" | "RESOLVED";
+      monitor_tag: string;
+      created_at: number;
+      updated_at: number;
+    }
+  | undefined;
 
 beforeEach(() => {
   requests.length = 0;
+  alertLog = undefined;
   vi.stubGlobal(
     "fetch",
     vi.fn(async (_url: string, options?: RequestInit) => {
@@ -38,7 +48,11 @@ beforeEach(() => {
           result = [{ id: 1, tag: "safe-tag", name: "Save", status: "ACTIVE" }];
           break;
         case "getAllAlertsPaginated":
-          result = { alerts: [], total: 0 };
+          result = { alerts: alertLog ? [alertLog] : [], total: alertLog ? 1 : 0 };
+          break;
+        case "updateMonitorAlertV2Status":
+          if (alertLog && alertLog.id === body.data.id) alertLog.alert_status = body.data.status;
+          result = {};
           break;
         case "getMonitorAlertConfigById":
           result = {};
@@ -160,6 +174,31 @@ describe("administrative language review regressions", () => {
       requests.filter((request) => request.action === "getAllAlertsPaginated").map((request) => request.data?.status),
     ).toEqual(["ALL", "TRIGGERED", "RESOLVED"]);
   });
+
+  it.each([
+    ["pl", "TRIGGERED", "WYZWOLONY", "RESOLVED", "ROZWIĄZANY", "Stan został zmieniony na ROZWIĄZANY"],
+    ["cs", "RESOLVED", "VYŘEŠENO", "TRIGGERED", "SPUŠTĚNO", "Stav byl změněn na SPUŠTĚNO"],
+  ] as const)(
+    "localizes the alert update notification in %s while keeping the API status code",
+    async (locale, initialStatus, currentLabel, newStatus, newLabel, notification) => {
+      alertLog = {
+        id: 42,
+        alert_status: initialStatus,
+        monitor_tag: "safe-tag",
+        created_at: 1735732800,
+        updated_at: 1735732800,
+      };
+      const screen = await render(Harness, { view: "alert-logs" });
+      if (locale === "cs") await userEvent.selectOptions(screen.getByRole("combobox", { name: "Język panelu" }), "cs");
+
+      await screen.getByRole("button", { name: currentLabel, exact: true }).click();
+      await page.getByRole("option", { name: newLabel, exact: true }).click();
+      await expect.element(page.getByText(notification, { exact: true })).toBeVisible();
+      expect(requests.filter(({ action }) => action === "updateMonitorAlertV2Status")).toEqual([
+        { action: "updateMonitorAlertV2Status", data: { id: 42, status: newStatus } },
+      ]);
+    },
+  );
 
   it("translates readonly role names in OIDC while retaining an identically named custom role", async () => {
     const screen = await render(Harness, { view: "oidc" });

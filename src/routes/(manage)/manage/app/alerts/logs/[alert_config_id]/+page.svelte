@@ -106,7 +106,7 @@
       if (result.error) {
         toast.error($adminT(result.error));
       } else {
-        toast.success($adminT("Status updated to {newStatus}", { newStatus: newStatus }));
+        toast.success($adminT("Status updated to {newStatus}", { newStatus: $adminT(newStatus) }));
         await fetchAlerts();
       }
     } catch (error) {

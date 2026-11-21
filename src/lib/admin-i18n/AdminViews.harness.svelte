@@ -8,6 +8,8 @@
   import Oidc from "../../routes/(manage)/manage/app/oidc/+page.svelte";
   import DangerZone from "../../routes/(manage)/manage/app/monitors/[tag]/components/DangerZoneCard.svelte";
   import ProviderSettingsPanel from "$lib/components/manage/ProviderSettingsPanel.svelte";
+  import { Toaster } from "$lib/components/ui/sonner/index.js";
+  import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import type { MonitorRecord } from "$lib/server/types/db";
 
   let { view }: { view: "internationalization" | "alert-logs" | "oidc" | "danger" | "provider" | "badges" } = $props();
@@ -20,7 +22,10 @@
 {:else if view === "badges"}
   <Badges />
 {:else if view === "alert-logs"}
-  <AlertLogs data={{ alert_config_id: "1" } as ComponentProps<typeof AlertLogs>["data"]} />
+  <Toaster />
+  <Tooltip.Provider>
+    <AlertLogs data={{ alert_config_id: "1" } as ComponentProps<typeof AlertLogs>["data"]} />
+  </Tooltip.Provider>
 {:else if view === "oidc"}
   <Oidc />
 {:else if view === "danger"}
