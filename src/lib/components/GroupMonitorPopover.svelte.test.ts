@@ -86,6 +86,31 @@ describe("GroupMonitorPopover", () => {
     expect(screen.container.querySelector("canvas") !== null).toBe(hasBars);
   });
 
+  it("shows hidden members as one sign-in row and never requests them", async () => {
+    const screen = await render(GroupMonitorPopover, { ...props, tags: ["api"], hiddenCount: 2, display: "INLINE" });
+
+    await screen.getByRole("button", { name: "Included Monitors" }).click();
+
+    await expect.element(screen.getByText("Member api")).toBeInTheDocument();
+    // Component tests load no translations, so $t returns the key text.
+    await expect.element(screen.getByTestId("group-hidden-members")).toHaveTextContent(/private monitors\./);
+    await expect
+      .element(screen.getByRole("link", { name: "Sign in to see them." }))
+      .toHaveAttribute("href", expect.stringContaining("/account/signin"));
+    await expect.element(screen.getByText(/Failed to load monitor/)).not.toBeInTheDocument();
+    expect(requestMonitorBar).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows only the sign-in row when every member is hidden", async () => {
+    const screen = await render(GroupMonitorPopover, { ...props, tags: [], hiddenCount: 3, display: "INLINE" });
+
+    await screen.getByRole("button", { name: "Included Monitors" }).click();
+
+    await expect.element(screen.getByTestId("group-hidden-members")).toBeInTheDocument();
+    await expect.element(screen.getByText("No monitors available.")).not.toBeInTheDocument();
+    expect(requestMonitorBar).not.toHaveBeenCalled();
+  });
+
   it("opens the members in a drawer when no display is set", async () => {
     const screen = await render(GroupMonitorPopover, props);
 
