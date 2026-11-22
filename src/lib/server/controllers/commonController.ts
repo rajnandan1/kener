@@ -162,7 +162,9 @@ export const CookieConfig = (): {
   //get base path from env
   let cookiePath = !!process.env.KENER_BASE_PATH ? process.env.KENER_BASE_PATH : "/";
 
-  let isSecuredDomain = false;
+  // Without ORIGIN the origin comes from each request (HOST_HEADER), so a production
+  // build keeps the cookie Secure instead of dropping the flag.
+  let isSecuredDomain = process.env.NODE_ENV === "production";
   if (!!process.env.ORIGIN) {
     isSecuredDomain = process.env.ORIGIN.startsWith("https://");
   }

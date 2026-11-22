@@ -14,7 +14,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
   try {
     const { url: authUrl, state, nonce, codeVerifier } = await BuildAuthorizationUrl(settings, callbackUrl);
 
-    const isSecure = process.env.ORIGIN?.startsWith("https://") ?? false;
+    const isSecure = process.env.ORIGIN ? process.env.ORIGIN.startsWith("https://") : url.protocol === "https:";
     const cookiePath = process.env.KENER_BASE_PATH || "/";
 
     const cookieOptions = {
