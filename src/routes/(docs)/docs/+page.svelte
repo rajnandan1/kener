@@ -459,6 +459,14 @@
           >
             <img src="https://zeabur.com/button.svg" alt="Deploy on Zeabur" class="h-8" />
           </a>
+          <a
+            href="https://zenavo.app/templates/kener"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="transition-transform duration-300 hover:scale-105"
+          >
+            <img src="https://zenavo.app/deploy-button.svg" alt="Deploy on Zenavo" class="h-8" />
+          </a>
         </div>
       </div>
 
