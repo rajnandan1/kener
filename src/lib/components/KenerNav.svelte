@@ -56,7 +56,7 @@
               <NavigationMenu.Link>
                 {#snippet child()}
                   <a
-                    data-sveltekit-preload-data="off"
+                    data-sveltekit-preload-data={false}
                     href={clientResolver(resolve, item.url)}
                     class="{navigationMenuTriggerStyle()} hover:border-border border border-transparent bg-transparent text-xs hover:bg-transparent"
                     target={item.url.startsWith("http") ? "_blank" : undefined}

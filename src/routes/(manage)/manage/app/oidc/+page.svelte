@@ -600,7 +600,7 @@
               <strong>Callback URL</strong> to configure in your OIDC provider:<br />
               <code class="bg-muted rounded px-2 py-1 text-xs">
                 {typeof window !== "undefined" ? window.location.origin : "https://your-kener-domain"}{resolve(
-                  "/account/oidc/callback"
+                  "account/oidc/callback"
                 )}
               </code>
             </p>

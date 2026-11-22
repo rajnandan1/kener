@@ -1,10 +1,11 @@
 // routes/+server.ts
 import { ScalarApiReference } from "@scalar/sveltekit";
 import type { RequestHandler } from "./$types";
-import { asset } from "$app/paths";
+import { resolve } from "$app/paths";
+import clientResolver from "$lib/client/resolver.js";
 
 const render = ScalarApiReference({
-  url: asset("/docs/spec/v4/spec.json"),
+  url: clientResolver(resolve, "/docs/spec/v4/spec.json"),
   hideModels: true,
   hideTestRequestButton: false,
   theme: "kepler",
