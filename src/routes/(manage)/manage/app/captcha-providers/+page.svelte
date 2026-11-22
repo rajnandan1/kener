@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import ProviderSettingsPanel from "$lib/components/manage/ProviderSettingsPanel.svelte";
   import type { ProviderDefinition } from "$lib/client/types/provider-settings.js";
 
@@ -53,7 +56,9 @@
 
 <ProviderSettingsPanel
   initialProviders={captchaProviders}
-  description="Add your CAPTCHA provider Site Key/Secret Key here. Only one provider can be active at a time."
+  description={$adminT(
+    "Add your CAPTCHA provider Site Key/Secret Key here. Only one provider can be active at a time."
+  )}
   learnMoreUrl="https://kener.ing/docs/v4/captcha"
   enforceSingleActive
 />

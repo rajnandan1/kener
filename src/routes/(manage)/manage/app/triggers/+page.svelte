@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Button } from "$lib/components/ui/button/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
@@ -55,7 +58,7 @@
       }
     } catch (error) {
       console.error("Error fetching triggers:", error);
-      toast.error("Failed to load triggers");
+      toast.error($adminT("Failed to load triggers"));
     } finally {
       loading = false;
     }
@@ -87,12 +90,12 @@
     <div class="flex items-center gap-3">
       <Select.Root type="single" value={statusFilter} onValueChange={handleStatusChange}>
         <Select.Trigger class="w-36">
-          {statusFilter === "ALL" ? "All Status" : statusFilter}
+          {statusFilter === "ALL" ? $adminT("All Status") : $adminT(statusFilter === "ACTIVE" ? "Active" : "Inactive")}
         </Select.Trigger>
         <Select.Content>
-          <Select.Item value="ALL">All Status</Select.Item>
-          <Select.Item value="ACTIVE">Active</Select.Item>
-          <Select.Item value="INACTIVE">Inactive</Select.Item>
+          <Select.Item value="ALL">{$adminT("All Status")}</Select.Item>
+          <Select.Item value="ACTIVE">{$adminT("Active")}</Select.Item>
+          <Select.Item value="INACTIVE">{$adminT("Inactive")}</Select.Item>
         </Select.Content>
       </Select.Root>
       {#if loading}
@@ -101,21 +104,21 @@
     </div>
     <Button href={clientResolver(resolve, "/manage/app/triggers/new")}>
       <PlusIcon class="size-4" />
-      New Trigger
+      {$adminT("New Trigger")}
     </Button>
   </div>
 
   <!-- Triggers List -->
   {#if paginatedTriggers.length === 0 && !loading}
-    <div class="text-muted-foreground py-8 text-center">No triggers found</div>
+    <div class="text-muted-foreground py-8 text-center">{$adminT("No triggers found")}</div>
   {:else}
     <div class="ktable rounded-xl border">
       <Table.Root>
         <Table.Header>
           <Table.Row>
-            <Table.Head class="w-[280px]">Name</Table.Head>
-            <Table.Head class="w-[140px]">Type</Table.Head>
-            <Table.Head class="w-[140px]">Status</Table.Head>
+            <Table.Head class="w-[280px]">{$adminT("Name")}</Table.Head>
+            <Table.Head class="w-[140px]">{$adminT("Type")}</Table.Head>
+            <Table.Head class="w-[140px]">{$adminT("Status")}</Table.Head>
             <Table.Head class="w-[160px] text-right"></Table.Head>
           </Table.Row>
         </Table.Header>
@@ -125,11 +128,11 @@
               <Table.Cell class="font-medium">{trigger.name}</Table.Cell>
 
               <Table.Cell>
-                <Badge variant="outline" class="capitalize">{trigger.trigger_type}</Badge>
+                <Badge variant="outline" class="">{$adminT(String(trigger.trigger_type ?? ""))}</Badge>
               </Table.Cell>
               <Table.Cell>
                 <Badge variant={trigger.trigger_status === "ACTIVE" ? "default" : "secondary"}>
-                  {trigger.trigger_status}
+                  {$adminT(String(trigger.trigger_status ?? ""))}
                 </Badge>
               </Table.Cell>
               <Table.Cell class="text-right">
@@ -139,7 +142,7 @@
                   href={clientResolver(resolve, `/manage/app/triggers/${trigger.id}`)}
                 >
                   <SettingsIcon class="mr-1 size-4" />
-                  Configure
+                  {$adminT("Configure")}
                 </Button>
               </Table.Cell>
             </Table.Row>
@@ -154,10 +157,22 @@
     {@const startItem = (pageNo - 1) * limit + 1}
     {@const endItem = Math.min(pageNo * limit, totalCount)}
     <div class="flex items-center justify-between">
-      <span class="text-muted-foreground text-sm">Showing {startItem}-{endItem} of {totalCount}</span>
+      <span class="text-muted-foreground text-sm"
+        >{$adminT("Showing {startItem}-{endItem} of {totalCount}", {
+          startItem: startItem,
+          endItem: endItem,
+          totalCount: totalCount
+        })}</span
+      >
       {#if totalPages > 1}
         <div class="flex items-center gap-2">
-          <Button variant="outline" size="icon" disabled={pageNo === 1} onclick={() => goToPage(pageNo - 1)}>
+          <Button
+            aria-label={$adminT("Previous page")}
+            variant="outline"
+            size="icon"
+            disabled={pageNo === 1}
+            onclick={() => goToPage(pageNo - 1)}
+          >
             <ChevronLeftIcon class="size-4" />
           </Button>
           <div class="flex items-center gap-1">
@@ -171,7 +186,13 @@
               {/if}
             {/each}
           </div>
-          <Button variant="outline" size="icon" disabled={pageNo === totalPages} onclick={() => goToPage(pageNo + 1)}>
+          <Button
+            aria-label={$adminT("Next page")}
+            variant="outline"
+            size="icon"
+            disabled={pageNo === totalPages}
+            onclick={() => goToPage(pageNo + 1)}
+          >
             <ChevronRightIcon class="size-4" />
           </Button>
         </div>

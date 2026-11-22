@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { toast } from "svelte-sonner";
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
@@ -30,7 +33,7 @@
 
   async function handleRequestReset() {
     if (!email) {
-      toast.error("Please enter your email address");
+      toast.error($adminT("Please enter your email address"));
       return;
     }
 
@@ -45,14 +48,14 @@
       const data = await response.json();
 
       if (!response.ok) {
-        toast.error(data.error || "Failed to send reset email");
+        toast.error($adminT(data.error || "Failed to send reset email"));
         return;
       }
 
       emailSent = true;
-      toast.success("Password reset email sent!");
+      toast.success($adminT("Password reset email sent!"));
     } catch (e) {
-      toast.error("An error occurred. Please try again.");
+      toast.error($adminT("An error occurred. Please try again."));
     } finally {
       loading = false;
     }
@@ -60,17 +63,17 @@
 
   async function handlePasswordReset() {
     if (!newPassword || !confirmPassword) {
-      toast.error("Please fill in all fields");
+      toast.error($adminT("Please fill in all fields"));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error($adminT("Passwords do not match"));
       return;
     }
 
     if (newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters");
+      toast.error($adminT("Password must be at least 8 characters"));
       return;
     }
 
@@ -85,14 +88,14 @@
       const data = await response.json();
 
       if (!response.ok) {
-        toast.error(data.error || "Failed to reset password");
+        toast.error($adminT(data.error || "Failed to reset password"));
         return;
       }
 
       passwordReset = true;
-      toast.success("Password reset successfully!");
+      toast.success($adminT("Password reset successfully!"));
     } catch (e) {
-      toast.error("An error occurred. Please try again.");
+      toast.error($adminT("An error occurred. Please try again."));
     } finally {
       loading = false;
     }
@@ -109,7 +112,7 @@
 </script>
 
 <svelte:head>
-  <title>{view === "confirm_token" ? "Reset Password" : "Forgot Password"}</title>
+  <title>{view === "confirm_token" ? $adminT("Reset Password") : $adminT("Forgot Password")}</title>
 </svelte:head>
 <div class="flex min-h-screen items-center justify-center p-4">
   <Card.Root class="kener-card w-full max-w-md">
@@ -120,27 +123,27 @@
           <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
             <CheckCircleIcon class="h-8 w-8 text-green-600" />
           </div>
-          <Card.Title>Password Reset Complete</Card.Title>
+          <Card.Title>{$adminT("Password Reset Complete")}</Card.Title>
           <Card.Description>
-            Your password has been reset successfully. You can now sign in with your new password.
+            {$adminT("Your password has been reset successfully. You can now sign in with your new password.")}
           </Card.Description>
         </Card.Header>
         <Card.Content>
           <Button href={clientResolver(resolve, "/account/signin")} class="w-full">
             <ArrowLeftIcon class="mr-2 h-4 w-4" />
-            Back to Sign In
+            {$adminT("Back to Sign In")}
           </Button>
         </Card.Content>
       {:else}
         <Card.Header>
-          <Card.Title>Set New Password</Card.Title>
-          <Card.Description>Enter your new password below to complete the reset process.</Card.Description>
+          <Card.Title>{$adminT("Set New Password")}</Card.Title>
+          <Card.Description>{$adminT("Enter your new password below to complete the reset process.")}</Card.Description>
         </Card.Header>
         <Card.Content>
           <form onsubmit={handleSubmit}>
             <Field.Group>
               <Field.Field class="relative flex flex-col gap-1">
-                <Field.Label for="newPassword">New Password</Field.Label>
+                <Field.Label for="newPassword">{$adminT("New Password")}</Field.Label>
                 <InputGroup.Root>
                   <InputGroup.Addon>
                     <LockIcon />
@@ -155,8 +158,8 @@
                   <InputGroup.Addon align="inline-end">
                     <InputGroup.Button
                       type="button"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                      title={showPassword ? "Hide password" : "Show password"}
+                      aria-label={$adminT(String(showPassword ? "Hide password" : "Show password"))}
+                      title={$adminT(String(showPassword ? "Hide password" : "Show password"))}
                       size="icon-xs"
                       onclick={() => (showPassword = !showPassword)}
                     >
@@ -168,11 +171,11 @@
                     </InputGroup.Button>
                   </InputGroup.Addon>
                 </InputGroup.Root>
-                <Field.Description>Password must be at least 8 characters.</Field.Description>
+                <Field.Description>{$adminT("Password must be at least 8 characters.")}</Field.Description>
               </Field.Field>
 
               <Field.Field class="relative flex flex-col gap-1">
-                <Field.Label for="confirmPassword">Confirm Password</Field.Label>
+                <Field.Label for="confirmPassword">{$adminT("Confirm Password")}</Field.Label>
                 <InputGroup.Root>
                   <InputGroup.Addon>
                     <LockIcon />
@@ -187,8 +190,8 @@
                   <InputGroup.Addon align="inline-end">
                     <InputGroup.Button
                       type="button"
-                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                      title={showConfirmPassword ? "Hide password" : "Show password"}
+                      aria-label={$adminT(String(showConfirmPassword ? "Hide password" : "Show password"))}
+                      title={$adminT(String(showConfirmPassword ? "Hide password" : "Show password"))}
                       size="icon-xs"
                       onclick={() => (showConfirmPassword = !showConfirmPassword)}
                     >
@@ -206,9 +209,9 @@
             <div class="mt-6">
               <Button type="submit" class="w-full" disabled={loading}>
                 {#if loading}
-                  Resetting Password...
+                  {$adminT("Resetting Password...")}
                 {:else}
-                  Reset Password
+                  {$adminT("Reset Password")}
                 {/if}
               </Button>
             </div>
@@ -216,7 +219,7 @@
             <div class="mt-4 text-center">
               <Button variant="link" href={clientResolver(resolve, "/account/signin")} class="text-sm">
                 <ArrowLeftIcon class="mr-1 h-3 w-3" />
-                Back to Sign In
+                {$adminT("Back to Sign In")}
               </Button>
             </div>
           </form>
@@ -229,41 +232,48 @@
           <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
             <MailIcon class="h-8 w-8 text-blue-600" />
           </div>
-          <Card.Title>Check Your Email</Card.Title>
+          <Card.Title>{$adminT("Check Your Email")}</Card.Title>
           <Card.Description>
-            We've sent a password reset link to <strong>{email}</strong>. Please check your inbox and click the link to
-            reset your password.
+            {$adminT("We've sent a password reset link to")} <strong>{email}</strong>{$adminT(
+              ". Please check your inbox and click the link to reset your password."
+            )}
           </Card.Description>
         </Card.Header>
         <Card.Content>
           <p class="text-muted-foreground mb-4 text-center text-sm">
-            Didn't receive the email? Check your spam folder or try again.
+            {$adminT("Didn't receive the email? Check your spam folder or try again.")}
           </p>
-          <Button variant="outline" class="w-full" onclick={() => (emailSent = false)}>Try Again</Button>
+          <Button variant="outline" class="w-full" onclick={() => (emailSent = false)}>{$adminT("Try Again")}</Button>
           <div class="mt-4 text-center">
             <Button variant="link" href={clientResolver(resolve, "/account/signin")} class="text-sm">
               <ArrowLeftIcon class="mr-1 h-3 w-3" />
-              Back to Sign In
+              {$adminT("Back to Sign In")}
             </Button>
           </div>
         </Card.Content>
       {:else}
         <Card.Header>
-          <Card.Title>Forgot Password</Card.Title>
+          <Card.Title>{$adminT("Forgot Password")}</Card.Title>
           <Card.Description>
-            Enter your email address and we'll send you a link to reset your password.
+            {$adminT("Enter your email address and we'll send you a link to reset your password.")}
           </Card.Description>
         </Card.Header>
         <Card.Content>
           <form onsubmit={handleSubmit}>
             <Field.Group>
               <Field.Field class="relative flex flex-col gap-1">
-                <Field.Label for="email">Email</Field.Label>
+                <Field.Label for="email">{$adminT("Email")}</Field.Label>
                 <InputGroup.Root>
                   <InputGroup.Addon>
                     <MailIcon />
                   </InputGroup.Addon>
-                  <InputGroup.Input id="email" type="email" placeholder="you@example.com" bind:value={email} required />
+                  <InputGroup.Input
+                    id="email"
+                    type="email"
+                    placeholder={$adminT("you@example.com")}
+                    bind:value={email}
+                    required
+                  />
                 </InputGroup.Root>
               </Field.Field>
             </Field.Group>
@@ -271,9 +281,9 @@
             <div class="mt-6">
               <Button type="submit" class="w-full" disabled={loading}>
                 {#if loading}
-                  Sending Reset Link...
+                  {$adminT("Sending Reset Link...")}
                 {:else}
-                  Send Reset Link
+                  {$adminT("Send Reset Link")}
                 {/if}
               </Button>
             </div>
@@ -281,7 +291,7 @@
             <div class="mt-4 text-center">
               <Button variant="link" href={clientResolver(resolve, "/account/signin")} class="text-sm">
                 <ArrowLeftIcon class="mr-1 h-3 w-3" />
-                Back to Sign In
+                {$adminT("Back to Sign In")}
               </Button>
             </div>
           </form>

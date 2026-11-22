@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT, locale: adminLocale } = getAdminI18n();
+
   import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
@@ -8,7 +11,7 @@
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
   import CopyButton from "$lib/components/CopyButton.svelte";
-  import ColorPicker from "svelte-awesome-color-picker";
+  import ColorPicker from "$lib/components/manage/ColorPicker.svelte";
   import CopyIcon from "@lucide/svelte/icons/copy";
   import EyeIcon from "@lucide/svelte/icons/eye";
   import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
@@ -22,6 +25,17 @@
   let monitors = $state<MonitorRecord[]>([]);
   let activatedLocales = $state<{ code: string; name: string }[]>([]);
   let loading = $state(true);
+
+  const languageNames = $derived(new Intl.DisplayNames([$adminLocale], { type: "language" }));
+  function displayLanguage(language: { code: string; name: string }): string {
+    try {
+      const code = language.code === "dk" ? "da" : language.code;
+      const name = languageNames.of(code);
+      return name && name.toLowerCase() !== code.toLowerCase() ? name : language.name;
+    } catch {
+      return language.name;
+    }
+  }
 
   // Badge configuration
   let badgeConfig = $state({
@@ -93,7 +107,11 @@
   const markdownSnippet = $derived.by(() => {
     if (!badgeUrl) return "";
     const monitor = monitors.find((m) => m.tag === badgeConfig.tag);
-    const altText = monitor ? `${monitor.name} ${badgeConfig.badgeType}` : badgeConfig.badgeType;
+    const altText = monitor
+      ? `${monitor.name} ${$adminT(badgeConfig.badgeType === "status" ? "Status" : badgeConfig.badgeType === "uptime" ? "Uptime" : "Latency")}`
+      : $adminT(
+          badgeConfig.badgeType === "status" ? "Status" : badgeConfig.badgeType === "uptime" ? "Uptime" : "Latency"
+        );
     return `![${altText}](${badgeUrl})`;
   });
 
@@ -101,7 +119,11 @@
   const htmlSnippet = $derived.by(() => {
     if (!badgeUrl) return "";
     const monitor = monitors.find((m) => m.tag === badgeConfig.tag);
-    const altText = monitor ? `${monitor.name} ${badgeConfig.badgeType}` : badgeConfig.badgeType;
+    const altText = monitor
+      ? `${monitor.name} ${$adminT(badgeConfig.badgeType === "status" ? "Status" : badgeConfig.badgeType === "uptime" ? "Uptime" : "Latency")}`
+      : $adminT(
+          badgeConfig.badgeType === "status" ? "Status" : badgeConfig.badgeType === "uptime" ? "Uptime" : "Latency"
+        );
     return `<img src="${badgeUrl}" alt="${altText}" />`;
   });
 
@@ -169,16 +191,16 @@
     <div class="flex flex-col gap-6">
       <Card.Root>
         <Card.Header>
-          <Card.Title>Badge Generator</Card.Title>
+          <Card.Title>{$adminT("Badge Generator")}</Card.Title>
           <Card.Description>
-            Create a customizable badge to display the status, uptime, or latency of your monitors
+            {$adminT("Create a customizable badge to display the status, uptime, or latency of your monitors")}
           </Card.Description>
         </Card.Header>
         <Card.Content>
           <div class="grid grid-cols-2 gap-4">
             <div class="flex flex-col gap-4 border-r pr-4">
               <div class="flex flex-col gap-2">
-                <Label for="monitor-select">Monitor</Label>
+                <Label for="monitor-select">{$adminT("Monitor")}</Label>
                 <Select.Root
                   type="single"
                   value={badgeConfig.tag}
@@ -188,11 +210,11 @@
                 >
                   <Select.Trigger id="monitor-select" class="w-full">
                     {badgeConfig.tag === "_"
-                      ? "All Monitors"
-                      : monitors.find((m) => m.tag === badgeConfig.tag)?.name || "Select a monitor"}
+                      ? $adminT("All Monitors")
+                      : monitors.find((m) => m.tag === badgeConfig.tag)?.name || $adminT("Select a monitor")}
                   </Select.Trigger>
                   <Select.Content>
-                    <Select.Item value="_">All Monitors</Select.Item>
+                    <Select.Item value="_">{$adminT("All Monitors")}</Select.Item>
                     {#each monitors as monitor (monitor.tag)}
                       <Select.Item value={monitor.tag}>{monitor.name}</Select.Item>
                     {/each}
@@ -202,7 +224,7 @@
 
               <!-- Badge Type -->
               <div class="flex flex-col gap-2">
-                <Label for="badge-type">Badge Type</Label>
+                <Label for="badge-type">{$adminT("Badge Type")}</Label>
                 <Select.Root
                   type="single"
                   value={badgeConfig.badgeType}
@@ -210,22 +232,28 @@
                     if (v) badgeConfig.badgeType = v as "status" | "uptime" | "latency";
                   }}
                 >
-                  <Select.Trigger id="badge-type" class="w-full capitalize">
-                    {badgeConfig.badgeType}
+                  <Select.Trigger id="badge-type" class="w-full">
+                    {$adminT(
+                      badgeConfig.badgeType === "status"
+                        ? "Status"
+                        : badgeConfig.badgeType === "uptime"
+                          ? "Uptime"
+                          : "Latency"
+                    )}
                   </Select.Trigger>
                   <Select.Content>
-                    <Select.Item value="status">Status</Select.Item>
-                    <Select.Item value="uptime">Uptime</Select.Item>
-                    <Select.Item value="latency">Latency</Select.Item>
+                    <Select.Item value="status">{$adminT("Status")}</Select.Item>
+                    <Select.Item value="uptime">{$adminT("Uptime")}</Select.Item>
+                    <Select.Item value="latency">{$adminT("Latency")}</Select.Item>
                   </Select.Content>
                 </Select.Root>
                 <p class="text-muted-foreground text-xs">
                   {#if badgeConfig.badgeType === "status"}
-                    Shows current real-time status (UP, DOWN, DEGRADED)
+                    {$adminT("Shows current real-time status (UP, DOWN, DEGRADED)")}
                   {:else if badgeConfig.badgeType === "uptime"}
-                    Shows uptime percentage over a time period
+                    {$adminT("Shows uptime percentage over a time period")}
                   {:else}
-                    Shows latency over a time period
+                    {$adminT("Shows latency over a time period")}
                   {/if}
                 </p>
               </div>
@@ -233,7 +261,7 @@
               <!-- Locale (only for status badges) -->
               {#if badgeConfig.badgeType === "status" && activatedLocales.length > 0}
                 <div class="flex flex-col gap-2">
-                  <Label for="badge-locale">Language</Label>
+                  <Label for="badge-locale">{$adminT("Language")}</Label>
                   <Select.Root
                     type="single"
                     value={badgeConfig.locale || "en"}
@@ -242,22 +270,27 @@
                     }}
                   >
                     <Select.Trigger id="badge-locale" class="w-full">
-                      {activatedLocales.find((l) => l.code === (badgeConfig.locale || "en"))?.name || "English"}
+                      {displayLanguage({
+                        code: badgeConfig.locale || "en",
+                        name: activatedLocales.find((l) => l.code === (badgeConfig.locale || "en"))?.name || "English"
+                      })}
                     </Select.Trigger>
                     <Select.Content>
                       {#each activatedLocales as locale (locale.code)}
-                        <Select.Item value={locale.code}>{locale.name}</Select.Item>
+                        <Select.Item value={locale.code}>{displayLanguage(locale)}</Select.Item>
                       {/each}
                     </Select.Content>
                   </Select.Root>
-                  <p class="text-muted-foreground text-xs">Status text will be shown in the selected language</p>
+                  <p class="text-muted-foreground text-xs">
+                    {$adminT("Status text will be shown in the selected language")}
+                  </p>
                 </div>
               {/if}
 
               <!-- Duration (only for uptime/latency) -->
               {#if badgeConfig.badgeType !== "status"}
                 <div class="flex flex-col gap-2">
-                  <Label for="duration">Time Period</Label>
+                  <Label for="duration">{$adminT("Time Period")}</Label>
                   <Select.Root
                     type="single"
                     value={badgeConfig.sinceLast.toString()}
@@ -266,11 +299,12 @@
                     }}
                   >
                     <Select.Trigger id="duration" class="w-full">
-                      {durationPresets.find((d) => d.value === badgeConfig.sinceLast)?.label || "Custom"}
+                      {$adminT(String(durationPresets.find((d) => d.value === badgeConfig.sinceLast)?.label ?? "")) ||
+                        $adminT("Custom")}
                     </Select.Trigger>
                     <Select.Content>
                       {#each durationPresets as preset (preset.value)}
-                        <Select.Item value={preset.value.toString()}>{preset.label}</Select.Item>
+                        <Select.Item value={preset.value.toString()}>{$adminT(String(preset.label ?? ""))}</Select.Item>
                       {/each}
                     </Select.Content>
                   </Select.Root>
@@ -279,8 +313,8 @@
                 <!-- Hide Duration Toggle -->
                 <div class="flex items-center justify-between">
                   <div class="space-y-0.5">
-                    <Label for="hide-duration">Hide Duration</Label>
-                    <p class="text-muted-foreground text-xs">Don't show the time period on the badge</p>
+                    <Label for="hide-duration">{$adminT("Hide Duration")}</Label>
+                    <p class="text-muted-foreground text-xs">{$adminT("Don't show the time period on the badge")}</p>
                   </div>
                   <Switch
                     id="hide-duration"
@@ -293,7 +327,7 @@
               <!-- Latency Metric (only for latency) -->
               {#if badgeConfig.badgeType === "latency"}
                 <div class="flex flex-col gap-2">
-                  <Label for="latency-metric">Latency Metric</Label>
+                  <Label for="latency-metric">{$adminT("Latency Metric")}</Label>
                   <Select.Root
                     type="single"
                     value={badgeConfig.metric}
@@ -301,26 +335,28 @@
                       if (v) badgeConfig.metric = v as "average" | "maximum" | "minimum";
                     }}
                   >
-                    <Select.Trigger id="latency-metric" class="w-full capitalize">
+                    <Select.Trigger id="latency-metric" class="w-full">
                       {badgeConfig.metric === "average"
-                        ? "Average"
+                        ? $adminT("Average")
                         : badgeConfig.metric === "maximum"
-                          ? "Maximum"
-                          : "Minimum"}
+                          ? $adminT("Maximum")
+                          : $adminT("Minimum")}
                     </Select.Trigger>
                     <Select.Content>
-                      <Select.Item value="average">Average</Select.Item>
-                      <Select.Item value="maximum">Maximum</Select.Item>
-                      <Select.Item value="minimum">Minimum</Select.Item>
+                      <Select.Item value="average">{$adminT("Average")}</Select.Item>
+                      <Select.Item value="maximum">{$adminT("Maximum")}</Select.Item>
+                      <Select.Item value="minimum">{$adminT("Minimum")}</Select.Item>
                     </Select.Content>
                   </Select.Root>
-                  <p class="text-muted-foreground text-xs">Select which latency metric to display on the badge</p>
+                  <p class="text-muted-foreground text-xs">
+                    {$adminT("Select which latency metric to display on the badge")}
+                  </p>
                 </div>
               {/if}
 
               <!-- Badge Style -->
               <div class="flex flex-col gap-2">
-                <Label for="badge-style">Style</Label>
+                <Label for="badge-style">{$adminT("Style")}</Label>
                 <Select.Root
                   type="single"
                   value={badgeConfig.style}
@@ -328,12 +364,12 @@
                     if (v) badgeConfig.style = v as BadgeStyle;
                   }}
                 >
-                  <Select.Trigger id="badge-style" class="w-full capitalize">
-                    {badgeConfig.style}
+                  <Select.Trigger id="badge-style" class="w-full">
+                    {$adminT(badgeConfig.style)}
                   </Select.Trigger>
                   <Select.Content>
                     {#each BADGE_STYLES as style (style)}
-                      <Select.Item value={style} class="capitalize">{style}</Select.Item>
+                      <Select.Item value={style} class="">{$adminT(style)}</Select.Item>
                     {/each}
                   </Select.Content>
                 </Select.Root>
@@ -341,14 +377,18 @@
 
               <!-- Custom Label -->
               <div class="flex flex-col gap-2">
-                <Label for="custom-label">Custom Label</Label>
-                <Input id="custom-label" bind:value={badgeConfig.label} placeholder="Leave empty to use monitor name" />
+                <Label for="custom-label">{$adminT("Custom Label")}</Label>
+                <Input
+                  id="custom-label"
+                  bind:value={badgeConfig.label}
+                  placeholder={$adminT("Leave empty to use monitor name")}
+                />
               </div>
 
               <!-- Colors -->
               <div class="grid grid-cols-2 gap-4">
                 <div class="flex flex-col gap-2">
-                  <Label>Label Color</Label>
+                  <Label>{$adminT("Label Color")}</Label>
                   <div class="flex items-center gap-2">
                     <ColorPicker
                       bind:hex={badgeConfig.labelColor}
@@ -360,7 +400,7 @@
                   </div>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <Label>Badge Color</Label>
+                  <Label>{$adminT("Badge Color")}</Label>
                   <div class="flex items-center gap-2">
                     <ColorPicker bind:hex={badgeConfig.color} label="" --picker-width="150px" --picker-height="150px" />
                     <Input bind:value={badgeConfig.color} class="w-24 font-mono text-xs" />
@@ -372,25 +412,31 @@
               {#if badgeConfig.tag}
                 <div>
                   <p class="flex items-center justify-between">
-                    <span>Preview</span>
-                    <Button variant="ghost" size="icon-sm" onclick={refreshPreview} disabled={!badgeConfig.tag}>
+                    <span>{$adminT("Preview")}</span>
+                    <Button
+                      aria-label={$adminT("Refresh preview")}
+                      variant="ghost"
+                      size="icon-sm"
+                      onclick={refreshPreview}
+                      disabled={!badgeConfig.tag}
+                    >
                       <RefreshCwIcon class="size-4" />
                     </Button>
                   </p>
-                  <p class="text-muted-foreground text-sm">See how your badge will look</p>
+                  <p class="text-muted-foreground text-sm">{$adminT("See how your badge will look")}</p>
                 </div>
                 <!-- Badge Preview -->
                 <div class="bg-muted/50 flex items-center justify-center rounded-lg border p-8">
                   {#key previewKey}
-                    <img src={badgeUrl} alt="Badge preview" class="max-w-full" />
+                    <img src={badgeUrl} alt={$adminT("Badge preview")} class="max-w-full" />
                   {/key}
                 </div>
 
                 <!-- URL -->
                 <div class="space-y-2">
-                  <Label>Badge URL</Label>
+                  <Label for="badge-url">{$adminT("Badge URL")}</Label>
                   <div class="flex gap-2">
-                    <Input value={badgeUrl} readonly class="font-mono text-xs" />
+                    <Input id="badge-url" value={badgeUrl} readonly class="font-mono text-xs" />
                     <CopyButton text={badgeUrl}>
                       <CopyIcon class="size-4" />
                     </CopyButton>
@@ -399,9 +445,9 @@
 
                 <!-- Markdown -->
                 <div class="space-y-2">
-                  <Label>Markdown</Label>
+                  <Label for="badge-markdown">{$adminT("Markdown")}</Label>
                   <div class="flex gap-2">
-                    <Input value={markdownSnippet} readonly class="font-mono text-xs" />
+                    <Input id="badge-markdown" value={markdownSnippet} readonly class="font-mono text-xs" />
                     <CopyButton text={markdownSnippet}>
                       <CopyIcon class="size-4" />
                     </CopyButton>
@@ -410,9 +456,9 @@
 
                 <!-- HTML -->
                 <div class="space-y-2">
-                  <Label>HTML</Label>
+                  <Label for="badge-html">{$adminT("HTML")}</Label>
                   <div class="flex gap-2">
-                    <Input value={htmlSnippet} readonly class="font-mono text-xs" />
+                    <Input id="badge-html" value={htmlSnippet} readonly class="font-mono text-xs" />
                     <CopyButton text={htmlSnippet}>
                       <CopyIcon class="size-4" />
                     </CopyButton>
@@ -420,7 +466,7 @@
                 </div>
               {:else}
                 <div class="text-muted-foreground flex items-center justify-center py-12 text-center">
-                  Select a monitor to preview the badge
+                  {$adminT("Select a monitor to preview the badge")}
                 </div>
               {/if}
             </div>

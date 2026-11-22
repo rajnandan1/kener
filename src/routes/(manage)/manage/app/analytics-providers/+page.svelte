@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import ProviderSettingsPanel from "$lib/components/manage/ProviderSettingsPanel.svelte";
   import type { ProviderDefinition } from "$lib/client/types/provider-settings.js";
 
@@ -176,6 +179,6 @@
 
 <ProviderSettingsPanel
   initialProviders={analyticsProviders}
-  description="Add your analytics ID/Key here. You can add multiple analytics providers."
+  description={$adminT("Add your analytics ID/Key here. You can add multiple analytics providers.")}
   learnMoreUrl="https://kener.ing/docs/v4/analytics"
 />

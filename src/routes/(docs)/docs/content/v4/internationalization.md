@@ -1,6 +1,6 @@
 ---
 title: Internationalization
-description: Configure language localization, timezone behavior, and date/time formats for your Kener status page.
+description: Configure public and management panel languages, timezone behavior, and date/time formats.
 ---
 
 Kener internationalization has three parts:
@@ -24,6 +24,52 @@ Use this page to configure all three from the admin UI.
 4. In **Date & Time Format**:
     - set formats for **Date + Time**, **Date Only**, and **Time Only**,
     - click **Save Format**.
+
+## Management panel language {#admin-panel-language}
+
+Use the separate **Panel language** selector in the management header or on account pages to choose **English**, **Polski**, or **Čeština**. Labels change immediately.
+
+The choice is stored for one year in the `kener_admin_locale` cookie, scoped to the application base path. An existing cookie takes priority; otherwise the panel follows a supported browser language and falls back to English. This is a browser preference, not a user-account setting.
+
+**Internationalization → Languages** continues to control the public status page independently. Panel localization does not translate saved incident text, monitor names, editable email bodies, code examples, or protocol identifiers. On account pages, the built-in Documentation and Login links follow the panel language only when their original labels and destinations still match the defaults. Custom navigation labels and URLs remain unchanged.
+
+Built-in editor controls, editor loading text, color-picker labels, and notification accessibility labels also follow the panel language. Date-format previews use the selected default public locale, so changing the panel language does not change those previews. Public locale names in the management form follow the panel language without changing the stored locale codes.
+
+Panel catalogues live in `src/lib/admin-i18n/`. The shared registry in `languages.ts` supplies the selector, supported browser languages, translations, and date formats, including `LocalTime` timestamps in incident comments and user lists. English is the fallback for every registered language. The public-page translation scripts below do not audit the management panel.
+
+### Contribute a panel language {#admin-panel-contribute}
+
+1. Fork the repository and create a translation branch from a version containing panel localization.
+2. Copy `src/lib/admin-i18n/en.json` to `<code>.json` and translate every value. Keep English keys, placeholder names such as `{value0}`, URLs, code, and technical confirmation phrases unchanged. Use a lowercase language code such as `de` or `pt-br`.
+3. Import the catalogue and matching `date-fns/locale` locale into `src/lib/admin-i18n/languages.ts`, then add one registration. For example:
+
+    ```ts
+    import { de } from "date-fns/locale";
+    import german from "./de.json";
+
+    // Add to adminLanguages:
+    { code: "de", label: "Deutsch", localeTag: "de-DE", dateLocale: de, messages: german },
+    ```
+
+    No other selector, cookie, resolver, or formatting changes are required. The native label is shown without translating it into other panel languages.
+
+4. Run `node scripts/admin-i18n/audit.mjs`, `npm run check`, and `npm test`. The audit checks every catalogue for missing values and mismatched placeholders. Keep shared product names, protocol identifiers, examples, and exact confirmation phrases in `scripts/admin-i18n/technical-exceptions.json`. Record native wording that happens to match English, such as Polish “Host” or Czech “Role”, under its language code in `scripts/admin-i18n/locale-exceptions.json`. This keeps the audit strict for other languages.
+5. Select the language and review account pages, forms, errors, dialogs, collapsed-menu tooltips, editor controls, dates, and a narrow mobile layout. Submit a pull request with screenshots and the checks performed. Language variants written right-to-left also need a layout review; registering a language does not add RTL layout support.
+
+### Follow upstream releases {#admin-panel-upstream-updates}
+
+Run the read-only release check from the repository root:
+
+```bash
+node scripts/admin-i18n/check-upstream.mjs
+node scripts/admin-i18n/audit.mjs --report panel-translation-report.json
+```
+
+The release check compares the latest stable GitHub release, the checked-out version, and the last reviewed version recorded in `scripts/admin-i18n/source-inventory.json`. Network failures are reported as failures, not as proof that the translations are current. It does not install software, merge Git branches, or publish changes.
+
+A version difference is an advisory audit warning. Missing translations and incorrect literal keys or placeholders still fail the audit. This keeps a release-number change from breaking an otherwise valid translation check while retaining a visible reminder to review new UI text.
+
+For each stable release, merge the upstream tag into a dedicated update branch, review changed account/management screens and shared controls, update all registered catalogues, and run the audit, type checks, tests, and build. Check the changed screens in the browser. Only then update the inventory's reviewed version, tag, commit, and date, and submit the update for review. Keep unrelated fork branding and documentation on their existing branch.
 
 ## Localization {#localization}
 

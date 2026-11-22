@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { toast } from "svelte-sonner";
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
@@ -30,17 +33,17 @@
 
   async function handleAcceptInvitation() {
     if (!newPassword || !confirmPassword) {
-      toast.error("Please fill in all fields");
+      toast.error($adminT("Please fill in all fields"));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error($adminT("Passwords do not match"));
       return;
     }
 
     if (newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters");
+      toast.error($adminT("Password must be at least 8 characters"));
       return;
     }
 
@@ -55,14 +58,14 @@
       const data = await response.json();
 
       if (!response.ok) {
-        toast.error(data.error || "Failed to set password");
+        toast.error($adminT(data.error || "Failed to set password"));
         return;
       }
 
       accountActivated = true;
-      toast.success("Account activated successfully!");
+      toast.success($adminT("Account activated successfully!"));
     } catch (e) {
-      toast.error("An error occurred. Please try again.");
+      toast.error($adminT("An error occurred. Please try again."));
     } finally {
       loading = false;
     }
@@ -75,7 +78,7 @@
 </script>
 
 <svelte:head>
-  <title>Accept Invitation</title>
+  <title>{$adminT("Accept Invitation")}</title>
 </svelte:head>
 
 <div class="flex min-h-screen items-center justify-center p-4">
@@ -86,13 +89,13 @@
         <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
           <AlertCircleIcon class="h-8 w-8 text-red-600" />
         </div>
-        <Card.Title>Invalid Invitation</Card.Title>
-        <Card.Description>{error}</Card.Description>
+        <Card.Title>{$adminT("Invalid Invitation")}</Card.Title>
+        <Card.Description>{$adminT(String(error ?? ""))}</Card.Description>
       </Card.Header>
       <Card.Content>
         <Button href={clientResolver(resolve, "/account/signin")} class="w-full">
           <ArrowLeftIcon class="mr-2 h-4 w-4" />
-          Go to Sign In
+          {$adminT("Go to Sign In")}
         </Button>
       </Card.Content>
     {:else if accountActivated}
@@ -101,31 +104,32 @@
         <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
           <CheckCircleIcon class="h-8 w-8 text-green-600" />
         </div>
-        <Card.Title>Account Activated</Card.Title>
+        <Card.Title>{$adminT("Account Activated")}</Card.Title>
         <Card.Description>
-          Your account has been set up successfully. You can now sign in with your new password.
+          {$adminT("Your account has been set up successfully. You can now sign in with your new password.")}
         </Card.Description>
       </Card.Header>
       <Card.Content>
         <Button href={clientResolver(resolve, "/account/signin")} class="w-full">
           <ArrowLeftIcon class="mr-2 h-4 w-4" />
-          Go to Sign In
+          {$adminT("Go to Sign In")}
         </Button>
       </Card.Content>
     {:else}
       <!-- Set Password View -->
       <Card.Header>
-        <Card.Title>Welcome, {name}!</Card.Title>
+        <Card.Title>{$adminT("Welcome, {name}!", { name: name })}</Card.Title>
         <Card.Description>
-          You've been invited to join as <strong>{email}</strong>. Create a password to activate your account and get
-          started.
+          {$adminT("You've been invited to join as")} <strong>{email}</strong>{$adminT(
+            ". Create a password to activate your account and get started."
+          )}
         </Card.Description>
       </Card.Header>
       <Card.Content>
         <form onsubmit={handleSubmit}>
           <Field.Group>
             <Field.Field class="relative flex flex-col gap-1">
-              <Field.Label for="newPassword">Password</Field.Label>
+              <Field.Label for="newPassword">{$adminT("Password")}</Field.Label>
               <InputGroup.Root>
                 <InputGroup.Addon>
                   <LockIcon />
@@ -140,8 +144,8 @@
                 <InputGroup.Addon align="inline-end">
                   <InputGroup.Button
                     type="button"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    title={showPassword ? "Hide password" : "Show password"}
+                    aria-label={$adminT(String(showPassword ? "Hide password" : "Show password"))}
+                    title={$adminT(String(showPassword ? "Hide password" : "Show password"))}
                     size="icon-xs"
                     onclick={() => (showPassword = !showPassword)}
                   >
@@ -154,12 +158,12 @@
                 </InputGroup.Addon>
               </InputGroup.Root>
               <Field.Description>
-                Password must contain at least 8 characters, one uppercase, one lowercase, and one number.
+                {$adminT("Password must contain at least 8 characters, one uppercase, one lowercase, and one number.")}
               </Field.Description>
             </Field.Field>
 
             <Field.Field class="relative flex flex-col gap-1">
-              <Field.Label for="confirmPassword">Confirm Password</Field.Label>
+              <Field.Label for="confirmPassword">{$adminT("Confirm Password")}</Field.Label>
               <InputGroup.Root>
                 <InputGroup.Addon>
                   <LockIcon />
@@ -174,8 +178,8 @@
                 <InputGroup.Addon align="inline-end">
                   <InputGroup.Button
                     type="button"
-                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                    title={showConfirmPassword ? "Hide password" : "Show password"}
+                    aria-label={$adminT(String(showConfirmPassword ? "Hide password" : "Show password"))}
+                    title={$adminT(String(showConfirmPassword ? "Hide password" : "Show password"))}
                     size="icon-xs"
                     onclick={() => (showConfirmPassword = !showConfirmPassword)}
                   >
@@ -193,9 +197,9 @@
           <div class="mt-6">
             <Button type="submit" class="w-full" disabled={loading}>
               {#if loading}
-                Activating Account...
+                {$adminT("Activating Account...")}
               {:else}
-                Activate Account
+                {$adminT("Activate Account")}
               {/if}
             </Button>
           </div>
@@ -203,7 +207,7 @@
           <div class="mt-4 text-center">
             <Button variant="link" href={clientResolver(resolve, "/account/signin")} class="text-sm">
               <ArrowLeftIcon class="mr-1 h-3 w-3" />
-              Back to Sign In
+              {$adminT("Back to Sign In")}
             </Button>
           </div>
         </form>

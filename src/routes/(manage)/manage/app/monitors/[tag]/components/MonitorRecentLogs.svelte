@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Badge } from "$lib/components/ui/badge/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
@@ -89,15 +92,15 @@
   <Card.Header>
     <div class="flex items-center justify-between">
       <div>
-        <Card.Title>Recent Logs</Card.Title>
-        <Card.Description>Last 10 monitoring data points</Card.Description>
+        <Card.Title>{$adminT("Recent Logs")}</Card.Title>
+        <Card.Description>{$adminT("Last 10 monitoring data points")}</Card.Description>
       </div>
       <div class="flex items-center gap-2">
-        <Button variant="ghost" size="icon" onclick={fetchLogs} disabled={loading}>
+        <Button aria-label={$adminT("Refresh logs")} variant="ghost" size="icon" onclick={fetchLogs} disabled={loading}>
           <RefreshCwIcon class="size-4 {loading ? 'animate-spin' : ''}" />
         </Button>
         <Button variant="outline" size="sm" href={clientResolver(resolve, "/manage/app/monitoring-data")}>
-          View All
+          {$adminT("View All")}
           <ExternalLinkIcon class="ml-1 size-3" />
         </Button>
       </div>
@@ -109,17 +112,19 @@
         <Spinner class="size-6" />
       </div>
     {:else if logs.length === 0}
-      <div class="text-muted-foreground py-8 text-center text-sm">No monitoring data found for this monitor</div>
+      <div class="text-muted-foreground py-8 text-center text-sm">
+        {$adminT("No monitoring data found for this monitor")}
+      </div>
     {:else}
       <div class="ktable rounded-lg border">
         <Table.Root>
           <Table.Header>
             <Table.Row>
-              <Table.Head class="w-44">Timestamp</Table.Head>
-              <Table.Head class="w-20">Status</Table.Head>
-              <Table.Head class="w-20">Latency</Table.Head>
-              <Table.Head class="w-20">Type</Table.Head>
-              <Table.Head>Error</Table.Head>
+              <Table.Head class="w-44">{$adminT("Timestamp")}</Table.Head>
+              <Table.Head class="w-20">{$adminT("Status")}</Table.Head>
+              <Table.Head class="w-20">{$adminT("Latency")}</Table.Head>
+              <Table.Head class="w-20">{$adminT("Type")}</Table.Head>
+              <Table.Head>{$adminT("Error")}</Table.Head>
             </Table.Row>
           </Table.Header>
           <Table.Body>
@@ -130,19 +135,19 @@
                 </Table.Cell>
                 <Table.Cell>
                   <Badge variant={getStatusBadgeVariant(log.status)}>
-                    {log.status || "N/A"}
+                    {$adminT(String(log.status ?? "")) || $adminT("N/A")}
                   </Badge>
                 </Table.Cell>
                 <Table.Cell>
                   {#if log.latency !== null}
-                    <span class="text-sm">{log.latency} ms</span>
+                    <span class="text-sm">{$adminT("{latency} ms", { latency: log.latency })}</span>
                   {:else}
                     <span class="text-muted-foreground text-sm">—</span>
                   {/if}
                 </Table.Cell>
                 <Table.Cell>
                   {#if log.type}
-                    <Badge variant="secondary" class="text-xs">{log.type}</Badge>
+                    <Badge variant="secondary" class="text-xs">{$adminT(String(log.type ?? ""))}</Badge>
                   {:else}
                     <span class="text-muted-foreground text-sm">—</span>
                   {/if}
@@ -151,10 +156,12 @@
                   {#if log.error_message}
                     <Tooltip.Root>
                       <Tooltip.Trigger>
-                        <span class="text-destructive line-clamp-1 max-w-xs text-sm">{log.error_message}</span>
+                        <span class="text-destructive line-clamp-1 max-w-xs text-sm"
+                          >{$adminT(String(log.error_message ?? ""))}</span
+                        >
                       </Tooltip.Trigger>
                       <Tooltip.Content class="max-w-md">
-                        <p class="break-words">{log.error_message}</p>
+                        <p class="break-words">{$adminT(String(log.error_message ?? ""))}</p>
                       </Tooltip.Content>
                     </Tooltip.Root>
                   {:else}

@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { formatAdminDate, formatAdminRelative } from "$lib/admin-i18n/formatters";
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT, locale } = getAdminI18n();
+
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
@@ -183,17 +187,7 @@
   }
 
   function formatPreviewDate(date: Date): string {
-    if (!scheduleTimezone) return format(date, "EEE, MMM d, yyyy 'at' h:mm a");
-    return date.toLocaleString("en-US", {
-      timeZone: scheduleTimezone,
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      timeZoneName: "short"
-    });
+    return formatAdminDate(date, $locale, scheduleTimezone || undefined);
   }
 
   function selectTimezone(zone: string) {
@@ -319,7 +313,7 @@
 
         events = result.events || [];
       } else {
-        error = "Maintenance not found";
+        error = $adminT("Maintenance not found");
       }
     } catch (e) {
       error = e instanceof Error ? e.message : "Failed to fetch maintenance";
@@ -394,9 +388,9 @@
         });
         const result = await response.json();
         if (result.error) {
-          toast.error(result.error);
+          toast.error($adminT(result.error));
         } else {
-          toast.success("Maintenance created successfully");
+          toast.success($adminT("Maintenance created successfully"));
           goto(clientResolver(resolve, `/manage/app/maintenances/${result.maintenance_id}`));
         }
       } else {
@@ -420,13 +414,13 @@
         });
         const result = await response.json();
         if (result.error) {
-          toast.error(result.error);
+          toast.error($adminT(result.error));
         } else {
-          toast.success("Maintenance updated successfully");
+          toast.success($adminT("Maintenance updated successfully"));
         }
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to save");
+      toast.error($adminT(e instanceof Error ? e.message : "Failed to save"));
     } finally {
       saving = false;
     }
@@ -434,7 +428,7 @@
 
   // Delete maintenance
   async function deleteMaintenance() {
-    if (!confirm("Are you sure you want to delete this maintenance? All events will also be deleted.")) return;
+    if (!confirm($adminT("Are you sure you want to delete this maintenance? All events will also be deleted."))) return;
 
     try {
       const response = await fetch(clientResolver(resolve, "/manage/api"), {
@@ -444,19 +438,19 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Maintenance deleted");
+        toast.success($adminT("Maintenance deleted"));
         goto(clientResolver(resolve, "/manage/app/maintenances"));
       }
     } catch {
-      toast.error("Failed to delete maintenance");
+      toast.error($adminT("Failed to delete maintenance"));
     }
   }
 
   // Delete event
   async function deleteEvent(eventId: number) {
-    if (!confirm("Are you sure you want to delete this event?")) return;
+    if (!confirm($adminT("Are you sure you want to delete this event?"))) return;
 
     try {
       const response = await fetch(clientResolver(resolve, "/manage/api"), {
@@ -466,13 +460,13 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Event deleted");
+        toast.success($adminT("Event deleted"));
         await fetchEvents();
       }
     } catch {
-      toast.error("Failed to delete event");
+      toast.error($adminT("Failed to delete event"));
     }
   }
 
@@ -488,14 +482,14 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success(status === "COMPLETED" ? "Event completed" : "Event cancelled");
+        toast.success($adminT(status === "COMPLETED" ? "Event completed" : "Event cancelled"));
         await fetchEvents();
         closeEventStatusDialog();
       }
     } catch {
-      toast.error("Failed to update event status");
+      toast.error($adminT("Failed to update event status"));
     } finally {
       updatingEventStatus = false;
     }
@@ -545,7 +539,7 @@
 
     // Check if in the future (upcoming)
     if (isFuture(startDate)) {
-      const distance = formatDistanceToNow(startDate, { addSuffix: false });
+      const distance = formatAdminRelative(startDate, $locale);
       return {
         label: `Upcoming • starts in ${distance}`,
         variant: "outline",
@@ -603,11 +597,15 @@
     <Breadcrumb.Root>
       <Breadcrumb.List>
         <Breadcrumb.Item>
-          <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/maintenances")}>Maintenances</Breadcrumb.Link>
+          <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/maintenances")}
+            >{$adminT("Maintenances")}</Breadcrumb.Link
+          >
         </Breadcrumb.Item>
         <Breadcrumb.Separator />
         <Breadcrumb.Item>
-          <Breadcrumb.Page>{isNew ? "New Maintenance" : `Edit #${params.id}`}</Breadcrumb.Page>
+          <Breadcrumb.Page
+            >{isNew ? $adminT("New Maintenance") : $adminT("Edit #{id}", { id: params.id })}</Breadcrumb.Page
+          >
         </Breadcrumb.Item>
       </Breadcrumb.List>
     </Breadcrumb.Root>
@@ -620,7 +618,7 @@
           class="mr-2"
           href={clientResolver(resolve, `/maintenances/${maintenance.id}?type=maintenance`)}
         >
-          View
+          {$adminT("View")}
         </Button>
       {/if}
     </div>
@@ -635,7 +633,7 @@
       <Card.Content class="pt-6">
         <div class="flex items-center gap-2">
           <AlertTriangleIcon class="text-destructive size-5" />
-          <p class="text-destructive">{error}</p>
+          <p class="text-destructive">{$adminT(String(error ?? ""))}</p>
         </div>
       </Card.Content>
     </Card.Root>
@@ -643,32 +641,32 @@
     <!-- Main Details Card -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>{isNew ? "Create New Maintenance" : "Maintenance Details"}</Card.Title>
+        <Card.Title>{isNew ? $adminT("Create New Maintenance") : $adminT("Maintenance Details")}</Card.Title>
         <Card.Description>
           {#if isNew}
-            Schedule a new maintenance window using iCalendar RRULE format
+            {$adminT("Schedule a new maintenance window using iCalendar RRULE format")}
           {:else}
-            Edit maintenance details
+            {$adminT("Edit maintenance details")}
           {/if}
         </Card.Description>
       </Card.Header>
       <Card.Content class="space-y-6">
         <!-- Schedule Type Selection -->
         <div class="flex flex-col gap-3">
-          <Label>Schedule Type <span class="text-destructive">*</span></Label>
+          <Label>{$adminT("Schedule Type")} <span class="text-destructive">*</span></Label>
           <RadioGroup.Root bind:value={scheduleType} class="flex gap-6">
             <div class="flex items-center gap-2">
               <RadioGroup.Item value="ONE_TIME" id="type-onetime" />
               <Label for="type-onetime" class="flex cursor-pointer items-center gap-2 font-normal">
                 <CalendarIcon class="size-4" />
-                One-Time
+                {$adminT("One-Time")}
               </Label>
             </div>
             <div class="flex items-center gap-2">
               <RadioGroup.Item value="RECURRING" id="type-recurring" />
               <Label for="type-recurring" class="flex cursor-pointer items-center gap-2 font-normal">
                 <RepeatIcon class="size-4" />
-                Recurring
+                {$adminT("Recurring")}
               </Label>
             </div>
           </RadioGroup.Root>
@@ -676,17 +674,17 @@
 
         <!-- Title -->
         <div class="flex flex-col gap-2">
-          <Label for="title">Title <span class="text-destructive">*</span></Label>
-          <Input id="title" bind:value={maintenance.title} placeholder="Scheduled maintenance window" />
+          <Label for="title">{$adminT("Title")} <span class="text-destructive">*</span></Label>
+          <Input id="title" bind:value={maintenance.title} placeholder={$adminT("Scheduled maintenance window")} />
         </div>
 
         <!-- Description -->
         <div class="flex flex-col gap-2">
-          <Label for="description">Description</Label>
+          <Label for="description">{$adminT("Description")}</Label>
           <Textarea
             id="description"
             bind:value={maintenance.description}
-            placeholder="Details about the maintenance..."
+            placeholder={$adminT("Details about the maintenance...")}
             rows={3}
           />
         </div>
@@ -694,9 +692,9 @@
         <!-- Global Visibility -->
         <div class="flex items-center justify-between rounded-md border p-3">
           <div class="flex flex-col gap-1">
-            <Label for="is-global">Global Maintenance</Label>
+            <Label for="is-global">{$adminT("Global Maintenance")}</Label>
             <p class="text-muted-foreground text-xs">
-              When enabled, this maintenance will be visible on all status pages
+              {$adminT("When enabled, this maintenance will be visible on all status pages")}
             </p>
           </div>
           <Switch
@@ -711,18 +709,21 @@
         <!-- Start Date/Time -->
         <div class="flex flex-col gap-2">
           <Label for="start-time">
-            {scheduleType === "ONE_TIME" ? "Start Date/Time" : "First Occurrence Date/Time"}
+            {scheduleType === "ONE_TIME" ? $adminT("Start Date/Time") : $adminT("First Occurrence Date/Time")}
             <span class="text-destructive">*</span>
           </Label>
           <Input id="start-time" type="datetime-local" bind:value={startDateTimeLocal} />
           {#if scheduleType === "RECURRING"}
             <p class="text-muted-foreground text-xs">
               {#if timezone}
-                Recurring maintenances run at this local time in {timezone} all year, also after a daylight saving change.
-                The date pattern is configured below.
+                {$adminT(
+                  "Recurring maintenances run at this local time in {timezone} all year, also after a daylight saving change. The date pattern is configured below.",
+                  { timezone: timezone }
+                )}
               {:else}
-                This is your browser time. Without a timezone the maintenance repeats in UTC, so its local time moves by
-                1 hour after a daylight saving change. The date pattern is configured below.
+                {$adminT(
+                  "This is your browser time. Without a timezone the maintenance repeats in UTC, so its local time moves by 1 hour after a daylight saving change. The date pattern is configured below."
+                )}
               {/if}
             </p>
           {/if}
@@ -731,7 +732,7 @@
         <!-- Timezone -->
         {#if scheduleType === "RECURRING"}
           <div class="flex flex-col gap-2">
-            <Label for="timezone">Timezone</Label>
+            <Label for="timezone">{$adminT("Timezone")}</Label>
             <Popover.Root bind:open={timezonePickerOpen}>
               <Popover.Trigger>
                 {#snippet child({ props })}
@@ -743,21 +744,21 @@
                     aria-expanded={timezonePickerOpen}
                     class="w-full justify-between font-normal"
                   >
-                    <span class="truncate">{timezone || NO_TIMEZONE}</span>
+                    <span class="truncate">{$adminT(String((timezone || NO_TIMEZONE) ?? ""))}</span>
                     <ChevronsUpDownIcon class="text-muted-foreground size-4 shrink-0" />
                   </Button>
                 {/snippet}
               </Popover.Trigger>
               <Popover.Content class="w-[var(--bits-popover-trigger-width)] p-0" align="start">
                 <Command.Root>
-                  <Command.Input placeholder="Search timezone..." />
+                  <Command.Input placeholder={$adminT("Search timezone...")} />
                   <Command.List class="max-h-60">
-                    <Command.Empty>No timezone found.</Command.Empty>
+                    <Command.Empty>{$adminT("No timezone found.")}</Command.Empty>
                     <Command.Group>
                       {#each ["", ...timezones] as zone (zone)}
                         <Command.Item value={zone || NO_TIMEZONE} onSelect={() => selectTimezone(zone)}>
                           <CheckIcon class="size-4 {timezone === zone ? 'opacity-100' : 'opacity-0'}" />
-                          {zone || NO_TIMEZONE}
+                          {$adminT(String((zone || NO_TIMEZONE) ?? ""))}
                         </Command.Item>
                       {/each}
                     </Command.Group>
@@ -770,19 +771,22 @@
 
         <!-- Duration -->
         <div class="flex flex-col gap-2">
-          <Label>Duration <span class="text-destructive">*</span></Label>
+          <Label>{$adminT("Duration")} <span class="text-destructive">*</span></Label>
           <div class="flex items-center gap-2">
             <div class="flex items-center gap-1">
               <Input type="number" min={0} max={72} class="w-20" bind:value={durationHours} />
-              <span class="text-muted-foreground text-sm">hours</span>
+              <span class="text-muted-foreground text-sm">{$adminT("hours")}</span>
             </div>
             <div class="flex items-center gap-1">
               <Input type="number" min={0} max={59} class="w-20" bind:value={durationMinutes} />
-              <span class="text-muted-foreground text-sm">minutes</span>
+              <span class="text-muted-foreground text-sm">{$adminT("minutes")}</span>
             </div>
           </div>
           <p class="text-muted-foreground text-xs">
-            Total: {calculatedDurationSeconds} seconds ({Math.floor(calculatedDurationSeconds / 60)} minutes)
+            {$adminT("Total: {calculatedDurationSeconds} seconds ({value2} minutes)", {
+              calculatedDurationSeconds: calculatedDurationSeconds,
+              value2: Math.floor(calculatedDurationSeconds / 60)
+            })}
           </p>
         </div>
 
@@ -791,23 +795,23 @@
           <Card.Header class="pb-3">
             <Card.Title class="flex items-center gap-2 text-base">
               <InfoIcon class="size-4" />
-              {scheduleType === "ONE_TIME" ? "Schedule Pattern" : "Recurrence Pattern (RRULE)"}
+              {scheduleType === "ONE_TIME" ? $adminT("Schedule Pattern") : $adminT("Recurrence Pattern (RRULE)")}
             </Card.Title>
           </Card.Header>
           <Card.Content class="space-y-4">
             {#if scheduleType === "ONE_TIME"}
               <!-- One-time: Show readonly RRULE -->
               <div class="flex flex-col gap-2">
-                <Label class="text-muted-foreground text-xs">iCalendar RRULE (auto-generated)</Label>
+                <Label class="text-muted-foreground text-xs">{$adminT("iCalendar RRULE (auto-generated)")}</Label>
                 <Input value="FREQ=MINUTELY;COUNT=1" disabled class="bg-muted font-mono text-sm" />
                 <p class="text-muted-foreground text-xs">
-                  One-time maintenance uses a fixed RRULE that triggers only once.
+                  {$adminT("One-time maintenance uses a fixed RRULE that triggers only once.")}
                 </p>
               </div>
             {:else}
               <!-- Recurring: Editable RRULE -->
               <div class="flex flex-col gap-2">
-                <Label for="rrule">iCalendar RRULE <span class="text-destructive">*</span></Label>
+                <Label for="rrule">{$adminT("iCalendar RRULE")} <span class="text-destructive">*</span></Label>
                 <Input
                   id="rrule"
                   bind:value={customRrule}
@@ -815,14 +819,14 @@
                   class={rruleError ? "border-destructive" : ""}
                 />
                 {#if rruleError}
-                  <p class="text-destructive text-xs">{rruleError}</p>
+                  <p class="text-destructive text-xs">{$adminT(String(rruleError ?? ""))}</p>
                 {/if}
               </div>
 
               <!-- Sample Patterns -->
               {#if isNew}
                 <div class="flex flex-col gap-2">
-                  <Label class="text-muted-foreground text-xs">Quick Patterns:</Label>
+                  <Label class="text-muted-foreground text-xs">{$adminT("Quick Patterns:")}</Label>
                   <div class="flex flex-wrap gap-2">
                     {#each sampleRrules as sample (sample.value)}
                       <Button
@@ -830,7 +834,7 @@
                         size="sm"
                         onclick={() => (customRrule = sample.value)}
                       >
-                        {sample.label}
+                        {$adminT(String(sample.label ?? ""))}
                       </Button>
                     {/each}
                   </div>
@@ -840,7 +844,7 @@
               <!-- Preview Dates -->
               {#if previewDates.length > 0}
                 <div class="bg-background rounded-md border p-3">
-                  <Label class="text-muted-foreground text-xs">Upcoming Occurrences:</Label>
+                  <Label class="text-muted-foreground text-xs">{$adminT("Upcoming Occurrences:")}</Label>
                   <ul class="mt-2 space-y-1 text-sm">
                     {#each previewDates as date (date)}
                       <li class="flex items-center gap-2">
@@ -857,11 +861,11 @@
 
         <!-- Monitor Selection -->
         <div class="flex flex-col gap-3">
-          <Label>Affected Monitors</Label>
+          <Label>{$adminT("Monitors affected by maintenance")}</Label>
 
           <!-- Available monitors to add -->
           <div class="rounded-md border p-3">
-            <Label class="text-muted-foreground mb-2 block text-xs">Select monitors to add:</Label>
+            <Label class="text-muted-foreground mb-2 block text-xs">{$adminT("Select monitors to add:")}</Label>
             <div class="grid max-h-32 grid-cols-2 gap-2 overflow-y-auto">
               {#each availableMonitors as monitor (monitor.tag)}
                 <div class="flex items-center gap-2">
@@ -876,7 +880,7 @@
                 </div>
               {/each}
               {#if availableMonitors.length === 0}
-                <p class="text-muted-foreground col-span-2 text-sm">No monitors available</p>
+                <p class="text-muted-foreground col-span-2 text-sm">{$adminT("No monitors available")}</p>
               {/if}
             </div>
           </div>
@@ -884,7 +888,9 @@
           <!-- Selected monitors with status -->
           {#if selectedMonitors.length > 0}
             <div class="rounded-md border p-3">
-              <Label class="text-muted-foreground mb-2 block text-xs">Monitor status during maintenance:</Label>
+              <Label class="text-muted-foreground mb-2 block text-xs"
+                >{$adminT("Monitor status during maintenance:")}</Label
+              >
               <div class="space-y-2">
                 {#each selectedMonitors as selectedMonitor, index (selectedMonitor.tag)}
                   {@const currentStatus = selectedMonitor.status}
@@ -901,13 +907,13 @@
                       }}
                     >
                       <Select.Trigger class="h-8 w-36 text-xs">
-                        {currentStatus}
+                        {$adminT(String(currentStatus ?? ""))}
                       </Select.Trigger>
                       <Select.Content>
-                        <Select.Item value="UP">UP</Select.Item>
-                        <Select.Item value="DOWN">DOWN</Select.Item>
-                        <Select.Item value="DEGRADED">DEGRADED</Select.Item>
-                        <Select.Item value="MAINTENANCE">MAINTENANCE</Select.Item>
+                        <Select.Item value="UP">{$adminT("UP")}</Select.Item>
+                        <Select.Item value="DOWN">{$adminT("DOWN")}</Select.Item>
+                        <Select.Item value="DEGRADED">{$adminT("DEGRADED")}</Select.Item>
+                        <Select.Item value="MAINTENANCE">{$adminT("MAINTENANCE")}</Select.Item>
                       </Select.Content>
                     </Select.Root>
                   </div>
@@ -916,28 +922,28 @@
             </div>
           {/if}
           <p class="text-muted-foreground text-xs">
-            Select monitors and set their status during the maintenance window
+            {$adminT("Select monitors and set their status during the maintenance window")}
           </p>
         </div>
 
         <!-- Status Toggle (only for existing) -->
         {#if !isNew}
           <div class="flex flex-col gap-2">
-            <Label>Status</Label>
+            <Label>{$adminT("Status")}</Label>
             <div class="flex gap-2">
               <Button
                 variant={maintenance.status === "ACTIVE" ? "default" : "outline"}
                 size="sm"
                 onclick={() => (maintenance.status = "ACTIVE")}
               >
-                Active
+                {$adminT("Active")}
               </Button>
               <Button
                 variant={maintenance.status === "INACTIVE" ? "default" : "outline"}
                 size="sm"
                 onclick={() => (maintenance.status = "INACTIVE")}
               >
-                Inactive
+                {$adminT("Inactive")}
               </Button>
             </div>
           </div>
@@ -947,7 +953,7 @@
         {#if !isNew}
           <Button variant="destructive" onclick={deleteMaintenance}>
             <TrashIcon class="size-4" />
-            Delete
+            {$adminT("Delete")}
           </Button>
         {/if}
         <Button onclick={saveMaintenance} disabled={saving || !isValid}>
@@ -956,7 +962,7 @@
           {:else}
             <SaveIcon class="size-4" />
           {/if}
-          {isNew ? "Create Maintenance" : "Save Changes"}
+          {isNew ? $adminT("Create Maintenance") : $adminT("Save Changes")}
         </Button>
       </Card.Footer>
     </Card.Root>
@@ -966,8 +972,8 @@
       <Card.Root>
         <Card.Header>
           <div>
-            <Card.Title>Maintenance Events</Card.Title>
-            <Card.Description>Pre-generated maintenance windows for the next 7 days</Card.Description>
+            <Card.Title>{$adminT("Maintenance Events")}</Card.Title>
+            <Card.Description>{$adminT("Pre-generated maintenance windows for the next 7 days")}</Card.Description>
           </div>
         </Card.Header>
         <Card.Content>
@@ -977,7 +983,9 @@
             </div>
           {:else if events.length === 0}
             <p class="text-muted-foreground py-4 text-center text-sm">
-              No events scheduled. Events are generated automatically when maintenance is created or updated.
+              {$adminT(
+                "No events scheduled. Events are generated automatically when maintenance is created or updated."
+              )}
             </p>
           {:else}
             <div class="space-y-3">
@@ -998,7 +1006,7 @@
                     </div>
                     <div class="space-y-1">
                       <div class="flex items-center gap-2">
-                        <Badge variant={displayStatus.variant}>{displayStatus.label}</Badge>
+                        <Badge variant={displayStatus.variant}>{$adminT(String(displayStatus.label ?? ""))}</Badge>
                       </div>
                       <p class="text-muted-foreground text-sm">
                         <LocalTime value={event.start_date_time} format="MMM d, yyyy HH:mm" />
@@ -1011,16 +1019,21 @@
                     {#if event.status === "ONGOING"}
                       <Button variant="outline" size="sm" onclick={() => openEventStatusDialog(event.id, "COMPLETED")}>
                         <CheckCircleIcon class="size-4" />
-                        Complete
+                        {$adminT("Complete")}
                       </Button>
                     {/if}
                     {#if event.status === "SCHEDULED" || event.status === "READY" || event.status === "ONGOING"}
                       <Button variant="outline" size="sm" onclick={() => openEventStatusDialog(event.id, "CANCELLED")}>
                         <XCircleIcon class="size-4" />
-                        Cancel
+                        {$adminT("Cancel")}
                       </Button>
                     {/if}
-                    <Button variant="ghost" size="icon" onclick={() => deleteEvent(event.id)}>
+                    <Button
+                      aria-label={$adminT("Delete event")}
+                      variant="ghost"
+                      size="icon"
+                      onclick={() => deleteEvent(event.id)}
+                    >
                       <TrashIcon class="size-4" />
                     </Button>
                   </div>
@@ -1037,12 +1050,12 @@
 <Dialog.Root bind:open={eventStatusDialogOpen}>
   <Dialog.Content>
     <Dialog.Header>
-      <Dialog.Title>{eventStatusDialogCopy.title}</Dialog.Title>
-      <Dialog.Description>{eventStatusDialogCopy.description}</Dialog.Description>
+      <Dialog.Title>{$adminT(String(eventStatusDialogCopy.title ?? ""))}</Dialog.Title>
+      <Dialog.Description>{$adminT(String(eventStatusDialogCopy.description ?? ""))}</Dialog.Description>
     </Dialog.Header>
     <Dialog.Footer>
       <Button variant="outline" onclick={closeEventStatusDialog} disabled={updatingEventStatus}>
-        {eventStatusDialogCopy.cancelLabel}
+        {$adminT(String(eventStatusDialogCopy.cancelLabel ?? ""))}
       </Button>
       <Button
         variant={eventStatusDialogCopy.confirmVariant}
@@ -1052,7 +1065,7 @@
         {#if updatingEventStatus}
           <Loader class="size-4 animate-spin" />
         {/if}
-        {eventStatusDialogCopy.confirmLabel}
+        {$adminT(String(eventStatusDialogCopy.confirmLabel ?? ""))}
       </Button>
     </Dialog.Footer>
   </Dialog.Content>

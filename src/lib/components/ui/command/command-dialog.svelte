@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
 	import type { Command as CommandPrimitive, Dialog as DialogPrimitive } from "bits-ui";
 	import type { Snippet } from "svelte";
 	import Command from "./command.svelte";
@@ -25,8 +28,8 @@
 
 <Dialog.Root bind:open {...restProps}>
 	<Dialog.Header class="sr-only">
-		<Dialog.Title>{title}</Dialog.Title>
-		<Dialog.Description>{description}</Dialog.Description>
+		<Dialog.Title>{$adminT(String(title ?? ""))}</Dialog.Title>
+		<Dialog.Description>{$adminT(String(description ?? ""))}</Dialog.Description>
 	</Dialog.Header>
 	<Dialog.Content class="overflow-hidden p-0" {portalProps}>
 		<Command

@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
@@ -24,7 +27,7 @@
   let heartbeatUrl = $derived(
     tag
       ? window.location.origin + clientResolve(resolve, `/ext/heartbeat/${tag}/${data.secretString}`)
-      : "Save the monitor first to get the heartbeat URL"
+      : $adminT("Save the monitor first to get the heartbeat URL")
   );
 
   function refreshSecret() {
@@ -38,8 +41,8 @@
       <InputGroup.Root>
         <InputGroup.Addon>
           <InputGroup.Text>
-            <span class="text-degraded">DEGRADED</span>
-            if no heartbeat received for
+            <span class="text-degraded">{$adminT("DEGRADED")}</span>
+            {$adminT("if no heartbeat received for")}
           </InputGroup.Text>
         </InputGroup.Addon>
         <InputGroup.Input
@@ -49,29 +52,34 @@
           placeholder="5"
         />
         <InputGroup.Addon align="inline-end">
-          <InputGroup.Text>minutes</InputGroup.Text>
+          <InputGroup.Text>{$adminT("minutes")}</InputGroup.Text>
         </InputGroup.Addon>
       </InputGroup.Root>
-      <p class="text-muted-foreground mt-1 text-xs">Mark as DEGRADED if no heartbeat received for this many minutes</p>
+      <p class="text-muted-foreground mt-1 text-xs">
+        {$adminT("Mark as DEGRADED if no heartbeat received for this many minutes")}
+      </p>
     </div>
     <div class="flex flex-col">
       <InputGroup.Root>
         <InputGroup.Addon>
           <InputGroup.Text>
-            <span class="text-down">DOWN</span> if no heartbeat received for
+            <span class="text-down">{$adminT("DOWN")}</span>
+            {$adminT("if no heartbeat received for")}
           </InputGroup.Text>
         </InputGroup.Addon>
         <InputGroup.Input class="text-right" id="hb-down" bind:value={data.downRemainingMinutes} placeholder="10" />
         <InputGroup.Addon align="inline-end">
-          <InputGroup.Text>minutes</InputGroup.Text>
+          <InputGroup.Text>{$adminT("minutes")}</InputGroup.Text>
         </InputGroup.Addon>
       </InputGroup.Root>
-      <p class="text-muted-foreground mt-1 text-xs">Mark as DOWN if no heartbeat received for this many minutes</p>
+      <p class="text-muted-foreground mt-1 text-xs">
+        {$adminT("Mark as DOWN if no heartbeat received for this many minutes")}
+      </p>
     </div>
   </div>
 
   <div class="flex flex-col gap-2">
-    <Label for="hb-secret">Heartbeat secret <span class="text-destructive">*</span></Label>
+    <Label for="hb-secret">{$adminT("Heartbeat secret")} <span class="text-destructive">*</span></Label>
     <div>
       <InputGroup.Root>
         <InputGroup.Input
@@ -81,23 +89,23 @@
           aria-describedby="hb-secret-rule"
         />
         <InputGroup.Addon align="inline-end">
-          <InputGroup.Button variant="secondary" onclick={refreshSecret}>New URL</InputGroup.Button>
+          <InputGroup.Button variant="secondary" onclick={refreshSecret}>{$adminT("New URL")}</InputGroup.Button>
         </InputGroup.Addon>
       </InputGroup.Root>
       <p id="hb-secret-rule" class={["mt-1 text-xs", secretValid ? "text-muted-foreground" : "text-destructive"]}>
-        {HEARTBEAT_SECRET_RULE}
+        {$adminT(String(HEARTBEAT_SECRET_RULE ?? ""))}
       </p>
     </div>
   </div>
 
   <div class="flex flex-col gap-2">
-    <Label for="hb-url">Heartbeat URL</Label>
+    <Label for="hb-url">{$adminT("Heartbeat URL")}</Label>
     <div>
       <div class="flex items-center gap-2">
         <InputGroup.Root>
           <InputGroup.Addon>
             <InputGroup.Text>
-              <Badge>GET | POST</Badge>
+              <Badge>{$adminT("GET | POST")}</Badge>
             </InputGroup.Text>
           </InputGroup.Addon>
           <InputGroup.Input class="text-muted-foreground" id="hb-url" value={heartbeatUrl} readonly />
@@ -108,7 +116,9 @@
           </InputGroup.Addon>
         </InputGroup.Root>
       </div>
-      <p class="text-muted-foreground mt-1 text-xs">Send a GET or POST request to this URL to record a heartbeat</p>
+      <p class="text-muted-foreground mt-1 text-xs">
+        {$adminT("Send a GET or POST request to this URL to record a heartbeat")}
+      </p>
     </div>
   </div>
 </div>

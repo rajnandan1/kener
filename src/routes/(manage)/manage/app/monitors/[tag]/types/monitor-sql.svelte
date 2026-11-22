@@ -1,9 +1,14 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT, editorPhrases: adminEditorPhrases } = getAdminI18n();
+  const editorLocale = $derived(EditorState.phrases.of($adminEditorPhrases));
+
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
   import * as InputGroup from "$lib/components/ui/input-group/index.js";
-  import CodeMirror from "svelte-codemirror-editor";
+  import { EditorState } from "@codemirror/state";
+  import CodeMirror from "$lib/components/manage/CodeEditor.svelte";
   import { javascript } from "@codemirror/lang-javascript";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
   import { mode } from "mode-watcher";
@@ -51,7 +56,7 @@
 <div class="space-y-4">
   <div class="grid grid-cols-2 gap-4">
     <div class="flex flex-col gap-2">
-      <Label for="sql-dbtype">Database Type</Label>
+      <Label for="sql-dbtype">{$adminT("Database Type")}</Label>
       <Select.Root
         type="single"
         value={data.dbType}
@@ -64,13 +69,13 @@
         </Select.Trigger>
         <Select.Content>
           {#each dbTypes as db (db.value)}
-            <Select.Item value={db.value}>{db.label}</Select.Item>
+            <Select.Item value={db.value}>{$adminT(String(db.label ?? ""))}</Select.Item>
           {/each}
         </Select.Content>
       </Select.Root>
     </div>
     <div class="flex flex-col gap-2">
-      <Label for="sql-timeout">Timeout (ms)</Label>
+      <Label for="sql-timeout">{$adminT("Timeout (ms)")}</Label>
       <Input id="sql-timeout" type="number" bind:value={data.timeout} placeholder="5000" />
     </div>
   </div>
@@ -78,7 +83,9 @@
   <div>
     <InputGroup.Root>
       <InputGroup.Addon>
-        <InputGroup.Text class="border-r-2 pr-2">Connection String for {selectedDbType}</InputGroup.Text>
+        <InputGroup.Text class="border-r-2 pr-2"
+          >{$adminT("Connection String for {selectedDbType}", { selectedDbType: selectedDbType })}</InputGroup.Text
+        >
       </InputGroup.Addon>
       <InputGroup.Input
         id="sql-connection"
@@ -89,8 +96,8 @@
       <InputGroup.Addon align="inline-end">
         <InputGroup.Button
           type="button"
-          aria-label={showConnectionString ? "Hide connection string" : "Show connection string"}
-          title={showConnectionString ? "Hide connection string" : "Show connection string"}
+          aria-label={$adminT(String(showConnectionString ? "Hide connection string" : "Show connection string"))}
+          title={$adminT(String(showConnectionString ? "Hide connection string" : "Show connection string"))}
           size="icon-xs"
           onclick={() => (showConnectionString = !showConnectionString)}
         >
@@ -102,13 +109,14 @@
         </InputGroup.Button>
       </InputGroup.Addon>
     </InputGroup.Root>
-    <p class="text-muted-foreground mt-1 text-xs">Connection string will be stored securely</p>
+    <p class="text-muted-foreground mt-1 text-xs">{$adminT("Connection string will be stored securely")}</p>
   </div>
 
   <div class="flex flex-col gap-2">
-    <Label for="sql-query">Query <span class="text-destructive">*</span></Label>
+    <Label for="sql-query">{$adminT("Query")} <span class="text-destructive">*</span></Label>
     <div class="rounded-md border">
       <CodeMirror
+        extensions={[editorLocale]}
         bind:value={data.query}
         lang={javascript()}
         theme={mode.current === "dark" ? githubDark : githubLight}
@@ -120,6 +128,6 @@
         }}
       />
     </div>
-    <p class="text-muted-foreground mt-1 text-xs">Query to execute. If successful, monitor is UP.</p>
+    <p class="text-muted-foreground mt-1 text-xs">{$adminT("Query to execute. If successful, monitor is UP.")}</p>
   </div>
 </div>

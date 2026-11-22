@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Field from "$lib/components/ui/field/index.js";
@@ -34,29 +37,29 @@
 </script>
 
 <svelte:head>
-  <title>{!isAdminAccountCreated ? "Create Admin Account" : "Sign In"}</title>
+  <title>{!isAdminAccountCreated ? $adminT("Create Admin Account") : $adminT("Sign In")}</title>
 </svelte:head>
 <div class="flex min-h-screen items-center justify-center p-4">
   <Card.Root class="kener-card w-full max-w-md">
     <Card.Header>
-      <Card.Title>{!isAdminAccountCreated ? "Create Admin Account" : "Sign In"}</Card.Title>
+      <Card.Title>{!isAdminAccountCreated ? $adminT("Create Admin Account") : $adminT("Sign In")}</Card.Title>
       <Card.Description>
         {!isAdminAccountCreated
-          ? "Set up your admin account to get started"
-          : "Enter your credentials to access the dashboard"}
+          ? $adminT("Set up your admin account to get started")
+          : $adminT("Enter your credentials to access the dashboard")}
       </Card.Description>
     </Card.Header>
     <Card.Content>
       {#if !isSetupComplete}
         <Alert.Root variant="destructive">
           <AlertCircleIcon />
-          <Alert.Title>Set up not completed.</Alert.Title>
+          <Alert.Title>{$adminT("Set up not completed.")}</Alert.Title>
           <Alert.Description>
-            <p>Please make sure to set the below environment variables:</p>
+            <p>{$adminT("Please make sure to set the below environment variables:")}</p>
             <ul class="list-inside list-disc text-sm">
-              <li>KENER_SECRET_KEY</li>
-              <li>ORIGIN</li>
-              <li>REDIS_URL</li>
+              <li>{$adminT("KENER_SECRET_KEY")}</li>
+              <li>{$adminT("ORIGIN")}</li>
+              <li>{$adminT("REDIS_URL")}</li>
             </ul>
             <Button
               variant="link"
@@ -64,7 +67,7 @@
               class="text-destructive w-full justify-start underline"
               href="https://kener.ing/docs/v4/setup/environment-variables"
             >
-              Go to docs
+              {$adminT("Go to docs")}
             </Button>
           </Alert.Description>
         </Alert.Root>
@@ -72,8 +75,8 @@
         {#if oidcError}
           <Alert.Root variant="destructive" class="mb-4">
             <AlertCircleIcon />
-            <Alert.Title>Authentication failed</Alert.Title>
-            <Alert.Description>{oidcError}</Alert.Description>
+            <Alert.Title>{$adminT("Authentication failed")}</Alert.Title>
+            <Alert.Description>{$adminT(String(oidcError ?? ""))}</Alert.Description>
           </Alert.Root>
         {/if}
 
@@ -81,7 +84,8 @@
           <div class="mb-4">
             <Button variant="outline" class="w-full" href={resolve("/account/oidc/login")}>
               <LogInIcon class="mr-2 h-4 w-4" />
-              Sign in with {oidcProviderName}
+              {$adminT("Sign in with")}
+              {oidcProviderName}
             </Button>
           </div>
 
@@ -91,7 +95,7 @@
                 <span class="border-border w-full border-t"></span>
               </div>
               <div class="relative flex justify-center text-xs uppercase">
-                <span class="bg-card text-muted-foreground px-2">or</span>
+                <span class="bg-card text-muted-foreground px-2">{$adminT("or")}</span>
               </div>
             </div>
           {/if}
@@ -108,15 +112,15 @@
             {#if form?.error}
               <Alert.Root variant="destructive" class="mb-4">
                 <AlertCircleIcon />
-                <Alert.Title>{!isAdminAccountCreated ? "Signup failed" : "Login failed"}</Alert.Title>
-                <Alert.Description>{form.error}</Alert.Description>
+                <Alert.Title>{!isAdminAccountCreated ? $adminT("Signup failed") : $adminT("Login failed")}</Alert.Title>
+                <Alert.Description>{$adminT(String(form.error ?? ""))}</Alert.Description>
               </Alert.Root>
             {/if}
 
             <Field.Group>
               {#if !isAdminAccountCreated}
                 <Field.Field>
-                  <Field.Label for="name">Name</Field.Label>
+                  <Field.Label for="name">{$adminT("Name")}</Field.Label>
                   <InputGroup.Root>
                     <InputGroup.Addon>
                       <UserIcon />
@@ -125,7 +129,7 @@
                       id="name"
                       name="name"
                       type="text"
-                      placeholder="Your name"
+                      placeholder={$adminT("Your name")}
                       value={nameValue}
                       required
                     />
@@ -134,7 +138,7 @@
               {/if}
 
               <Field.Field class="relative flex flex-col gap-1">
-                <Field.Label for="email">Email</Field.Label>
+                <Field.Label for="email">{$adminT("Email")}</Field.Label>
                 <InputGroup.Root>
                   <InputGroup.Addon>
                     <MailIcon />
@@ -143,7 +147,7 @@
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder={$adminT("you@example.com")}
                     value={emailValue}
                     required
                   />
@@ -152,14 +156,14 @@
 
               <Field.Field class="relative flex flex-col gap-1">
                 <Field.Label for="password" class="relative">
-                  Password
+                  {$adminT("Password")}
                   <Button
                     variant="link"
                     size="sm"
                     class="text-muted-foreground absolute top-0 right-0 h-auto p-0 text-xs"
                     href={resolve("/account/forgot")}
                   >
-                    Forgot?
+                    {$adminT("Forgot?")}
                   </Button>
                 </Field.Label>
                 <InputGroup.Root>
@@ -177,8 +181,8 @@
                   <InputGroup.Addon align="inline-end">
                     <InputGroup.Button
                       type="button"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                      title={showPassword ? "Hide password" : "Show password"}
+                      aria-label={$adminT(String(showPassword ? "Hide password" : "Show password"))}
+                      title={$adminT(String(showPassword ? "Hide password" : "Show password"))}
                       size="icon-xs"
                       onclick={() => (showPassword = !showPassword)}
                     >
@@ -192,7 +196,9 @@
                 </InputGroup.Root>
                 {#if !isAdminAccountCreated}
                   <Field.Description>
-                    Password must contain at least 8 characters, one uppercase, one lowercase, and one number.
+                    {$adminT(
+                      "Password must contain at least 8 characters, one uppercase, one lowercase, and one number."
+                    )}
                   </Field.Description>
                 {/if}
               </Field.Field>
@@ -201,9 +207,9 @@
             <div class="mt-6">
               <Button type="submit" class="w-full" disabled={loading}>
                 {#if loading}
-                  {!isAdminAccountCreated ? "Creating Account..." : "Signing In..."}
+                  {!isAdminAccountCreated ? $adminT("Creating Account...") : $adminT("Signing In...")}
                 {:else}
-                  {!isAdminAccountCreated ? "Create Account" : "Sign In"}
+                  {!isAdminAccountCreated ? $adminT("Create Account") : $adminT("Sign In")}
                 {/if}
               </Button>
             </div>

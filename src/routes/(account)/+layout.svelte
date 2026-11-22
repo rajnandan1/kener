@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { untrack } from "svelte";
+  import { createAdminI18n } from "$lib/admin-i18n/context";
   import "../layout.css";
   import "../kener.css";
   import { ModeWatcher } from "mode-watcher";
@@ -7,7 +9,8 @@
   import clientResolver from "$lib/client/resolver.js";
 
   let { children, data } = $props();
-  import KenerNav from "$lib/components/KenerNav.svelte";
+  const { locale, t: adminT } = createAdminI18n(untrack(() => data.adminLocale));
+  import AccountHeader from "$lib/components/AccountHeader.svelte";
 </script>
 
 <ModeWatcher defaultMode={data.defaultSiteTheme as "light" | "dark" | "system"} />
@@ -42,9 +45,9 @@
 	</style>`}
   <script src={clientResolver(resolve, "/capture.js")}></script>
 </svelte:head>
-<main>
+<main lang={$locale}>
   <!-- Nav -->
-  <KenerNav />
+  <AccountHeader />
   <!-- Body -->
   <div class="mx-auto max-w-5xl">
     {@render children()}

@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
   import * as Table from "$lib/components/ui/table/index.js";
@@ -53,7 +56,7 @@
   <div class="mb-4 flex justify-end">
     <Button class="cursor-pointer" onclick={() => goto(clientResolver(resolve, "/manage/app/pages/new"))}>
       <Plus class="size-4" />
-      New Page
+      {$adminT("New Page")}
     </Button>
   </div>
 
@@ -64,24 +67,26 @@
           <Spinner />
         </Item.Media>
         <Item.Content>
-          <Item.Title class="line-clamp-1">Loading Pages....</Item.Title>
+          <Item.Title class="line-clamp-1">{$adminT("Loading Pages....")}</Item.Title>
         </Item.Content>
       </Item.Root>
     </div>
   {:else if error}
     <div class="text-destructive py-8 text-center">
-      {error}
+      {$adminT(String(error ?? ""))}
     </div>
   {:else if pages.length === 0}
-    <div class="text-muted-foreground py-8 text-center">No pages found. Create your first page to get started.</div>
+    <div class="text-muted-foreground py-8 text-center">
+      {$adminT("No pages found. Create your first page to get started.")}
+    </div>
   {:else}
     <div class="ktable rounded-xl border">
       <Table.Root>
         <Table.Header>
           <Table.Row>
-            <Table.Head class="w-[340px]">Page</Table.Head>
-            <Table.Head class="w-[220px]">Path</Table.Head>
-            <Table.Head class="w-[150px]">Monitors</Table.Head>
+            <Table.Head class="w-[340px]">{$adminT("Page")}</Table.Head>
+            <Table.Head class="w-[220px]">{$adminT("Path")}</Table.Head>
+            <Table.Head class="w-[150px]">{$adminT("Monitors")}</Table.Head>
             <Table.Head class="w-[120px] text-right"></Table.Head>
           </Table.Row>
         </Table.Header>
@@ -117,22 +122,22 @@
               </Table.Cell>
               <Table.Cell>
                 {#if page.monitors && page.monitors.length > 0}
-                  <Badge variant="secondary">{page.monitors.length} monitor{page.monitors.length > 1 ? "s" : ""}</Badge>
+                  <Badge variant="secondary">{$adminT("Monitors: {length}", { length: page.monitors.length })}</Badge>
                 {:else}
-                  <Badge variant="outline" class="text-muted-foreground">No monitors</Badge>
+                  <Badge variant="outline" class="text-muted-foreground">{$adminT("No monitors")}</Badge>
                 {/if}
               </Table.Cell>
 
               <Table.Cell class="text-right">
                 <Button variant="ghost" target="_blank" size="sm" href={clientResolver(resolve, `/${page.page_path}`)}>
-                  View
+                  {$adminT("View")}
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onclick={() => goto(clientResolver(resolve, `/manage/app/pages/${page.id}`))}
                 >
-                  Edit
+                  {$adminT("Edit")}
                 </Button>
               </Table.Cell>
             </Table.Row>

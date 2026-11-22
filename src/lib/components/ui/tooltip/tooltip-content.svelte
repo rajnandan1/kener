@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { active: adminActive, locale: adminLocale } = getAdminI18n();
+
   import { Tooltip as TooltipPrimitive } from "bits-ui";
   import { cn } from "$lib/utils.js";
   import TooltipPortal from "./tooltip-portal.svelte";
@@ -24,6 +27,7 @@
   <TooltipPrimitive.Content
     bind:ref
     data-slot="tooltip-content"
+    lang={adminActive ? $adminLocale : undefined}
     {sideOffset}
     {side}
     class={cn(

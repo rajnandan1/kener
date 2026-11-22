@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
@@ -36,12 +39,14 @@
 
     const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/svg+xml", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      toast.error("Invalid file type. Allowed: PNG, JPG, SVG, WebP");
+      toast.error($adminT("Invalid file type. Allowed: PNG, JPG, SVG, WebP"));
       return;
     }
 
     if (file.size > GC.MAX_UPLOAD_BYTES) {
-      toast.error(`File too large. Maximum size is ${GC.MAX_UPLOAD_BYTES / (1024 * 1024)}MB`);
+      toast.error(
+        $adminT("File too large. Maximum size is {value1}MB", { value1: GC.MAX_UPLOAD_BYTES / (1024 * 1024) })
+      );
       return;
     }
 
@@ -67,13 +72,13 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
         monitor.image = result.url;
-        toast.success("Image uploaded successfully");
+        toast.success($adminT("Image uploaded successfully"));
       }
     } catch (e) {
-      toast.error("Failed to upload image");
+      toast.error($adminT("Failed to upload image"));
     } finally {
       uploadingImage = false;
       input.value = "";
@@ -122,16 +127,16 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else if (isNew) {
-        toast.success("Monitor created successfully");
+        toast.success($adminT("Monitor created successfully"));
         goto(clientResolver(resolve, `/manage/app/monitors/${monitor.tag}`));
       } else {
-        toast.success("General settings saved successfully");
+        toast.success($adminT("General settings saved successfully"));
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to save general settings";
-      toast.error(message);
+      toast.error($adminT(message));
     } finally {
       savingGeneral = false;
     }
@@ -140,45 +145,47 @@
 
 <Card.Root>
   <Card.Header>
-    <Card.Title>General Settings</Card.Title>
-    <Card.Description>Basic information about this monitor</Card.Description>
+    <Card.Title>{$adminT("General Settings")}</Card.Title>
+    <Card.Description>{$adminT("Basic information about this monitor")}</Card.Description>
   </Card.Header>
   <Card.Content class="space-y-4">
     <div class="grid grid-cols-2 gap-4">
       <div class="flex flex-col gap-2">
-        <Label for="monitor-name">Name <span class="text-destructive">*</span></Label>
-        <Input id="monitor-name" bind:value={monitor.name} placeholder="My API Monitor" />
+        <Label for="monitor-name">{$adminT("Name")} <span class="text-destructive">*</span></Label>
+        <Input id="monitor-name" bind:value={monitor.name} placeholder={$adminT("My API Monitor")} />
       </div>
       <div class="flex flex-col gap-2">
-        <Label for="monitor-tag">Tag <span class="text-destructive">*</span></Label>
-        <Input id="monitor-tag" bind:value={monitor.tag} placeholder="my-api-monitor" disabled={!isNew} />
-        <p class="text-muted-foreground mt-1 text-xs">Unique identifier (cannot be changed after creation)</p>
+        <Label for="monitor-tag">{$adminT("Tag")} <span class="text-destructive">*</span></Label>
+        <Input id="monitor-tag" bind:value={monitor.tag} placeholder={$adminT("my-api-monitor")} disabled={!isNew} />
+        <p class="text-muted-foreground mt-1 text-xs">
+          {$adminT("Unique identifier (cannot be changed after creation)")}
+        </p>
       </div>
     </div>
 
     <div class="flex flex-col gap-2">
-      <Label for="monitor-description">Description</Label>
+      <Label for="monitor-description">{$adminT("Description")}</Label>
       <Textarea
         id="monitor-description"
         bind:value={monitor.description}
-        placeholder="A brief description of what this monitor checks"
+        placeholder={$adminT("A brief description of what this monitor checks")}
         rows={3}
       />
     </div>
     <div class="flex flex-col gap-2">
-      <Label for="monitor-external_url">Service URL</Label>
+      <Label for="monitor-external_url">{$adminT("Service URL")}</Label>
       <Input id="monitor-external_url" bind:value={monitor.external_url} placeholder="https://example.com/api/health" />
     </div>
 
     <div class="grid grid-cols-2 gap-4">
       <div class="flex flex-col gap-2">
-        <Label>Monitor Image</Label>
+        <Label>{$adminT("Monitor Image")}</Label>
         <div class="flex items-center gap-3">
           <div class="bg-muted flex h-12 w-12 items-center justify-center rounded-md border">
             {#if monitor.image}
               <img
                 src={clientResolver(resolve, monitor.image)}
-                alt="Monitor"
+                alt={$adminT("Monitor")}
                 class="max-h-10 max-w-10 object-contain"
               />
             {:else}
@@ -194,10 +201,10 @@
             >
               {#if uploadingImage}
                 <Loader class="h-4 w-4 animate-spin" />
-                Uploading...
+                {$adminT("Uploading...")}
               {:else}
                 <UploadIcon class="h-4 w-4" />
-                Upload
+                {$adminT("Upload")}
               {/if}
             </Button>
             <input
@@ -209,24 +216,24 @@
               disabled={uploadingImage}
             />
             {#if monitor.image}
-              <Button variant="ghost" size="icon" onclick={clearImage}>
+              <Button aria-label={$adminT("Remove monitor image")} variant="ghost" size="icon" onclick={clearImage}>
                 <XIcon class="h-4 w-4" />
               </Button>
             {/if}
           </div>
         </div>
-        <p class="text-muted-foreground text-xs">Max 128x128px, PNG/JPG/SVG/WebP</p>
+        <p class="text-muted-foreground text-xs">{$adminT("Max 128x128px, PNG/JPG/SVG/WebP")}</p>
       </div>
       <div class="flex flex-col gap-2">
-        <Label for="monitor-cron">Cron Schedule</Label>
+        <Label for="monitor-cron">{$adminT("Cron Schedule")}</Label>
         <Input id="monitor-cron" bind:value={monitor.cron} placeholder="* * * * *" />
-        <p class="text-muted-foreground mt-1 text-xs">How often to check (cron format)</p>
+        <p class="text-muted-foreground mt-1 text-xs">{$adminT("How often to check (cron format)")}</p>
       </div>
     </div>
 
     <div class="grid grid-cols-2 gap-4">
       <div class="flex flex-col gap-2">
-        <Label for="monitor-default-status">Default Status</Label>
+        <Label for="monitor-default-status">{$adminT("Default Status")}</Label>
         <Select.Root
           type="single"
           value={monitor.default_status}
@@ -235,18 +242,18 @@
           }}
         >
           <Select.Trigger id="monitor-default-status" class="w-full">
-            {monitor.default_status}
+            {$adminT(String(monitor.default_status ?? ""))}
           </Select.Trigger>
           <Select.Content>
-            <Select.Item value="UP">UP</Select.Item>
-            <Select.Item value="DOWN">DOWN</Select.Item>
-            <Select.Item value="DEGRADED">DEGRADED</Select.Item>
-            <Select.Item value="MAINTENANCE">MAINTENANCE</Select.Item>
+            <Select.Item value="UP">{$adminT("UP")}</Select.Item>
+            <Select.Item value="DOWN">{$adminT("DOWN")}</Select.Item>
+            <Select.Item value="DEGRADED">{$adminT("DEGRADED")}</Select.Item>
+            <Select.Item value="MAINTENANCE">{$adminT("MAINTENANCE")}</Select.Item>
           </Select.Content>
         </Select.Root>
       </div>
       <div class="flex flex-col gap-2">
-        <Label for="hidden-switch">Hidden in Status Page</Label>
+        <Label for="hidden-switch">{$adminT("Hidden in Status Page")}</Label>
         <div class="flex items-center gap-2">
           <Switch
             id="hidden-switch"
@@ -254,16 +261,17 @@
             onCheckedChange={(checked) => (monitor.is_hidden = checked ? "YES" : "NO")}
           />
           <span class="text-muted-foreground text-xs">
-            {monitor.is_hidden === "YES" ? "Hidden" : "Visible"}
+            {monitor.is_hidden === "YES" ? $adminT("Hidden") : $adminT("Visible")}
           </span>
         </div>
         <p class="text-muted-foreground text-xs">
-          Hidden monitors don't appear on status pages, except to signed-in users whose role has monitors.read.
-          Monitoring, alerting, and all other features keep working.
+          {$adminT(
+            "Hidden monitors don't appear on status pages, except to signed-in users whose role has monitors.read. Monitoring, alerting, and all other features keep working."
+          )}
         </p>
       </div>
       <div class="flex flex-col gap-2">
-        <Label for="monitor-confirmation-threshold">Grace period</Label>
+        <Label for="monitor-confirmation-threshold">{$adminT("Grace period")}</Label>
         <Input
           id="monitor-confirmation-threshold"
           type="number"
@@ -277,8 +285,9 @@
           }}
         />
         <p class="text-muted-foreground text-xs">
-          Require this many consecutive checks before a status change is recorded. 1 = off (record every check
-          immediately).
+          {$adminT(
+            "Require this many consecutive checks before a status change is recorded. 1 = off (record every check immediately)."
+          )}
         </p>
       </div>
     </div>
@@ -290,7 +299,7 @@
       {:else}
         <SaveIcon class="size-4" />
       {/if}
-      {isNew ? "Create Monitor" : "Save General Settings"}
+      {isNew ? $adminT("Create Monitor") : $adminT("Save General Settings")}
     </Button>
   </Card.Footer>
 </Card.Root>

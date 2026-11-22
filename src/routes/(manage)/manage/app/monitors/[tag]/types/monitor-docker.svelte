@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Textarea } from "$lib/components/ui/textarea/index.js";
@@ -81,10 +84,10 @@
       const result = await response.json();
       if (result?.error) throw new Error(result.error);
       containers = result;
-      if (containers.length === 0) toast.info("No containers found on this daemon");
+      if (containers.length === 0) toast.info($adminT("No containers found on this daemon"));
     } catch (e) {
       containers = [];
-      toast.error(e instanceof Error ? e.message : "Failed to list containers");
+      toast.error($adminT(e instanceof Error ? e.message : "Failed to list containers"));
     } finally {
       loadingContainers = false;
     }
@@ -94,76 +97,80 @@
 <div class="space-y-4">
   <div class="grid grid-cols-3 gap-4">
     <div class="flex flex-col gap-2">
-      <Label for="docker-connection-type">Connection</Label>
+      <Label for="docker-connection-type">{$adminT("Connection")}</Label>
       <Select.Root type="single" value={formData.connectionType} onValueChange={selectConnectionType}>
         <Select.Trigger id="docker-connection-type" class="w-full">
-          {CONNECTION_TYPES[formData.connectionType].label}
+          {$adminT(String(CONNECTION_TYPES[formData.connectionType].label ?? ""))}
         </Select.Trigger>
         <Select.Content>
           {#each Object.entries(CONNECTION_TYPES) as [value, option] (value)}
-            <Select.Item {value}>{option.label}</Select.Item>
+            <Select.Item {value}>{$adminT(String(option.label ?? ""))}</Select.Item>
           {/each}
         </Select.Content>
       </Select.Root>
     </div>
     <div class="col-span-2 flex flex-col gap-2">
       <Label for="docker-daemon">
-        {CONNECTION_TYPES[formData.connectionType].addressLabel} <span class="text-destructive">*</span>
+        {$adminT(String(CONNECTION_TYPES[formData.connectionType].addressLabel ?? ""))}
+        <span class="text-destructive">*</span>
       </Label>
       <Input
         id="docker-daemon"
         bind:value={formData.daemon}
-        placeholder={CONNECTION_TYPES[formData.connectionType].placeholder}
+        placeholder={$adminT(String(CONNECTION_TYPES[formData.connectionType].placeholder ?? ""))}
       />
     </div>
   </div>
   <p class="text-muted-foreground text-xs">
-    Whoever can reach the Docker socket is root on that host. Prefer a read-only socket proxy over mounting the socket
-    directly, and never expose <code>tcp</code> without TLS outside a trusted network.
+    {$adminT(
+      "Whoever can reach the Docker socket is root on that host. Prefer a read-only socket proxy over mounting the socket directly, and never expose"
+    )} <code>tcp</code>
+    {$adminT("without TLS outside a trusted network.")}
   </p>
 
   {#if formData.connectionType === "tls"}
     <div class="flex flex-col gap-2">
-      <Label for="docker-tls-ca">CA certificate</Label>
+      <Label for="docker-tls-ca">{$adminT("CA certificate")}</Label>
       <Textarea
         id="docker-tls-ca"
         bind:value={formData.tlsCa}
         rows={3}
         class="font-mono text-xs"
-        placeholder="-----BEGIN CERTIFICATE----- or $DOCKER_TLS_CA"
+        placeholder={$adminT("-----BEGIN CERTIFICATE----- or $DOCKER_TLS_CA")}
       />
     </div>
     <div class="grid grid-cols-2 gap-4">
       <div class="flex flex-col gap-2">
-        <Label for="docker-tls-cert">Client certificate</Label>
+        <Label for="docker-tls-cert">{$adminT("Client certificate")}</Label>
         <Textarea
           id="docker-tls-cert"
           bind:value={formData.tlsCert}
           rows={4}
           class="font-mono text-xs"
-          placeholder="-----BEGIN CERTIFICATE----- or $DOCKER_TLS_CERT"
+          placeholder={$adminT("-----BEGIN CERTIFICATE----- or $DOCKER_TLS_CERT")}
         />
       </div>
       <div class="flex flex-col gap-2">
-        <Label for="docker-tls-key">Client key</Label>
+        <Label for="docker-tls-key">{$adminT("Client key")}</Label>
         <Textarea
           id="docker-tls-key"
           bind:value={formData.tlsKey}
           rows={4}
           class="font-mono text-xs"
-          placeholder="-----BEGIN PRIVATE KEY----- or $DOCKER_TLS_KEY"
+          placeholder={$adminT("-----BEGIN PRIVATE KEY----- or $DOCKER_TLS_KEY")}
         />
       </div>
     </div>
     <p class="text-muted-foreground text-xs">
-      Paste PEM, or reference an environment variable such as <code>$DOCKER_TLS_KEY</code> to keep the key out of the database.
-      Leave all three empty for a daemon behind a TLS proxy that does not ask for a client certificate. The certificate and
-      key go together.
+      {$adminT("Paste PEM, or reference an environment variable such as")} <code>$DOCKER_TLS_KEY</code>
+      {$adminT(
+        "to keep the key out of the database. Leave all three empty for a daemon behind a TLS proxy that does not ask for a client certificate. The certificate and key go together."
+      )}
     </p>
   {/if}
 
   <div class="flex flex-col gap-2">
-    <Label for="docker-check-type">What to check</Label>
+    <Label for="docker-check-type">{$adminT("What to check")}</Label>
     <Select.Root
       type="single"
       value={formData.checkType}
@@ -172,31 +179,33 @@
       }}
     >
       <Select.Trigger id="docker-check-type" class="w-full">
-        {CHECK_TYPE_LABELS[formData.checkType]}
+        {$adminT(String(CHECK_TYPE_LABELS[formData.checkType] ?? ""))}
       </Select.Trigger>
       <Select.Content>
         {#each Object.entries(CHECK_TYPE_LABELS) as [value, label] (value)}
-          <Select.Item {value}>{label}</Select.Item>
+          <Select.Item {value}>{$adminT(String(label ?? ""))}</Select.Item>
         {/each}
       </Select.Content>
     </Select.Root>
     <p class="text-muted-foreground text-xs">
-      Daemon checks only verify that the Docker Engine API answers. Use this as a parent monitor for a host.
+      {$adminT(
+        "Daemon checks only verify that the Docker Engine API answers. Use this as a parent monitor for a host."
+      )}
     </p>
   </div>
 
   {#if formData.checkType === "container"}
     <div class="flex flex-col gap-2">
-      <Label for="docker-container">Container Name or ID <span class="text-destructive">*</span></Label>
+      <Label for="docker-container">{$adminT("Container Name or ID")} <span class="text-destructive">*</span></Label>
       <div class="flex gap-2">
-        <Input id="docker-container" bind:value={formData.containerName} placeholder="my-app" />
+        <Input id="docker-container" bind:value={formData.containerName} placeholder={$adminT("my-app")} />
         <Button variant="secondary" disabled={!formData.daemon?.trim() || loadingContainers} onclick={loadContainers}>
           {#if loadingContainers}
             <Spinner class="size-4" />
           {:else}
             <RefreshCwIcon class="size-4" />
           {/if}
-          Browse
+          {$adminT("Browse")}
         </Button>
       </div>
       {#if containers.length > 0}
@@ -211,20 +220,21 @@
         </div>
       {/if}
       <p class="text-muted-foreground text-xs">
-        The container is resolved on every check, so it survives recreation as long as the name stays the same. A
-        running container is UP unless its <code>HEALTHCHECK</code> says otherwise; restarting or starting is DEGRADED; paused,
-        stopped, unhealthy, or missing is DOWN.
+        {$adminT(
+          "The container is resolved on every check, so it survives recreation as long as the name stays the same. A running container is UP unless its"
+        )} <code>HEALTHCHECK</code>
+        {$adminT("says otherwise; restarting or starting is DEGRADED; paused, stopped, unhealthy, or missing is DOWN.")}
       </p>
     </div>
   {/if}
 
   <div class="flex flex-col gap-2">
-    <Label for="docker-timeout">Timeout (ms)</Label>
+    <Label for="docker-timeout">{$adminT("Timeout (ms)")}</Label>
     <Input
       id="docker-timeout"
       type="number"
       bind:value={formData.timeout}
-      placeholder={String(DOCKER_DEFAULT_TIMEOUT)}
+      placeholder={$adminT(String(String(DOCKER_DEFAULT_TIMEOUT)))}
     />
   </div>
 </div>
