@@ -94,6 +94,10 @@ The dashboard and the REST API show these stored values as `********`: each head
 - A save that sends `********` back keeps the stored value. To change a secret, type the new value.
 - A `$SECRET` reference such as `Bearer $API_TOKEN` is masked too. The value stays in the environment variable.
 
+## Service URL {#service-url}
+
+A monitor's **Service URL** (`external_url` in the API) is the public address of the service it checks. When it is an absolute `http` or `https` URL, the status page shows it as a link under the monitor's name; other values are not linked there, and compact layouts omit the link. The monitor page shows a button that opens any non-empty Service URL as stored.
+
 ## Related docs {#related-docs}
 
 - [Grace Period](/docs/v4/monitors/grace-period) — require N consecutive checks before a status change is recorded

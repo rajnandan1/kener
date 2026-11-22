@@ -10,6 +10,7 @@
   import { formatDate } from "$lib/stores/datetime";
   import {
     GetInitials,
+    FormatServiceUrl,
     GetSslSecurityState,
     SslSecurityLabelKey,
     SslSecurityTextClass,
@@ -130,6 +131,14 @@
         </Item.Title>
         {#if data.description}
           <Item.Description class="line-clamp-2 wrap-break-word">{data.description}</Item.Description>
+        {/if}
+        {#if data.externalUrl && !compact}
+          <a
+            class="text-muted-foreground hover:text-foreground block truncate text-xs hover:underline"
+            href={data.externalUrl}
+            target="_blank"
+            rel="noopener noreferrer">{FormatServiceUrl(data.externalUrl)}</a
+          >
         {/if}
       </Item.Content>
 

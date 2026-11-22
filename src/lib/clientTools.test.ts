@@ -8,6 +8,7 @@ import {
   FormatSslRemaining,
   ResolveEventListPlacement,
   ResolveGroupMemberDisplay,
+  FormatServiceUrl,
 } from "./clientTools";
 
 describe("IsValidDnsResolver", () => {
@@ -84,5 +85,17 @@ describe("ResolveGroupMemberDisplay", () => {
     expect(ResolveGroupMemberDisplay("DRAWER")).toBe("DRAWER");
     expect(ResolveGroupMemberDisplay(undefined)).toBe("DRAWER");
     expect(ResolveGroupMemberDisplay("inline")).toBe("DRAWER");
+  });
+});
+
+describe("FormatServiceUrl", () => {
+  it("shows the host and path without the scheme or a trailing slash", () => {
+    expect(FormatServiceUrl("https://status.example.com/")).toBe("status.example.com");
+    expect(FormatServiceUrl("https://example.com/api/health")).toBe("example.com/api/health");
+    expect(FormatServiceUrl("http://example.com:8080/")).toBe("example.com:8080");
+  });
+
+  it("returns an unparseable value unchanged", () => {
+    expect(FormatServiceUrl("not a url")).toBe("not a url");
   });
 });
