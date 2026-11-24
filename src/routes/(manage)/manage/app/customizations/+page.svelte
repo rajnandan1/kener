@@ -30,6 +30,8 @@
   import StatusBarCalendar from "$lib/components/StatusBarCalendar.svelte";
   import type { TimestampStatusCount } from "$lib/server/types/db";
   import { DEFAULT_STATUS_BAR_LAYOUT, ResolveStatusBarLayout, type StatusBarLayout } from "$lib/statusBarLayout";
+  import { selectedTimezone } from "$lib/stores/timezone";
+  import { getStartOfDayAtTz } from "$lib/client/datetime";
 
   interface StatusColors {
     UP: string;
@@ -197,7 +199,9 @@
   // maintenance day near the end (so they show up even with few days) and no data
   // for the oldest days, like on a fresh install.
   let barPreviewData: TimestampStatusCount[] = $derived.by(() => {
-    const today = Math.floor(Date.now() / 1000 / 86400) * 86400;
+    // Noon of today in the time zone the tooltip uses, so every sample day keeps
+    // its date, also across a daylight saving change
+    const today = getStartOfDayAtTz($selectedTimezone) + 12 * 3600;
     const days = barPreviewDays;
     const noDataDays = Math.floor(days * 0.15);
     return Array.from({ length: days }, (_, i) => {

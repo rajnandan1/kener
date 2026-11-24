@@ -83,8 +83,8 @@
 
   // Joined strip or separated bars, set in Manage → Customizations → Status Bars
   const barLayout = $derived(layout ?? ResolveStatusBarLayout(page.data.barLayout));
-  // Bar width, gap and corner radius for the current canvas width
-  const geometry = $derived(GetStatusBarGeometry(canvasWidth, data?.length ?? 0, barLayout));
+  // Bar width, gap and corner radius for the current canvas width and screen
+  const geometry = $derived(GetStatusBarGeometry(canvasWidth, data?.length ?? 0, barLayout, dpr));
 
   // Track hovered index separately for efficient redraw
   let hoveredIndex = $state<number | null>(null);

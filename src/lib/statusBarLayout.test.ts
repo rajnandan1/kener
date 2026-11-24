@@ -23,7 +23,7 @@ describe("ResolveStatusBarLayout", () => {
 
 describe("GetStatusBarGeometry", () => {
   it("has no gap and no per-bar corners for joined bars", () => {
-    expect(GetStatusBarGeometry(900, 90, "JOINED")).toEqual({ gap: 0, barWidth: 10, cornerRadius: 0 });
+    expect(GetStatusBarGeometry(900, 90, "JOINED")).toEqual({ gap: 0, barWidth: 10, cornerRadius: 0, pixelRatio: 1 });
   });
 
   it("uses a 3px gap and 3px corners for separated bars with enough room", () => {
@@ -52,7 +52,7 @@ describe("GetStatusBarGeometry", () => {
   });
 
   it("never needs more than the available width", () => {
-    for (const width of [60, 180, 200, 321, 640, 999, 1440]) {
+    for (const width of [90, 180, 200, 321, 640, 999, 1440]) {
       for (const count of [1, 7, 30, 45, 90]) {
         const g = GetStatusBarGeometry(width, count, "SEPARATED");
         expect(count * g.barWidth + (count - 1) * g.gap).toBeCloseTo(width);
@@ -60,14 +60,30 @@ describe("GetStatusBarGeometry", () => {
     }
   });
 
+  it("gives every day at least one screen pixel in very narrow embeds", () => {
+    for (const layout of ["JOINED", "SEPARATED"] as const) {
+      // 90 days in 84px: a 2x screen has 168 pixels, so all days fit
+      const sharp = GetStatusBarGeometry(84, 90, layout, 2);
+      for (let i = 0; i < 90; i++) {
+        expect(GetStatusBarStart(i + 1, sharp) - GetStatusBarStart(i, sharp)).toBeGreaterThanOrEqual(0.5);
+      }
+      expect(GetStatusBarStart(90, sharp)).toBeLessThanOrEqual(84);
+
+      // A 1x screen has only 84 pixels, so the bars get 1px each, like the joined bars always did
+      const plain = GetStatusBarGeometry(84, 90, layout, 1);
+      expect(plain.barWidth).toBe(1);
+    }
+  });
+
   it("returns an empty geometry when there is nothing to draw", () => {
-    expect(GetStatusBarGeometry(0, 90, "SEPARATED")).toEqual({ gap: 0, barWidth: 0, cornerRadius: 0 });
-    expect(GetStatusBarGeometry(500, 0, "JOINED")).toEqual({ gap: 0, barWidth: 0, cornerRadius: 0 });
+    const empty = { gap: 0, barWidth: 0, cornerRadius: 0, pixelRatio: 1 };
+    expect(GetStatusBarGeometry(0, 90, "SEPARATED")).toEqual(empty);
+    expect(GetStatusBarGeometry(500, 0, "JOINED")).toEqual(empty);
   });
 });
 
 describe("GetStatusBarIndexAt", () => {
-  const geometry = { gap: 2, barWidth: 8, cornerRadius: 3 };
+  const geometry = { gap: 2, barWidth: 8, cornerRadius: 3, pixelRatio: 1 };
 
   it("finds the bar under the pointer", () => {
     expect(GetStatusBarIndexAt(0, 3, geometry)).toBe(0);
@@ -90,16 +106,23 @@ describe("GetStatusBarIndexAt and the drawn bars", () => {
   it("picks the bar that is drawn under every pixel, and the left bar inside a gap", () => {
     const failures: string[] = [];
     for (const layout of ["JOINED", "SEPARATED"] as const) {
-      for (const width of [160, 180, 320, 333, 1000, 1200]) {
-        for (const count of [30, 45, 90]) {
-          const g = GetStatusBarGeometry(width, count, layout);
-          for (let i = 0; i < count; i++) {
-            // Bar i is drawn from its start up to the next bar's start; the gap sits at the end
-            for (let x = GetStatusBarStart(i, g); x < GetStatusBarStart(i + 1, g); x++) {
-              const lastBarGap = i === count - 1 && x >= GetStatusBarStart(count, g) - Math.round(g.gap);
-              const expected = lastBarGap ? -1 : i;
-              const got = GetStatusBarIndexAt(x + 0.5, count, g);
-              if (got !== expected) failures.push(`${layout} ${width}px/${count}: x=${x} -> ${got}, drawn ${expected}`);
+      for (const ratio of [1, 1.25, 2]) {
+        for (const width of [84, 160, 180, 320, 333, 1000, 1200]) {
+          for (const count of [30, 45, 90]) {
+            const g = GetStatusBarGeometry(width, count, layout, ratio);
+            // Walk the screen pixels: bar i covers them from its start up to the next bar's start,
+            // the gap sits at the end
+            const screenPixel = (px: number) => Math.round(px * ratio);
+            for (let i = 0; i < count; i++) {
+              for (let p = screenPixel(GetStatusBarStart(i, g)); p < screenPixel(GetStatusBarStart(i + 1, g)); p++) {
+                const x = (p + 0.5) / ratio;
+                const lastBarGap = i === count - 1 && x >= GetStatusBarStart(count, g) - Math.round(g.gap);
+                const expected = lastBarGap ? -1 : i;
+                const got = GetStatusBarIndexAt(x, count, g);
+                if (got !== expected) {
+                  failures.push(`${layout} ${ratio}x ${width}px/${count}: pixel ${p} -> ${got}, drawn ${expected}`);
+                }
+              }
             }
           }
         }
