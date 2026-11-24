@@ -155,7 +155,7 @@
               </Avatar.Fallback>
             </Avatar.Root>
             <div class="grid flex-1 text-start text-sm leading-tight">
-              <span class="truncate font-medium">{nameAbbr}</span>
+              <span class="truncate font-medium">{user.name}</span>
               <span class="text-muted-foreground truncate text-xs">
                 {user.email}
               </span>
