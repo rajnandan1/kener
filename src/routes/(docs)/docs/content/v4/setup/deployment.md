@@ -21,18 +21,25 @@ Minimum required values:
 
 - `KENER_SECRET_KEY`
 - `ORIGIN`
-- `REDIS_URL`
+
+Redis is optional. Set `REDIS_URL` when running multiple replicas or when queued work must survive a restart. Without it, monitoring, alerts, emails, and scheduled jobs run in-process; use exactly one Kener replica because pending work is not shared or persisted.
+
+The bundled Compose file runs without Redis by default. To include Redis:
+
+```bash
+REDIS_URL=redis://redis:6379 docker compose --profile redis up -d
+```
 
 ## Required and common variables {#required-and-common-variables}
 
-| Variable           | Required | Notes                         |
-| :----------------- | :------- | :---------------------------- |
-| `KENER_SECRET_KEY` | Yes      | Use a strong random secret    |
-| `ORIGIN`           | Yes      | Public URL, no trailing slash |
-| `REDIS_URL`        | Yes      | `redis://` or `rediss://`     |
-| `DATABASE_URL`     | No       | Defaults to SQLite if omitted |
-| `PORT`             | No       | Defaults to `3000`            |
-| `KENER_BASE_PATH`  | No       | Example: `/status`            |
+| Variable           | Required | Notes                                   |
+| :----------------- | :------- | :-------------------------------------- |
+| `KENER_SECRET_KEY` | Yes      | Use a strong random secret              |
+| `ORIGIN`           | Yes      | Public URL, no trailing slash           |
+| `REDIS_URL`        | No       | Preferred for multi-replica deployments |
+| `DATABASE_URL`     | No       | Defaults to SQLite if omitted           |
+| `PORT`             | No       | Defaults to `3000`                      |
+| `KENER_BASE_PATH`  | No       | Example: `/status`                      |
 
 For full variable reference, see [Environment Variables](/docs/v4/setup/environment-variables).
 
@@ -210,7 +217,7 @@ Example using `.env`:
 ```bash
 mkdir -p database
 
-# .env should contain at least KENER_SECRET_KEY, ORIGIN, REDIS_URL
+# .env should contain at least KENER_SECRET_KEY and ORIGIN
 docker run -d \
   --name kener \
   -p 3000:3000 \
@@ -248,7 +255,7 @@ Use this when you prefer managing runtime directly on a VM/server.
 Requirements:
 
 - Node.js `>= 24.14`
-- Redis
+- Redis is optional
 
 ```bash
 git clone https://github.com/rajnandan1/kener.git
@@ -264,7 +271,8 @@ Minimum `.env`:
 ```dotenv
 KENER_SECRET_KEY=replace_with_a_random_string
 ORIGIN=https://status.example.com
-REDIS_URL=redis://localhost:6379
+# Optional. Without Redis, use one Kener replica.
+# REDIS_URL=redis://localhost:6379
 PORT=3000
 # Optional (defaults to SQLite):
 # DATABASE_URL=sqlite://./database/kener.sqlite.db
@@ -286,10 +294,10 @@ curl -fsS https://your-domain/healthcheck
 Expected response body:
 
 ```json
-{ "status": "ok", "db": true, "redis": true }
+{ "status": "ok", "db": true, "redis": true, "redisConfigured": false }
 ```
 
-`status` is `degraded` when the database or Redis is unreachable. The endpoint always returns HTTP 200 so healthcheck-driven restarters do not bounce the app while a dependency is down.
+`status` is `degraded` when the database is unreachable, or when Redis is configured but unavailable. `redis` stays `true` in in-process mode; `redisConfigured` tells you which mode is active. The endpoint always returns HTTP 200 so healthcheck-driven restarters do not bounce the app while a dependency is down.
 
 For orchestrators that should act on dependency health (load balancer readiness, alerting), pass `?strict=1` to get HTTP 503 when any component is down:
 

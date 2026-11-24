@@ -2,7 +2,7 @@
 
 ## Run
 
-Dev needs Redis on `REDIS_URL`: `cp .env-min.example .env`, then `docker compose -f docker-compose.dev.yml up -d redis`. `npm run dev` migrates and seeds the database before it starts. `npm run build` leaves out the docs site in `src/routes/(docs)/`; `npm run build-with-docs` keeps it.
+Redis is optional. `cp .env-min.example .env` and run the compose stack for the in-process path, or use `REDIS_URL=redis://redis:6379 docker compose --profile redis -f docker-compose.dev.yml up -d` for the production-like Redis path. `npm run dev` migrates and seeds the database before it starts. `npm run build` leaves out the docs site in `src/routes/(docs)/`; `npm run build-with-docs` keeps it.
 
 ## Finish a Change
 
