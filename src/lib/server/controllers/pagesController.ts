@@ -1,5 +1,49 @@
 import db from "../db/db.js";
 import type { PageRecord, PageRecordInsert, PageMonitorRecord, PageMonitorRecordInsert } from "../types/db.js";
+import type { PageMonitorInput } from "../../types/api.js";
+
+// ============ Page Monitor Input ============
+
+const MAX_GROUP_NAME_LENGTH = 255;
+const MAX_POSITION = 2_147_483_647;
+
+export interface NormalizedPageMonitorInput {
+  tag: string;
+  group: string | null;
+  position: number;
+}
+
+/**
+ * Normalize the `monitors` field on Create/Update Page requests.
+ * Accepts either a plain string (the tag, ungrouped) or an object with
+ * `{ tag, group?, position? }`. Throws on malformed entries; returns
+ * objects with explicit position (index fallback) and group (null fallback).
+ */
+export function normalizePageMonitorInputs(input: PageMonitorInput[]): NormalizedPageMonitorInput[] {
+  return input.map((item, idx) => {
+    if (typeof item === "string") {
+      return { tag: item, group: null, position: idx };
+    }
+    if (!item || typeof item !== "object" || typeof item.tag !== "string" || item.tag.trim().length === 0) {
+      throw new Error("Each monitor must be a string tag or an object with a non-empty `tag` field");
+    }
+    const group = item.group ?? null;
+    if (group !== null && typeof group !== "string") {
+      throw new Error("Monitor `group` must be a string or null");
+    }
+    const normalizedGroup = group === null ? null : group.trim() || null;
+    if (normalizedGroup && normalizedGroup.length > MAX_GROUP_NAME_LENGTH) {
+      throw new Error(`Monitor \`group\` must be ${MAX_GROUP_NAME_LENGTH} characters or fewer`);
+    }
+    if (
+      item.position !== undefined &&
+      (!Number.isInteger(item.position) || item.position < 0 || item.position > MAX_POSITION)
+    ) {
+      throw new Error("Monitor `position` must be a non-negative integer");
+    }
+    return { tag: item.tag.trim(), group: normalizedGroup, position: item.position ?? idx };
+  });
+}
 
 // ============ Page CRUD Operations ============
 
@@ -108,6 +152,7 @@ export async function AddMonitorToPage(
   monitor_tag: string,
   monitor_settings_json?: string | null,
   position?: number,
+  group_name?: string | null,
 ): Promise<void> {
   // Check if page exists
   const page = await db.getPageById(page_id);
@@ -133,7 +178,59 @@ export async function AddMonitorToPage(
     monitor_tag,
     monitor_settings_json: monitor_settings_json || null,
     position: finalPosition,
+    group_name: group_name ?? null,
   });
+}
+
+/** Replaces a page's monitor assignments atomically after validation. */
+export async function ReplacePageMonitors(page_id: number, monitors: NormalizedPageMonitorInput[]): Promise<void> {
+  const page = await db.getPageById(page_id);
+  if (!page) {
+    throw new Error(`Page with id ${page_id} not found`);
+  }
+
+  const tags = new Set<string>();
+  for (const monitor of monitors) {
+    if (tags.has(monitor.tag)) {
+      throw new Error(`Monitor "${monitor.tag}" is listed more than once`);
+    }
+    tags.add(monitor.tag);
+  }
+
+  await db.replacePageMonitors(
+    page_id,
+    monitors.map((monitor) => ({
+      page_id,
+      monitor_tag: monitor.tag,
+      monitor_settings_json: null,
+      position: monitor.position,
+      group_name: monitor.group,
+    })),
+  );
+}
+
+/**
+ * Set or clear the group of a single monitor on a page. group_name=null
+ * moves it back to "ungrouped" — same as removing the group label.
+ */
+export async function UpdatePageMonitorGroup(
+  page_id: number,
+  monitor_tag: string,
+  group_name: string | null,
+): Promise<void> {
+  const page = await db.getPageById(page_id);
+  if (!page) {
+    throw new Error(`Page with id ${page_id} not found`);
+  }
+  const exists = await db.monitorExistsOnPage(page_id, monitor_tag);
+  if (!exists) {
+    throw new Error(`Monitor "${monitor_tag}" not found on this page`);
+  }
+  const normalized = group_name === null ? null : group_name.trim() || null;
+  if (normalized && normalized.length > MAX_GROUP_NAME_LENGTH) {
+    throw new Error(`Monitor \`group\` must be ${MAX_GROUP_NAME_LENGTH} characters or fewer`);
+  }
+  await db.updatePageMonitorGroup(page_id, monitor_tag, normalized);
 }
 
 /**

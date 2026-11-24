@@ -2352,6 +2352,61 @@
           }
         }
       },
+      "PageMonitorInput": {
+        "oneOf": [
+          {
+            "type": "string",
+            "minLength": 1
+          },
+          {
+            "type": "object",
+            "required": ["tag"],
+            "additionalProperties": false,
+            "properties": {
+              "tag": {
+                "type": "string",
+                "minLength": 1
+              },
+              "group": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "position": {
+                "type": "integer"
+              }
+            }
+          }
+        ]
+      },
+      "PageMonitorResponse": {
+        "type": "object",
+        "required": ["monitor_tag"],
+        "properties": {
+          "monitor_tag": {
+            "type": "string"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "group": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true
+      },
       "Page": {
         "type": "object",
         "required": ["page_path", "page_title", "page_header"],
@@ -2379,7 +2434,7 @@
           "monitors": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Monitor"
+              "$ref": "#/components/schemas/PageMonitorResponse"
             }
           }
         },
@@ -2427,7 +2482,7 @@
           "monitors": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/PageMonitorInput"
             }
           }
         }
@@ -2471,7 +2526,7 @@
           "monitors": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/PageMonitorInput"
             }
           }
         }

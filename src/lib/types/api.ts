@@ -507,7 +507,13 @@ export interface PageSettings {
 
 export interface PageMonitorResponse {
   monitor_tag: string;
+  position?: number;
+  group?: string | null;
 }
+
+// Items for the request `monitors` field. Plain strings (legacy) stay
+// supported; objects let callers specify a group and/or position.
+export type PageMonitorInput = string | { tag: string; group?: string | null; position?: number };
 
 export interface PageResponse {
   id: number;
@@ -542,7 +548,7 @@ export interface CreatePageRequest {
   page_subheader?: string | null;
   page_logo?: string | null;
   page_settings?: PageSettingsPatch;
-  monitors?: string[];
+  monitors?: PageMonitorInput[];
 }
 
 export interface CreatePageResponse {
@@ -556,7 +562,7 @@ export interface UpdatePageRequest {
   page_subheader?: string | null;
   page_logo?: string | null;
   page_settings?: PageSettingsPatch;
-  monitors?: string[];
+  monitors?: PageMonitorInput[];
 }
 
 export interface UpdatePageResponse {

@@ -44,6 +44,17 @@ Remove a monitor by clicking the remove button next to it.
 > [!IMPORTANT]
 > Only monitors added to a page are shown on that page.
 
+## Group monitors on a page {#group-monitors-on-a-page}
+
+Use groups to organize a page's monitors under named headings. Ungrouped monitors appear first, followed by each group in the order its first monitor appears.
+
+1. In **Page Monitors**, click **Add group** and enter a name.
+2. Open the **Move to** menu on a monitor and choose the group.
+3. Use the arrow buttons to reorder monitors within a section.
+4. To remove a group, click its remove button. Its monitors move back to **Ungrouped**.
+
+Empty groups created in the editor are local-only and disappear after a reload until a monitor is moved into them.
+
 ## Display settings {#display-settings}
 
 Each page has its own display preferences.

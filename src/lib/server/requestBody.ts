@@ -6,6 +6,7 @@ export interface Schema {
   enum?: unknown[];
   required?: string[];
   properties?: Record<string, Schema>;
+  additionalProperties?: boolean;
   items?: Schema;
   oneOf?: Schema[];
   $ref?: string;
@@ -43,7 +44,10 @@ export function findBodyError(schema: Schema, value: unknown, path = ""): string
     if (errors.includes(undefined)) return undefined;
     const types = typesOf(s);
     if (!types.some((type) => isType(value, type))) return typeError(name, types);
-    return errors.find((error) => !error!.endsWith(" is required")) ?? errors[0];
+    const applicable = s.oneOf.flatMap((branch, index) =>
+      typesOf(branch).some((type) => isType(value, type)) ? [errors[index]!] : [],
+    );
+    return applicable.find((error) => !error.endsWith(" is required")) ?? applicable[0] ?? errors[0];
   }
   const types = [s.type ?? []].flat();
   if (types.length > 0 && !types.some((type) => isType(value, type))) return typeError(name, types);
@@ -57,6 +61,10 @@ export function findBodyError(schema: Schema, value: unknown, path = ""): string
   if (isType(value, "object")) {
     const record = value as Record<string, unknown>;
     const field = (key: string) => (path ? `${path}.${key}` : key);
+    if (s.additionalProperties === false) {
+      const unknown = Object.keys(record).find((key) => !s.properties?.[key]);
+      if (unknown) return `${field(unknown)} is not allowed`;
+    }
     const missing = s.required?.find((key) => record[key] === undefined);
     if (missing) return `${field(missing)} is required`;
     for (const [key, property] of Object.entries(s.properties ?? {})) {
