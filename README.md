@@ -59,6 +59,7 @@
 [![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/Kener/)
 [![Deploy on ZopDay](https://zop.dev/deploytozopday-inkhard.svg)](https://zop.dev/zopday/app/deploy?image=rajnandan1/kener:latest&port=3000)
 [![Deploy on Elestio](https://elest.io/images/logos/deploy-to-elestio-btn.svg)](https://dash.elest.io/deploy?soft=Kener&id=473)
+[![Self-host on Simafri](https://www.simafri.com/assets/img/self-host-on-simafri.svg)](https://www.simafri.com/en/guides/self-host-kener/)
 
 </p>
 
