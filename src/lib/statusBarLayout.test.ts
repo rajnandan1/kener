@@ -75,6 +75,21 @@ describe("GetStatusBarGeometry", () => {
     }
   });
 
+  it("drops the gaps before the bars run past the edge on a zoomed-out page", () => {
+    // 90 days in 180px at 80% zoom: a screen pixel is 1.25px, so bars and gaps no longer fit
+    const g = GetStatusBarGeometry(180, 90, "SEPARATED", 0.8);
+    expect(g.gap).toBe(0);
+    expect(GetStatusBarStart(90, g)).toBeLessThanOrEqual(180);
+
+    for (const ratio of [0.5, 0.67, 0.8, 0.9, 1, 1.25, 2]) {
+      for (const width of [90, 120, 180, 240, 320]) {
+        const geometry = GetStatusBarGeometry(width, 90, "SEPARATED", ratio);
+        if (width * ratio >= 90)
+          expect(GetStatusBarStart(90, geometry) - geometry.gap).toBeLessThanOrEqual(width + 0.5 / ratio);
+      }
+    }
+  });
+
   it("returns an empty geometry when there is nothing to draw", () => {
     const empty = { gap: 0, barWidth: 0, cornerRadius: 0, pixelRatio: 1 };
     expect(GetStatusBarGeometry(0, 90, "SEPARATED")).toEqual(empty);

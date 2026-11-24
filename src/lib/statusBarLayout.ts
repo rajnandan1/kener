@@ -61,7 +61,10 @@ export function GetStatusBarGeometry(
   }
 
   const spacePerDay = width / count;
-  const gap = spacePerDay < 2 ? 0 : Math.min(MAX_GAP, Math.max(1, Math.floor(spacePerDay / 4)));
+  let gap = spacePerDay < 2 ? 0 : Math.min(MAX_GAP, Math.max(1, Math.floor(spacePerDay / 4)));
+  // Bars come before gaps: drop the gap when it would squeeze a bar below one screen pixel
+  // (possible when the page is zoomed out and a screen pixel is larger than 1px)
+  if ((width - (count - 1) * gap) / count < minBarWidth) gap = 0;
   const barWidth = Math.max(minBarWidth, (width - (count - 1) * gap) / count);
   // Never rounder than half the bar width, otherwise thin bars turn into lines with blobs.
   const cornerRadius = Math.min(MAX_CORNER_RADIUS, barWidth / 2);
