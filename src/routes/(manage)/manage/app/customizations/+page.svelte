@@ -27,6 +27,9 @@
   import ArrowUp from "@lucide/svelte/icons/arrow-up";
   import ArrowDown from "@lucide/svelte/icons/arrow-down";
   import GripVertical from "@lucide/svelte/icons/grip-vertical";
+  import StatusBarCalendar from "$lib/components/StatusBarCalendar.svelte";
+  import type { TimestampStatusCount } from "$lib/server/types/db";
+  import { DEFAULT_STATUS_BAR_LAYOUT, ResolveStatusBarLayout, type StatusBarLayout } from "$lib/statusBarLayout";
 
   interface StatusColors {
     UP: string;
@@ -57,6 +60,7 @@
   let savingTheme = $state(false);
   let savingAnnouncement = $state(false);
   let savingPageOrdering = $state(false);
+  let savingBarLayout = $state(false);
   let loadingPages = $state(false);
 
   // Data
@@ -95,11 +99,46 @@
     ctaText: ""
   });
 
+  // Status bars
+  let barLayout = $state<StatusBarLayout>(DEFAULT_STATUS_BAR_LAYOUT);
+
   // Page ordering
   interface PageItem {
     id: number;
     page_path: string;
     page_title: string;
+    historyDays: { desktop: number; mobile: number };
+    layoutStyle: string;
+  }
+
+  // Reads what the bar preview needs from a page's stored settings, with the same
+  // defaults the status page uses when a page never saved them.
+  // Values of the wrong type (e.g. from a hand-edited database) count as missing, so the
+  // preview can never break this page.
+  function readPreviewSettings(settingsJson: unknown): Pick<PageItem, "historyDays" | "layoutStyle"> {
+    let settings: {
+      monitor_status_history_days?: { desktop?: unknown; mobile?: unknown };
+      monitor_layout_style?: unknown;
+    } = {};
+    try {
+      const parsed = typeof settingsJson === "string" ? JSON.parse(settingsJson) : settingsJson;
+      if (parsed && typeof parsed === "object") settings = parsed;
+    } catch {
+      // broken JSON: fall back to the defaults below
+    }
+    const days = settings.monitor_status_history_days;
+    const dayCount = (value: unknown, fallback: number) =>
+      typeof value === "number" && Number.isInteger(value) && value > 0 ? value : fallback;
+    return {
+      historyDays: {
+        desktop: dayCount(days?.desktop, constants.DEFAULT_STATUS_HISTORY_DAYS_DESKTOP),
+        mobile: dayCount(days?.mobile, constants.DEFAULT_STATUS_HISTORY_DAYS_MOBILE)
+      },
+      layoutStyle:
+        typeof settings.monitor_layout_style === "string"
+          ? settings.monitor_layout_style
+          : constants.DEFAULT_MONITOR_LAYOUT_STYLE
+    };
   }
   let pageOrderingEnabled = $state(false);
   let orderedPageIds = $state<number[]>([]);
@@ -120,6 +159,65 @@
       }
     }
     return ordered;
+  });
+
+  // Status bar preview
+  // The preview uses the number of days of a real page, so it looks like the status page.
+  // The days live in each page's settings (Manage → Pages), separately for desktop and mobile.
+  let barPreviewPageId = $state<number | null>(null);
+  let barPreviewDevice = $state<"desktop" | "mobile">("desktop");
+
+  let barPreviewPage = $derived(allPages.find((p) => p.id === barPreviewPageId) ?? allPages[0] ?? null);
+  // The status page loads at most 90 days (MAX_DAYS in dashboard-apis/monitor-bars), whatever a page sets
+  const STATUS_PAGE_MAX_DAYS = 90;
+  let barPreviewDays = $derived(
+    Math.min(
+      STATUS_PAGE_MAX_DAYS,
+      barPreviewPage?.historyDays[barPreviewDevice] ??
+        (barPreviewDevice === "mobile"
+          ? constants.DEFAULT_STATUS_HISTORY_DAYS_MOBILE
+          : constants.DEFAULT_STATUS_HISTORY_DAYS_DESKTOP)
+    )
+  );
+
+  // Compact layouts show no daily bars; the default grid puts two monitors side by side from md up
+  let barPreviewLayoutStyle = $derived(barPreviewPage?.layoutStyle ?? constants.DEFAULT_MONITOR_LAYOUT_STYLE);
+  let barPreviewIsCompact = $derived(
+    barPreviewLayoutStyle === "compact-list" || barPreviewLayoutStyle === "compact-grid"
+  );
+  let barPreviewWidthClass = $derived(
+    barPreviewDevice === "mobile"
+      ? "max-w-[360px]"
+      : barPreviewLayoutStyle === "default-grid"
+        ? "max-w-lg"
+        : "max-w-5xl"
+  );
+
+  // Made-up history for the preview: mostly up, with one degraded, one down and one
+  // maintenance day near the end (so they show up even with few days) and no data
+  // for the oldest days, like on a fresh install.
+  let barPreviewData: TimestampStatusCount[] = $derived.by(() => {
+    const today = Math.floor(Date.now() / 1000 / 86400) * 86400;
+    const days = barPreviewDays;
+    const noDataDays = Math.floor(days * 0.15);
+    return Array.from({ length: days }, (_, i) => {
+      const daysAgo = days - 1 - i;
+      const day = {
+        ts: today - daysAgo * 86400,
+        countOfUp: 1440,
+        countOfDown: 0,
+        countOfDegraded: 0,
+        countOfMaintenance: 0,
+        avgLatency: 0,
+        maxLatency: 0,
+        minLatency: 0
+      };
+      if (i < noDataDays) day.countOfUp = 0;
+      else if (daysAgo === 3) [day.countOfUp, day.countOfMaintenance] = [1320, 120];
+      else if (daysAgo === 9) [day.countOfUp, day.countOfDown] = [1100, 340];
+      else if (daysAgo === 17) [day.countOfUp, day.countOfDegraded] = [1300, 140];
+      return day;
+    });
   });
 
   async function fetchSettings() {
@@ -189,6 +287,7 @@
             ctaText: result.announcement.ctaText || ""
           };
         }
+        barLayout = ResolveStatusBarLayout(result.barLayout);
         if (result.pageOrderingSettings) {
           pageOrderingEnabled = result.pageOrderingSettings.enabled ?? false;
           orderedPageIds = result.pageOrderingSettings.order ?? [];
@@ -259,6 +358,30 @@
       toast.error("Failed to save colors");
     } finally {
       savingColors = false;
+    }
+  }
+
+  async function saveBarLayout() {
+    savingBarLayout = true;
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "storeSiteData",
+          data: { barLayout }
+        })
+      });
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Status bar settings saved successfully");
+      }
+    } catch (e) {
+      toast.error("Failed to save status bar settings");
+    } finally {
+      savingBarLayout = false;
     }
   }
 
@@ -384,11 +507,14 @@
       });
       const result = await response.json();
       if (Array.isArray(result)) {
-        allPages = result.map((p: { id: number; page_path: string; page_title: string }) => ({
-          id: p.id,
-          page_path: p.page_path,
-          page_title: p.page_title
-        }));
+        allPages = result.map(
+          (p: { id: number; page_path: string; page_title: string; page_settings_json?: unknown }) => ({
+            id: p.id,
+            page_path: p.page_path,
+            page_title: p.page_title,
+            ...readPreviewSettings(p.page_settings_json)
+          })
+        );
       }
     } catch {
       // silently fail
@@ -678,6 +804,112 @@
             <Loader class="h-4 w-4 animate-spin" />
           {/if}
           Save Colors
+        </Button>
+      </Card.Footer>
+    </Card.Root>
+
+    <!-- Status Bars Section -->
+    <Card.Root>
+      <Card.Header class="border-b">
+        <Card.Title>Status Bars</Card.Title>
+        <Card.Description>Choose how the daily uptime bars of each monitor look on the status page.</Card.Description>
+      </Card.Header>
+      <Card.Content class="space-y-6 pt-6">
+        <div class="space-y-3">
+          <Label id="bar-layout-label">Bar Layout</Label>
+          <RadioGroup.Root bind:value={barLayout} aria-labelledby="bar-layout-label" class="flex flex-col gap-3">
+            <div class="flex items-center space-x-2">
+              <RadioGroup.Item value="JOINED" id="bar-layout-joined" />
+              <Label for="bar-layout-joined" class="cursor-pointer font-normal">
+                Joined <span class="text-muted-foreground">– the days form one continuous strip</span>
+              </Label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <RadioGroup.Item value="SEPARATED" id="bar-layout-separated" />
+              <Label for="bar-layout-separated" class="cursor-pointer font-normal">
+                Separated <span class="text-muted-foreground">– every day is its own bar with a small gap</span>
+              </Label>
+            </div>
+          </RadioGroup.Root>
+          <p class="text-muted-foreground text-xs">
+            Applies to the status page, monitor pages and embeds. On small screens the gap between separated bars
+            shrinks automatically.
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex flex-wrap items-end justify-between gap-3">
+            <Label>Preview</Label>
+            <div class="flex flex-wrap items-center gap-2">
+              {#if allPages.length > 1}
+                <Select.Root
+                  type="single"
+                  value={barPreviewPage ? String(barPreviewPage.id) : undefined}
+                  onValueChange={(v) => (barPreviewPageId = Number(v))}
+                >
+                  <Select.Trigger class="w-48" aria-label="Page for the preview">
+                    <span class="truncate">{barPreviewPage?.page_title ?? "Page"}</span>
+                  </Select.Trigger>
+                  <Select.Content>
+                    {#each allPages as p (p.id)}
+                      <Select.Item value={String(p.id)}>{p.page_title}</Select.Item>
+                    {/each}
+                  </Select.Content>
+                </Select.Root>
+              {/if}
+              <div class="flex rounded-md border p-0.5">
+                <Button
+                  size="sm"
+                  variant={barPreviewDevice === "desktop" ? "secondary" : "ghost"}
+                  aria-pressed={barPreviewDevice === "desktop"}
+                  class="h-7"
+                  onclick={() => (barPreviewDevice = "desktop")}
+                >
+                  Desktop
+                </Button>
+                <Button
+                  size="sm"
+                  variant={barPreviewDevice === "mobile" ? "secondary" : "ghost"}
+                  aria-pressed={barPreviewDevice === "mobile"}
+                  class="h-7"
+                  onclick={() => (barPreviewDevice = "mobile")}
+                >
+                  Mobile
+                </Button>
+              </div>
+            </div>
+          </div>
+          {#if barPreviewIsCompact}
+            <p class="text-muted-foreground text-xs">
+              “{barPreviewPage?.page_title}” uses a compact monitor layout, which shows no daily bars. The preview shows
+              how they look on pages with a list or grid layout.
+            </p>
+          {/if}
+          <!-- Limit the width to roughly what one monitor gets on the status page (or a phone), so the bars get the same size -->
+          <div class="mx-auto w-full rounded-lg border px-4 py-3 {barPreviewWidthClass}">
+            <StatusBarCalendar
+              data={barPreviewData}
+              monitorTag="preview"
+              layout={barLayout}
+              barHeight={40}
+              disableClick
+            />
+          </div>
+          <p class="text-muted-foreground text-xs">
+            Shows {barPreviewDays} days, as set for {barPreviewPage
+              ? `the page “${barPreviewPage.page_title}”`
+              : "pages by default"} on {barPreviewDevice} (the status page shows at most {STATUS_PAGE_MAX_DAYS}). Change
+            the number of days in Manage → Pages. The width follows the page's monitor layout and is approximate; the
+            status data is sample data.
+          </p>
+        </div>
+      </Card.Content>
+      <Card.Footer class="flex justify-end border-t pt-6">
+        <Button onclick={saveBarLayout} disabled={savingBarLayout}>
+          {#if savingBarLayout}
+            <Loader class="h-4 w-4 animate-spin" />
+          {/if}
+          Save Status Bars
         </Button>
       </Card.Footer>
     </Card.Root>

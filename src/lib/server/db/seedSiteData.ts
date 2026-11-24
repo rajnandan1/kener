@@ -87,6 +87,7 @@ const seedSiteData = {
   tzToggle: "YES",
   barStyle: "PARTIAL",
   barRoundness: "SHARP",
+  barLayout: "JOINED",
   summaryStyle: "CURRENT",
   colors: {
     UP: "#67ab95",

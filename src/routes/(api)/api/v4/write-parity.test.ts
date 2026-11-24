@@ -658,6 +658,11 @@ const pairs: Pair[] = [
     dashboard: () => dashboard("storeSiteData", { siteName: "Acme Status" }),
   },
   {
+    name: "PATCH /site/barLayout = storeSiteData",
+    api: () => v4(siteKey.PATCH, { value: "SEPARATED" }, {}, { config_key: "barLayout" }),
+    dashboard: () => dashboard("storeSiteData", { barLayout: "SEPARATED" }),
+  },
+  {
     name: "PATCH /site/oidcSettings = storeSiteData",
     api: () => v4(siteKey.PATCH, { value: oidcSettings }, {}, { config_key: "oidcSettings" }),
     dashboard: () => dashboard("storeSiteData", { oidcSettings: JSON.stringify(oidcSettings) }),
@@ -883,6 +888,15 @@ describe("v4 writes the dashboard cannot make keep working through the dashboard
 
     expect(response.status).toBe(200);
     expect((await response.json()).incident).toMatchObject({ start_date_time: T0 + 1200, end_date_time: null });
+  });
+
+  it("PATCH /site/barLayout returns 400 for a layout that does not exist, and saves nothing", async () => {
+    await seed();
+    const before = await signals();
+    const response = await send(siteKey.PATCH, { value: "ROUNDED" }, {}, { config_key: "barLayout" });
+
+    expect(response.status).toBe(400);
+    expect(await signals()).toEqual(before);
   });
 
   it("POST /pages and PATCH /pages/{page_path} return 400 for a repeated monitor tag, and save nothing", async () => {

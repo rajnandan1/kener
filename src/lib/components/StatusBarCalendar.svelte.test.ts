@@ -45,6 +45,20 @@ describe("StatusBarCalendar", () => {
     await expect.element(screen.getByText("250ms")).toBeInTheDocument();
   });
 
+  it("shows the tooltip for separated bars too", async () => {
+    const data = [day({ countOfUp: 100 }), day({ countOfDown: 90, countOfUp: 10 }), day({ countOfUp: 100 })];
+    const screen = await render(StatusBarCalendar, {
+      data,
+      monitorTag: "test-monitor",
+      disableClick: true,
+      layout: "SEPARATED",
+    });
+
+    await screen.getByLabelText("Status calendar showing 3-day uptime data").hover();
+
+    await expect.element(screen.getByText("Major System Outage")).toBeInTheDocument();
+  });
+
   it("reports a partial outage when downtime is below the 75% threshold", async () => {
     const data = [day({ countOfUp: 100 }), day({ countOfDown: 20, countOfUp: 80 }), day({ countOfUp: 100 })];
     const screen = await render(StatusBarCalendar, { data, monitorTag: "test-monitor", disableClick: true });
