@@ -18,7 +18,9 @@ import {
   DeletePage,
   GetPageMonitors,
   RemoveMonitorFromPage,
+  SetPageAccessGroups,
   UpdatePage,
+  ValidatePageAccessGroups,
 } from "$lib/server/controllers/pagesController";
 import { readRequestBody } from "$lib/server/requestBody";
 
@@ -26,6 +28,7 @@ async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
   const pageSettings = toApiPageSettings(page.page_settings_json);
 
   const pageMonitors = await db.getPageMonitors(page.id);
+  const accessGroups = await db.getAccessGroupsForPage(page.id);
 
   return {
     id: page.id,
@@ -37,6 +40,7 @@ async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
     page_logo: page.page_logo,
     page_settings: pageSettings,
     monitors: pageMonitors.map((pm) => ({ monitor_tag: pm.monitor_tag, position: pm.position })),
+    access_groups: accessGroups,
     created_at: parseDbTimestamp(page.created_at).toISOString(),
     updated_at: parseDbTimestamp(page.updated_at).toISOString(),
   };
@@ -186,6 +190,19 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     return json(errorResponse, { status: 400 });
   }
 
+  // Validate access groups before anything is written, so a bad group changes nothing
+  let accessGroups: string[] | undefined;
+  if (body.access_groups !== undefined) {
+    try {
+      accessGroups = await ValidatePageAccessGroups(body.access_groups);
+    } catch (e) {
+      const errorResponse: BadRequestResponse = {
+        error: { code: "BAD_REQUEST", message: e instanceof Error ? e.message : String(e) },
+      };
+      return json(errorResponse, { status: 400 });
+    }
+  }
+
   // Build update data
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateData: Record<string, any> = {};
@@ -228,6 +245,11 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     for (let i = 0; i < body.monitors.length; i++) {
       await AddMonitorToPage(page.id, body.monitors[i], null, i);
     }
+  }
+
+  // Replace the access groups
+  if (accessGroups !== undefined) {
+    await SetPageAccessGroups(page.id, accessGroups);
   }
 
   // Fetch updated page

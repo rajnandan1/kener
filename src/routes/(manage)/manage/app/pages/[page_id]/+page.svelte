@@ -29,6 +29,9 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import GC from "$lib/global-constants.js";
+  import AccessGroupChecklist from "$lib/components/manage/AccessGroupChecklist.svelte";
+  import { ADMIN_ACCESS_GROUP, PUBLIC_ACCESS_GROUP } from "$lib/pageAccess.js";
+  import type { AccessGroupRecord } from "$lib/server/types/db.js";
 
   // Default page settings
   const defaultPageSettings: PageSettingsType = {
@@ -53,6 +56,16 @@
   let savingMonitors = $state(false);
   let uploadingLogo = $state(false);
   let uploadingSocialPreview = $state(false);
+
+  // Page access groups
+  let accessGroups = $state<AccessGroupRecord[]>([]);
+  let pageGroupIds = $state<string[]>([]);
+  let savingAccessGroups = $state(false);
+  // Saving before the groups have loaded would save an empty list and make the page private
+  let accessGroupsLoaded = $state(false);
+  // "admin" is for roles only: it lets a role see every page
+  let pageSelectableGroups = $derived(accessGroups.filter((g) => g.id !== ADMIN_ACCESS_GROUP));
+  let isPagePublic = $derived(pageGroupIds.includes(PUBLIC_ACCESS_GROUP));
 
   // Page data
   let currentPage = $state<PageWithMonitors | null>(null);
@@ -523,9 +536,49 @@
     }
   }
 
+  async function manageApi(action: string, data: Record<string, unknown> = {}) {
+    const response = await fetch(clientResolver(resolve, "/manage/api"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, data })
+    });
+    const result = await response.json();
+    if (result.error) throw new Error(result.error);
+    return result;
+  }
+
+  async function fetchAccessGroups() {
+    if (isNew) return;
+    try {
+      const [groups, pageGroups] = await Promise.all([
+        manageApi("getAccessGroups"),
+        manageApi("getPageAccessGroups", { page_id: parseInt(pageId || "0") })
+      ]);
+      accessGroups = groups;
+      pageGroupIds = pageGroups;
+      accessGroupsLoaded = true;
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to load access groups");
+    }
+  }
+
+  async function saveAccessGroups() {
+    if (!currentPage) return;
+    savingAccessGroups = true;
+    try {
+      await manageApi("setPageAccessGroups", { page_id: currentPage.id, group_ids: pageGroupIds });
+      toast.success("Page access updated");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to update page access");
+    } finally {
+      savingAccessGroups = false;
+    }
+  }
+
   onMount(() => {
     void fetchPage();
     void fetchMonitors();
+    void fetchAccessGroups();
   });
 </script>
 
@@ -958,6 +1011,55 @@
         <Card.Footer class="flex justify-end">
           <Button onclick={() => savePageSettings("seo")} disabled={savingSeoSettings}>
             {#if savingSeoSettings}
+              <Loader class="h-4 w-4 animate-spin" />
+              Saving...
+            {:else}
+              <SaveIcon class="h-4 w-4" />
+              Save
+            {/if}
+          </Button>
+        </Card.Footer>
+      </Card.Root>
+
+      <!-- Page Access Card -->
+      <Card.Root>
+        <Card.Header>
+          <Card.Title>Page Access</Card.Title>
+          <Card.Description>
+            Choose who can see this page. "Public" shows it to everyone. Otherwise visitors have to sign in, and only
+            roles that share a group with the page see it. Others get "Page not found". Administrators see every page.
+          </Card.Description>
+        </Card.Header>
+        <Card.Content class="space-y-3">
+          {#if !accessGroupsLoaded}
+            <p class="text-muted-foreground text-sm">Loading access groups…</p>
+          {:else}
+            <AccessGroupChecklist groups={pageSelectableGroups} bind:selected={pageGroupIds} idPrefix="page-access" />
+          {/if}
+          {#if accessGroupsLoaded && isPagePublic}
+            <p class="text-muted-foreground text-xs">Everyone can see this page, signed in or not.</p>
+          {:else if accessGroupsLoaded && pageGroupIds.length > 0}
+            <p class="text-muted-foreground text-xs">
+              Only signed-in users whose role shares one of these groups can see this page.
+            </p>
+          {:else if accessGroupsLoaded}
+            <p class="text-destructive text-xs">
+              No group selected: only administrators and roles in the "All pages" group can see this page.
+            </p>
+          {/if}
+          {#if accessGroupsLoaded && currentPage.page_path === "" && !isPagePublic}
+            <p class="text-destructive text-xs">
+              This is the home page. Visitors who are not signed in get "Page not found" at the site root.
+            </p>
+          {/if}
+          <p class="text-muted-foreground text-xs">
+            Access groups hide this page, its events and its RSS feed. They do not hide the monitors on it: a monitor
+            keeps its own page at /monitors/&lt;tag&gt; unless the monitor is marked as hidden.
+          </p>
+        </Card.Content>
+        <Card.Footer class="flex justify-end">
+          <Button onclick={saveAccessGroups} disabled={savingAccessGroups || !accessGroupsLoaded}>
+            {#if savingAccessGroups}
               <Loader class="h-4 w-4 animate-spin" />
               Saving...
             {:else}

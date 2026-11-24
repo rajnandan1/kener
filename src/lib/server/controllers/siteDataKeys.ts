@@ -321,4 +321,10 @@ export const siteDataKeys: SiteDataKey[] = [
     isValid: IsValidJSONString,
     data_type: "object",
   },
+  {
+    key: "autoPublicPages",
+    //YES or NO: whether new pages get the "public" access group
+    isValid: (value) => value === "YES" || value === "NO",
+    data_type: "string",
+  },
 ];

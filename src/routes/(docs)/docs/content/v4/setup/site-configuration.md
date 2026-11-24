@@ -25,6 +25,7 @@ Use **Manage → Site Configurations** to control identity, navigation, monitor 
 | Favicon                      | `favicon`                                                    | Used in `<head>` as page icon                                                                   |
 | Monitor sub menu options     | `subMenuOptions`                                             | Gates monitor share actions (badges/embed) on public monitor pages                              |
 | Global page visibility       | `globalPageVisibilitySettings`                               | Controls page switcher visibility and page-scoped navigation/events                             |
+| Page access                  | `autoPublicPages`                                            | Whether new pages get the Public access group                                                   |
 | Data retention policy        | `dataRetentionPolicy`                                        | Controls daily cleanup of old `monitoring_data`                                                 |
 | Event display settings       | `eventDisplaySettings`                                       | Controls event visibility, inline events, and where the event list shows                        |
 | Maintenance notifications    | `globalMaintenanceNotificationSettings`                      | Controls which maintenance lifecycle events notify subscribers and reminder buffer timing       |
@@ -63,6 +64,15 @@ See [Sharing Monitors](/docs/v4/sharing).
 > `forceExclusivity` takes precedence over `showSwitcher` behavior for page-scoped navigation/event flows.
 
 See [Pages](/docs/v4/pages).
+
+## Page access {#page-access}
+
+**New pages are public** (`autoPublicPages`, `YES` or `NO`) sets the access of pages created from now on:
+
+- `YES` (default): new pages get the **Public** access group.
+- `NO`: new pages start without groups, so only administrators see them until you add groups.
+
+Existing pages keep their groups. See [Page access](/docs/v4/pages#page-access).
 
 ## Data retention policy {#data-retention-policy}
 

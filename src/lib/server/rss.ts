@@ -10,6 +10,7 @@
 
 import db from "$lib/server/db/db.js";
 import { GetAllSiteData } from "$lib/server/controllers/siteDataController.js";
+import { GetVisiblePageByPath } from "$lib/server/controllers/pagesController.js";
 import type { IncidentForMonitorListWithComments, MaintenanceEventsMonitorList } from "$lib/server/types/db.js";
 
 export type RssFeedItemType = "incident" | "maintenance";
@@ -116,7 +117,8 @@ const FEED_MAX_ITEMS = 50;
 
 // Scope determines which monitors the feed covers.
 //   - page: scoped to a status page's monitor list (honors hidden-monitor
-//     stripping and globalPageVisibilitySettings.forceExclusivity when pagePath is null)
+//     stripping and globalPageVisibilitySettings.forceExclusivity when pagePath is null;
+//     404 for a page that is not in the "public" access group)
 //   - monitor: scoped to a single monitor by tag (404 if hidden, inactive, or unknown)
 export type RenderRssFeedScope = { type: "page"; pagePath: string | null } | { type: "monitor"; tag: string };
 
@@ -148,7 +150,8 @@ export async function renderRssFeedResponse(args: RenderRssFeedArgs): Promise<Re
       pagePath = "";
     }
     if (pagePath !== null) {
-      const page = await db.getPageByPath(pagePath);
+      // Feed readers do not sign in, so only pages visible to everyone have a feed
+      const page = await GetVisiblePageByPath(pagePath, null);
       if (!page) {
         return new Response("Not found", { status: 404 });
       }

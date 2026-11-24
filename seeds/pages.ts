@@ -21,6 +21,12 @@ export async function seed(knex: Knex): Promise<void> {
         })
         .returning("id");
 
+      // Seeded pages are visible to everyone. seeds/access_groups.ts runs first and creates "public".
+      if (await knex("access_groups").where({ id: "public" }).first()) {
+        const pageId = typeof insertedPage === "object" ? insertedPage.id : insertedPage;
+        await knex("page_access_groups").insert({ page_id: pageId, access_group_id: "public" });
+      }
+
       // For the home page, add the default monitor (earth) if it exists
       if (page.page_path === "") {
         const earthMonitor = await knex("monitors").where({ tag: "earth" }).first();

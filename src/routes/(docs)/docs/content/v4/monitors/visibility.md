@@ -28,6 +28,8 @@ You set it with the **Visible** switch in **Manage → Monitors**, or with **Hid
 
 A status page lists only the monitors that you add to it. A new monitor is on no page. You add a monitor to a page in **Manage → Pages → _(page)_ → Page Monitors**.
 
+A page itself can be limited to signed-in roles with access groups. That hides the page, not its monitors. See [Page access](/docs/v4/pages#page-access).
+
 ### forceExclusivity {#force-exclusivity}
 
 This site setting is stored as `globalPageVisibilitySettings.forceExclusivity`. The values are `true` and `false`. The default is `false`. When it is `true`, the root events page and `/rss.xml` include only monitors on the default page. The logo also links to the current page instead of `/`.
@@ -55,7 +57,7 @@ You set them in the monitor's **Sharing Options** and in **Manage → Site Confi
 
 ## Where each rule applies {#where-each-rule-applies}
 
-- The status pages `/` and `/{page_path}` list monitors that are on the page, `ACTIVE`, and not hidden. The page banner status counts only these monitors.
+- The status pages `/` and `/{page_path}` list monitors that are on the page, `ACTIVE`, and not hidden. The page banner status counts only these monitors. A page that the viewer may not see because of its [access groups](/docs/v4/pages#page-access) returns 404.
 - The monitor page `/monitors/{tag}` opens only for a monitor that is `ACTIVE` and not hidden. It does not check page membership.
 - The incident page `/incidents/{id}` and the maintenance page `/maintenances/{id}` list the affected monitors that the viewer can see. These are the monitors that are not hidden, plus hidden monitors for a [signed-in viewer](#signed-in-viewers) with `monitors.read`. A page opens only when its event is global (`is_global = YES`) or the viewer can see at least one of its affected monitors. When neither is true, the page returns 404.
 - Badges at `/badge/{tag}/...` follow the same rule as the monitor page. For any other monitor, the badge shows an error. The `_` badge covers every `ACTIVE` monitor on the site that is not hidden.

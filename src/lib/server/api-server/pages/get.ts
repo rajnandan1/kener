@@ -1,17 +1,18 @@
 import { json } from "@sveltejs/kit";
 import type { APIServerRequest } from "$lib/server/types/api-server";
-import { GetAllPages } from "$lib/server/controllers/pagesController";
+import { GetAccessiblePages } from "$lib/server/controllers/pagesController";
+import { GetLoggedInSession } from "$lib/server/controllers/userController";
 import { GetSiteDataByKey } from "$lib/server/controllers/siteDataController";
 import type { PageNavItem } from "$lib/server/controllers/dashboardController";
 import type { PageOrderingSettings } from "$lib/types/site";
 
 /**
  * GET /dashboard-apis/pages
- * Returns all pages as PageNavItem[] (page_title, page_path)
+ * Returns the pages the visitor may see as PageNavItem[] (page_title, page_path)
  * Respects pageOrderingSettings if enabled
  */
-export default async function get(_req: APIServerRequest): Promise<Response> {
-  const allPagesData = await GetAllPages();
+export default async function get(req: APIServerRequest): Promise<Response> {
+  const allPagesData = await GetAccessiblePages(await GetLoggedInSession(req.cookies));
   const pageOrderingSettings = (await GetSiteDataByKey("pageOrderingSettings")) as PageOrderingSettings | null;
 
   let orderedPages = allPagesData;

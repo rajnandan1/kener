@@ -21,6 +21,10 @@
   import TrashIcon from "@lucide/svelte/icons/trash-2";
   import UserMinusIcon from "@lucide/svelte/icons/user-minus";
   import UserPlusIcon from "@lucide/svelte/icons/user-plus";
+  import EyeIcon from "@lucide/svelte/icons/eye";
+  import AccessGroupChecklist from "$lib/components/manage/AccessGroupChecklist.svelte";
+  import { ADMIN_ROLE_ID, PUBLIC_ACCESS_GROUP } from "$lib/pageAccess.js";
+  import type { AccessGroupRecord } from "$lib/server/types/db.js";
   import { toast } from "svelte-sonner";
   import { onMount } from "svelte";
   import { resolve } from "$app/paths";
@@ -91,6 +95,31 @@
   let loadingUsers = $state(false);
   let addingUserId = $state<number | null>(null);
   let removingUserId = $state<number | null>(null);
+
+  // Page access sheet
+  let showAccessSheet = $state(false);
+  let accessRole = $state<RoleRecord | null>(null);
+  let accessGroups = $state<AccessGroupRecord[]>([]);
+  let roleGroupIds = $state<string[]>([]);
+  let loadingAccess = $state(false);
+  // Saving after a failed load would save an empty list and remove the role's access
+  let accessLoadFailed = $state(false);
+  let savingAccess = $state(false);
+
+  // Create / delete access group
+  let showCreateGroupDialog = $state(false);
+  let creatingGroup = $state(false);
+  let createGroupError = $state("");
+  let newGroup = $state({ id: "", name: "", description: "" });
+  let groupToDelete = $state<AccessGroupRecord | null>(null);
+  let deletingGroup = $state(false);
+
+  // "public" is for pages only: every visitor already sees public pages
+  let roleSelectableGroups = $derived(accessGroups.filter((g) => g.id !== PUBLIC_ACCESS_GROUP));
+  let isAdminRole = $derived(accessRole?.id === ADMIN_ROLE_ID);
+  let canEditRoleAccess = $derived(hasPermission("roles.write") && !isAdminRole);
+  // Deleting a group also changes every page that uses it
+  let canDeleteGroups = $derived(hasPermission("roles.write") && hasPermission("pages.write"));
 
   const apiUrl = clientResolver(resolve, "/manage/api");
 
@@ -367,6 +396,90 @@
     return perms.filter((p) => rolePermissionIds.has(p.id)).length;
   }
 
+  // ============ Page access ============
+
+  async function openAccessGroups(role: RoleRecord) {
+    accessRole = role;
+    roleGroupIds = [];
+    showAccessSheet = true;
+    loadingAccess = true;
+    accessLoadFailed = false;
+    try {
+      const [groups, roleGroups] = await Promise.all([
+        apiCall("getAccessGroups"),
+        apiCall("getRoleAccessGroups", { roleId: role.id })
+      ]);
+      accessGroups = groups;
+      roleGroupIds = roleGroups;
+    } catch (e: unknown) {
+      accessLoadFailed = true;
+      toast.error(e instanceof Error ? e.message : "Failed to load access groups");
+    } finally {
+      loadingAccess = false;
+    }
+  }
+
+  async function saveAccessGroups() {
+    if (!accessRole) return;
+    savingAccess = true;
+    try {
+      await apiCall("setRoleAccessGroups", { roleId: accessRole.id, group_ids: roleGroupIds });
+      toast.success("Page access updated");
+      showAccessSheet = false;
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to update page access");
+    } finally {
+      savingAccess = false;
+    }
+  }
+
+  function openCreateGroupDialog() {
+    newGroup = { id: "", name: "", description: "" };
+    createGroupError = "";
+    showCreateGroupDialog = true;
+  }
+
+  async function handleCreateGroup() {
+    createGroupError = "";
+    if (!newGroup.id.trim() || !newGroup.name.trim()) {
+      createGroupError = "Group ID and name are required";
+      return;
+    }
+    creatingGroup = true;
+    try {
+      await apiCall("createAccessGroup", {
+        id: newGroup.id,
+        group_name: newGroup.name,
+        description: newGroup.description || null
+      });
+      toast.success("Access group created");
+      showCreateGroupDialog = false;
+      accessGroups = await apiCall("getAccessGroups");
+    } catch (e: unknown) {
+      createGroupError = e instanceof Error ? e.message : "Failed to create access group";
+    } finally {
+      creatingGroup = false;
+    }
+  }
+
+  async function handleDeleteGroup() {
+    if (!groupToDelete) return;
+    // Keep the id: the dialog state is cleared below, but the selection still needs it
+    const deletedId = groupToDelete.id;
+    deletingGroup = true;
+    try {
+      await apiCall("deleteAccessGroup", { id: deletedId });
+      toast.success("Access group deleted");
+      groupToDelete = null;
+      roleGroupIds = roleGroupIds.filter((id) => id !== deletedId);
+      accessGroups = await apiCall("getAccessGroups");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete access group");
+    } finally {
+      deletingGroup = false;
+    }
+  }
+
   let availableUsersToAdd = $derived(allUsers.filter((u) => !roleUsers.some((ru) => ru.id === u.id)));
 
   onMount(async () => {
@@ -438,6 +551,10 @@
                     <Button variant="ghost" size="sm" onclick={() => openUsers(role)}>
                       <UsersIcon class="mr-1 h-4 w-4" />
                       Users
+                    </Button>
+                    <Button variant="ghost" size="sm" onclick={() => openAccessGroups(role)}>
+                      <EyeIcon class="mr-1 h-4 w-4" />
+                      Page Access
                     </Button>
                     {#if hasPermission("roles.write")}
                       <Button
@@ -819,3 +936,163 @@
     {/if}
   </Sheet.Content>
 </Sheet.Root>
+
+<!-- Page Access Sheet -->
+<Sheet.Root bind:open={showAccessSheet}>
+  <Sheet.Content side="right" class="w-full overflow-y-auto sm:max-w-lg">
+    <Sheet.Header>
+      <Sheet.Title>
+        Page Access — {accessRole?.role_name}
+      </Sheet.Title>
+      <Sheet.Description>
+        {#if isAdminRole}
+          The Administrator role always sees every page. Its page access cannot be changed.
+        {:else}
+          Users with this role see public pages and every page that shares a group with this role. Without groups they
+          see public pages only.
+        {/if}
+      </Sheet.Description>
+    </Sheet.Header>
+    <div class="p-4">
+      {#if loadingAccess}
+        <div class="flex items-center justify-center p-8">
+          <Spinner class="h-6 w-6" />
+        </div>
+      {:else if accessLoadFailed}
+        <p class="text-destructive text-sm">Could not load the access groups. Close this panel and try again.</p>
+      {:else}
+        {#if !isAdminRole}
+          {#if roleSelectableGroups.length === 0}
+            <p class="text-muted-foreground text-sm">No access groups yet. Create one below.</p>
+          {:else}
+            <AccessGroupChecklist
+              groups={roleSelectableGroups}
+              bind:selected={roleGroupIds}
+              disabled={!canEditRoleAccess}
+              idPrefix="role-access"
+            />
+          {/if}
+
+          {#if canEditRoleAccess}
+            <div class="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onclick={() => (showAccessSheet = false)}>Cancel</Button>
+              <Button onclick={saveAccessGroups} disabled={savingAccess}>
+                {#if savingAccess}
+                  <Spinner class="mr-2 h-4 w-4" />
+                {/if}
+                Save Page Access
+              </Button>
+            </div>
+          {/if}
+        {/if}
+
+        <Separator class="my-4" />
+
+        <!-- Manage the groups themselves -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-medium">Access Groups</h4>
+            {#if hasPermission("roles.write")}
+              <Button size="sm" variant="outline" onclick={openCreateGroupDialog}>
+                <PlusIcon class="mr-1 h-4 w-4" />
+                New Group
+              </Button>
+            {/if}
+          </div>
+          <ul class="flex flex-col gap-1">
+            {#each accessGroups as group (group.id)}
+              <li class="flex items-center justify-between gap-2 rounded-md border p-2">
+                <div class="flex min-w-0 items-center gap-2">
+                  <span class="truncate text-sm">{group.group_name}</span>
+                  <Badge variant="outline" class="font-mono text-xs">{group.id}</Badge>
+                  {#if group.is_system}
+                    <Badge variant="secondary" class="text-xs">
+                      <LockIcon class="mr-1 h-3 w-3" />
+                      Built-in
+                    </Badge>
+                  {/if}
+                </div>
+                {#if !group.is_system && canDeleteGroups}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Delete access group {group.group_name}"
+                    onclick={() => (groupToDelete = group)}
+                  >
+                    <TrashIcon class="text-destructive h-4 w-4" />
+                  </Button>
+                {/if}
+              </li>
+            {/each}
+          </ul>
+        </div>
+      {/if}
+    </div>
+  </Sheet.Content>
+</Sheet.Root>
+
+<!-- Create Access Group Dialog -->
+<Dialog.Root bind:open={showCreateGroupDialog}>
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title>Create Access Group</Dialog.Title>
+      <Dialog.Description>Give the group to pages and roles to decide who sees which page.</Dialog.Description>
+    </Dialog.Header>
+    <div class="grid gap-4 py-4">
+      {#if createGroupError}
+        <p class="text-destructive text-sm">{createGroupError}</p>
+      {/if}
+      <div class="grid gap-2">
+        <Label for="group-id">Group ID</Label>
+        <Input id="group-id" bind:value={newGroup.id} placeholder="e.g. customer-a" />
+        <p class="text-muted-foreground text-xs">
+          Lowercase letters, digits, "-" and "_". Cannot be changed later. "public" and "admin" are reserved.
+        </p>
+      </div>
+      <div class="grid gap-2">
+        <Label for="group-name">Display Name</Label>
+        <Input id="group-name" bind:value={newGroup.name} placeholder="e.g. Customer A" />
+      </div>
+      <div class="grid gap-2">
+        <Label for="group-desc">Description (optional)</Label>
+        <Input id="group-desc" bind:value={newGroup.description} placeholder="e.g. Pages for Customer A" />
+      </div>
+    </div>
+    <Dialog.Footer>
+      <Button variant="outline" onclick={() => (showCreateGroupDialog = false)}>Cancel</Button>
+      <Button onclick={handleCreateGroup} disabled={creatingGroup}>
+        {#if creatingGroup}
+          <Spinner class="mr-2 h-4 w-4" />
+        {/if}
+        Create
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
+
+<!-- Delete Access Group Dialog -->
+<Dialog.Root
+  open={groupToDelete !== null}
+  onOpenChange={(open) => {
+    if (!open) groupToDelete = null;
+  }}
+>
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title>Delete Access Group</Dialog.Title>
+      <Dialog.Description>
+        Delete <span class="font-semibold">{groupToDelete?.group_name}</span>? It is removed from every page and role.
+        Pages that had only this group are then visible to administrators only.
+      </Dialog.Description>
+    </Dialog.Header>
+    <Dialog.Footer>
+      <Button variant="outline" onclick={() => (groupToDelete = null)}>Cancel</Button>
+      <Button variant="destructive" onclick={handleDeleteGroup} disabled={deletingGroup}>
+        {#if deletingGroup}
+          <Spinner class="mr-2 h-4 w-4" />
+        {/if}
+        Delete
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
