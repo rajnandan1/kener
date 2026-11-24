@@ -14,6 +14,7 @@ import {
 import type { EventDisplaySettings, GlobalPageVisibilitySettings, SiteDateTimeFormat } from "$lib/types/site.js";
 import serverResolve from "../resolver.js";
 import { ResolveEventListPlacement } from "$lib/clientTools";
+import { ResolveStatusBarLayout, type StatusBarLayout } from "$lib/statusBarLayout";
 
 export interface LayoutServerData {
   isMobile: boolean;
@@ -78,6 +79,7 @@ export interface LayoutServerData {
   dateAndTimeFormat: SiteDateTimeFormat;
   metaSiteTitle?: string;
   metaSiteDescription?: string;
+  barLayout: StatusBarLayout;
 }
 
 function NormalizeEventDisplaySettings(settings?: Partial<EventDisplaySettings>): EventDisplaySettings {
@@ -193,5 +195,6 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     dateAndTimeFormat: siteData.dateAndTimeFormat || seedSiteData.dateAndTimeFormat,
     metaSiteTitle: siteData.metaSiteTitle,
     metaSiteDescription: siteData.metaSiteDescription,
+    barLayout: ResolveStatusBarLayout(siteData.barLayout),
   };
 }

@@ -44,6 +44,7 @@ export interface SiteDataTransformed {
   tzToggle?: string;
   barStyle: string;
   barRoundness?: string;
+  barLayout?: string;
   summaryStyle?: string;
   colors: SiteStatusColors;
   colorsDark: SiteStatusColors;

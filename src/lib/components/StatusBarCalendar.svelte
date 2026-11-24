@@ -8,6 +8,13 @@
   import { t } from "$lib/stores/i18n";
   import { formatDate } from "$lib/stores/datetime";
   import trackEvent from "$lib/beacon";
+  import {
+    GetStatusBarGeometry,
+    GetStatusBarIndexAt,
+    GetStatusBarStart,
+    ResolveStatusBarLayout,
+    type StatusBarLayout
+  } from "$lib/statusBarLayout";
 
   interface Props {
     data: TimestampStatusCount[];
@@ -16,9 +23,19 @@
     radius?: number;
     class?: string;
     disableClick?: boolean;
+    // Overrides the site setting, e.g. for the preview in Manage → Customizations
+    layout?: StatusBarLayout;
   }
 
-  let { data, monitorTag, barHeight = 40, radius = 8, class: className = "", disableClick = false }: Props = $props();
+  let {
+    data,
+    monitorTag,
+    barHeight = 40,
+    radius = 8,
+    class: className = "",
+    disableClick = false,
+    layout
+  }: Props = $props();
 
   // Canvas state
   let canvas = $state<HTMLCanvasElement | null>(null);
@@ -63,16 +80,14 @@
   const colorDown = $derived(page.data.siteStatusColors?.DOWN || "#ef4444");
   const colorDegraded = $derived(page.data.siteStatusColors?.DEGRADED || "#eab308");
   const colorMaintenance = $derived(page.data.siteStatusColors?.MAINTENANCE || "#3b82f6");
-  const gap = 0;
+
+  // Joined strip or separated bars, set in Manage → Customizations → Status Bars
+  const barLayout = $derived(layout ?? ResolveStatusBarLayout(page.data.barLayout));
+  // Bar width, gap and corner radius for the current canvas width and screen
+  const geometry = $derived(GetStatusBarGeometry(canvasWidth, data?.length ?? 0, barLayout, dpr));
 
   // Track hovered index separately for efficient redraw
   let hoveredIndex = $state<number | null>(null);
-
-  function calculateBarWidth(): number {
-    if (!data || data.length === 0 || canvasWidth === 0) return 0;
-    const totalGaps = (data.length - 1) * gap;
-    return Math.max(1, (canvasWidth - totalGaps) / data.length);
-  }
 
   // Helper to draw a rounded rect path (only rounds specified corners)
   function roundedRectPath(
@@ -125,7 +140,7 @@
     canvas.height = scaledHeight;
     ctx.scale(dpr, dpr);
 
-    const barWidth = calculateBarWidth();
+    const { gap, cornerRadius: barCornerRadius } = geometry;
     const noDataColor = mode.current === "dark" ? "#27272a" : "#e4e4e7";
     const roundedGap = Math.round(gap);
 
@@ -134,8 +149,9 @@
 
     // Draw each bar
     for (let i = 0; i < data.length; i++) {
-      const x = Math.round(i * (barWidth + gap));
-      const nextX = Math.round((i + 1) * (barWidth + gap));
+      // Same rounded edges as GetStatusBarIndexAt, so drawing and hover agree
+      const x = GetStatusBarStart(i, geometry);
+      const nextX = GetStatusBarStart(i + 1, geometry);
       const roundedBarWidth = Math.max(0, nextX - x - roundedGap);
       const barItem = data[i];
       const total = barItem.countOfUp + barItem.countOfDown + barItem.countOfDegraded + barItem.countOfMaintenance;
@@ -167,9 +183,15 @@
       const isLast = i === data.length - 1;
       const cornerRadius = radius * scale;
 
-      // Set up clipping path for rounded corners on first/last bars
+      // Separated bars: round every bar on its own.
+      // Joined bars: only round the outer ends of the strip (first/last bar).
       ctx.save();
-      if (isFirst || isLast) {
+      if (barLayout === "SEPARATED") {
+        // Rounding makes some bars a pixel narrower than the average, so cap the radius per drawn bar
+        const drawnCornerRadius = Math.min(barCornerRadius, roundedBarWidth / 2, scaledBarHeight / 2);
+        roundedRectPath(ctx, x, yOffset, roundedBarWidth, scaledBarHeight, drawnCornerRadius, true, true);
+        ctx.clip();
+      } else if (isFirst || isLast) {
         roundedRectPath(ctx, x, yOffset, roundedBarWidth, scaledBarHeight, cornerRadius, isFirst, isLast);
         ctx.clip();
       }
@@ -241,22 +263,12 @@
 
     const rect = canvas.getBoundingClientRect();
     const mouseX = event.clientX - rect.left;
-    const barWidth = calculateBarWidth();
-    const totalBarWidth = barWidth + gap;
 
-    // Find which bar the mouse is over
-    let foundIndex = -1;
-    for (let i = 0; i < data.length; i++) {
-      const barStart = Math.round(i * totalBarWidth);
-      const barEnd = Math.round((i + 1) * totalBarWidth) - Math.round(gap);
-      if (mouseX >= barStart && mouseX < barEnd) {
-        foundIndex = i;
-        break;
-      }
-    }
+    // Find which bar the mouse is over (a gap belongs to the bar on its left)
+    const foundIndex = GetStatusBarIndexAt(mouseX, data.length, geometry);
 
     if (foundIndex >= 0) {
-      const barX = Math.round(foundIndex * totalBarWidth) + Math.round(barWidth) / 2;
+      const barX = GetStatusBarStart(foundIndex, geometry) + Math.round(geometry.barWidth) / 2;
       hoveredBar = { index: foundIndex, x: barX, data: data[foundIndex] };
       // Only redraw if hovered index changed
       if (hoveredIndex !== foundIndex) {
@@ -347,6 +359,7 @@
     const _width = canvasWidth;
     const _data = data;
     const _mode = mode.current;
+    const _geometry = geometry;
 
     if (_width > 0 && _data && _data.length > 0 && mounted) {
       drawBars(hoveredIndex);
@@ -355,7 +368,8 @@
 </script>
 
 <div class="relative w-full {className}" bind:this={container}>
-  <div class="overflow-hidden" style="border-radius: {radius}px;">
+  <!-- Separated bars round their own corners, so the wrapper must not cut them off -->
+  <div class="overflow-hidden" style="border-radius: {barLayout === 'SEPARATED' ? 0 : radius}px;">
     <canvas
       bind:this={canvas}
       style="width: 100%; height: {barHeight + 8}px;"
@@ -375,7 +389,8 @@
     >
       <span class={getStatusColor(hoveredBar.data)}>{$t(GetStatusSummary(hoveredBar.data))}</span>
       <span class="text-muted-foreground">@</span>
-      {$formatDate(hoveredBar.data.ts, page.data.dateAndTimeFormat.dateOnly)}
+      <!-- Manage pages have no dateAndTimeFormat, so the preview there falls back to the locale's date format -->
+      {$formatDate(hoveredBar.data.ts, page.data.dateAndTimeFormat?.dateOnly ?? "PP")}
       {#if hoveredBar.data.avgLatency > 0}
         <span class="text-muted-foreground ml-1">|</span>
         <span class="ml-1">{ParseLatency(hoveredBar.data.avgLatency)}</span>

@@ -8,6 +8,7 @@ import {
   IsValidNav,
   IsValidURL,
 } from "./validators.js";
+import { IsStatusBarLayout } from "../../statusBarLayout.js";
 
 interface SiteDataKey {
   key: string;
@@ -148,6 +149,12 @@ export const siteDataKeys: SiteDataKey[] = [
     key: "barRoundness",
     //SHARP or ROUNDED
     isValid: (value) => typeof value === "string" && ["SHARP", "ROUNDED"].includes(value),
+    data_type: "string",
+  },
+  {
+    key: "barLayout",
+    //JOINED or SEPARATED, see $lib/statusBarLayout.ts
+    isValid: IsStatusBarLayout,
     data_type: "string",
   },
   {

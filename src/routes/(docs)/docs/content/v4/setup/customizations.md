@@ -9,6 +9,7 @@ Use **Manage → Customizations** to control visual behavior of the public statu
 
 - Site footer HTML
 - Status colors (light + dark)
+- Status bar layout (joined or separated)
 - Font source and font family
 - Default theme and theme toggle
 - Site-wide announcement banner
@@ -21,6 +22,7 @@ Use **Manage → Customizations** to control visual behavior of the public statu
 | -------------- | --------------------------- | ------------------------------------------------------------- |
 | Footer         | `footerHTML`                | Rendered by public footer component                           |
 | Status colors  | `colors`, `colorsDark`      | Injected as CSS variables in public layout `<head>`           |
+| Status bars    | `barLayout`                 | Draws the daily uptime bars as one strip or as separate bars  |
 | Font           | `font` (`cssSrc`, `family`) | Loads font stylesheet and applies global `--font-family`      |
 | Theme defaults | `theme`, `themeToggle`      | Sets initial mode and controls whether users can toggle theme |
 | Announcement   | `announcement`              | Renders site banner when title + message are present          |
@@ -41,6 +43,15 @@ Color settings feed CSS variables for status/accent colors in the public layout.
 - load `font.cssSrc` as stylesheet
 - set `--font-family`
 - apply global font family
+
+## Status bars {#status-bars}
+
+`barLayout` sets how the daily uptime bars look on the status page, monitor pages, and embeds:
+
+- `JOINED` (default): the days form one continuous strip.
+- `SEPARATED`: each day is its own bar with a small gap and rounded corners. The gap shrinks on narrow screens.
+
+The card shows a live preview before you save. It uses the number of days set for the selected page, on desktop or mobile.
 
 ## Theme and announcement {#theme-and-announcement}
 
@@ -71,6 +82,7 @@ Stored as `pageOrderingSettings` with `enabled` (boolean) and `order` (array of 
 
 - Update footer and refresh page.
 - Change color values and confirm status/accent colors update.
+- Switch the status bar layout and confirm the monitor bars change.
 - Set font URL/family and confirm typography changes.
 - Toggle theme settings and verify theme toggle visibility.
 - Create announcement and verify banner appears.
