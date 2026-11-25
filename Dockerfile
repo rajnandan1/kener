@@ -111,9 +111,11 @@ RUN apk add --no-cache \
     tzdata \
     iputils \
     curl \
-    libcap && \
-    # Grant ping the NET_RAW capability so non-root users can send ICMP packets
-    setcap cap_net_raw+ep /bin/ping || true
+    libcap
+# Grant ping the NET_RAW capability so non-root users can send ICMP packets.
+# Isolated in its own RUN so a failed `apk add` is not masked by `|| true`
+# (the intent is only to tolerate setcap failing when ping is absent).
+RUN setcap cap_net_raw+ep /bin/ping || true
 
 # ---------- Debian runtime ----------
 FROM node:${NODE_VERSION}-slim AS final-debian
@@ -123,8 +125,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     iputils-ping \
     curl \
     libcap2-bin && \
-    setcap cap_net_raw+ep /usr/bin/ping || true && \
     rm -rf /var/lib/apt/lists/*
+# See alpine stage: keep setcap isolated so apt-get failures are not masked.
+RUN setcap cap_net_raw+ep /usr/bin/ping || true
 
 # ---------- Selected variant ----------
 FROM final-${VARIANT} AS final
@@ -186,9 +189,12 @@ USER node
 
 EXPOSE ${PORT}
 
-# Healthcheck: hit the /healthcheck endpoint exposed by Express in main.ts
+# Healthcheck: hit the /healthcheck endpoint exposed by Express in main.ts.
+# Use $$ so the shell expands PORT/KENER_BASE_PATH at *runtime* from the
+# container environment; a bare ${VAR} would be substituted at build time and
+# ignore operator overrides like `docker run -e KENER_BASE_PATH=/status`.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-    CMD sh -c 'curl -sf http://localhost:${PORT}${KENER_BASE_PATH}/healthcheck || exit 1'
+    CMD sh -c 'curl -sf "http://localhost:$${PORT}$${KENER_BASE_PATH}/healthcheck" || exit 1'
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "build/main.js"]
