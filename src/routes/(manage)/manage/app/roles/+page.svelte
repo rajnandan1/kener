@@ -398,7 +398,11 @@
 
   // ============ Page access ============
 
+  // Counts the loads, so a slow answer for an earlier role cannot overwrite the current one
+  let accessLoadId = 0;
+
   async function openAccessGroups(role: RoleRecord) {
+    const loadId = ++accessLoadId;
     accessRole = role;
     roleGroupIds = [];
     showAccessSheet = true;
@@ -409,13 +413,15 @@
         apiCall("getAccessGroups"),
         apiCall("getRoleAccessGroups", { roleId: role.id })
       ]);
+      if (loadId !== accessLoadId) return;
       accessGroups = groups;
       roleGroupIds = roleGroups;
     } catch (e: unknown) {
+      if (loadId !== accessLoadId) return;
       accessLoadFailed = true;
       toast.error(e instanceof Error ? e.message : "Failed to load access groups");
     } finally {
-      loadingAccess = false;
+      if (loadId === accessLoadId) loadingAccess = false;
     }
   }
 

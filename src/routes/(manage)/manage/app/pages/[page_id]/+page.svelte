@@ -224,8 +224,10 @@
       } else {
         toast.success(isNew ? "Page created successfully" : "Page updated successfully");
         if (isNew && result.id) {
-          // Navigate to the newly created page
-          goto(clientResolver(resolve, `/manage/app/pages/${result.id}`));
+          // Navigate to the newly created page. The editor stays mounted, so load the page here.
+          await goto(clientResolver(resolve, `/manage/app/pages/${result.id}`));
+          void fetchPage();
+          void fetchAccessGroups();
         } else if (isNew) {
           // Fallback: go back to pages list
           goto(clientResolver(resolve, "/manage/app/pages"));

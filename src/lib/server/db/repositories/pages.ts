@@ -224,6 +224,9 @@ export class PagesRepository extends BaseRepository {
   /** Replaces all access groups of a page. */
   async setPageAccessGroups(page_id: number, group_ids: string[]): Promise<void> {
     await this.knex.transaction(async (trx) => {
+      // Two saves at the same time would otherwise mix their groups. SQLite ignores this
+      // and runs write transactions one after the other anyway.
+      await trx("pages").where("id", page_id).forUpdate().first();
       await trx("page_access_groups").where("page_id", page_id).del();
       if (group_ids.length > 0) {
         await trx("page_access_groups").insert(group_ids.map((access_group_id) => ({ page_id, access_group_id })));
@@ -234,6 +237,8 @@ export class PagesRepository extends BaseRepository {
   /** Replaces all access groups of a role. */
   async setRoleAccessGroups(role_id: string, group_ids: string[]): Promise<void> {
     await this.knex.transaction(async (trx) => {
+      // See setPageAccessGroups
+      await trx("roles").where("id", role_id).forUpdate().first();
       await trx("role_access_groups").where("role_id", role_id).del();
       if (group_ids.length > 0) {
         await trx("role_access_groups").insert(group_ids.map((access_group_id) => ({ role_id, access_group_id })));

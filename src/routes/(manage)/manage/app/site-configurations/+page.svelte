@@ -53,6 +53,8 @@
   let savingMaintenanceNotificationSettings = $state(false);
   // Whether new pages get the "public" access group (stored as YES / NO)
   let autoPublicPages = $state(true);
+  // Saving before the stored value has loaded could turn "private" back into "public"
+  let autoPublicPagesLoaded = $state(false);
   let savingAutoPublicPages = $state(false);
   let uploadingLogo = $state(false);
   let uploadingFavicon = $state(false);
@@ -204,6 +206,7 @@
         }
 
         autoPublicPages = data.autoPublicPages !== "NO";
+        autoPublicPagesLoaded = true;
 
         dataRetentionPolicy = {
           enabled: data.dataRetentionPolicy?.enabled ?? true,
@@ -1285,7 +1288,11 @@
         </div>
       </Card.Content>
       <Card.Footer class="flex justify-end">
-        <Button onclick={saveAutoPublicPages} disabled={savingAutoPublicPages} class="cursor-pointer">
+        <Button
+          onclick={saveAutoPublicPages}
+          disabled={savingAutoPublicPages || !autoPublicPagesLoaded}
+          class="cursor-pointer"
+        >
           {#if savingAutoPublicPages}
             <Loader class="h-4 w-4 animate-spin" />
             Saving...

@@ -28,8 +28,7 @@ export async function up(knex: Knex): Promise<void> {
   }
 
   // Which groups may see a page
-  const createsPageGroups = !(await knex.schema.hasTable("page_access_groups"));
-  if (createsPageGroups) {
+  if (!(await knex.schema.hasTable("page_access_groups"))) {
     await knex.schema.createTable("page_access_groups", (table) => {
       table.integer("page_id").unsigned().notNullable().references("id").inTable("pages").onDelete("CASCADE");
       table.string("access_group_id", 100).notNullable().references("id").inTable("access_groups").onDelete("CASCADE");
@@ -54,9 +53,11 @@ export async function up(knex: Knex): Promise<void> {
     }
   }
 
-  // Pages that exist before this migration stay visible to everyone. Only on the run that
-  // creates the table: a second run must not reopen pages an admin has made private since.
-  if (createsPageGroups) {
+  // Pages that exist before this migration stay visible to everyone. Only while the table is
+  // empty: a second run must not reopen pages an admin has made private since. Checking the
+  // rows instead of whether this run created the table also covers a first run that failed
+  // after the table was created (MySQL commits CREATE TABLE right away).
+  if (!(await knex("page_access_groups").first())) {
     const pages: { id: number }[] = await knex("pages").select("id");
     for (let i = 0; i < pages.length; i += 100) {
       await knex("page_access_groups").insert(
