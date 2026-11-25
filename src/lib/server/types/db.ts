@@ -497,6 +497,21 @@ export interface PageRecordInsert {
   page_settings_json?: string | null;
 }
 
+// ============ access_groups table ============
+export interface AccessGroupRecord {
+  id: string;
+  group_name: string;
+  description: string | null;
+  // Built-in groups ("public", "admin") cannot be created or deleted
+  is_system: boolean;
+}
+
+export interface AccessGroupRecordInsert {
+  id: string;
+  group_name: string;
+  description?: string | null;
+}
+
 export interface PageSettingsType {
   monitor_status_history_days: {
     desktop: number;

@@ -38,6 +38,9 @@
       "name": "Pages"
     },
     {
+      "name": "Access Groups"
+    },
+    {
       "name": "Site"
     },
     {
@@ -1612,6 +1615,110 @@
           }
         }
       }
+    },
+    "/api/v4/access-groups": {
+      "get": {
+        "tags": ["Access Groups"],
+        "operationId": "listAccessGroups",
+        "summary": "List access groups",
+        "responses": {
+          "200": {
+            "description": "All access groups, built-in groups first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["access_groups"],
+                  "properties": {
+                    "access_groups": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AccessGroup"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Access Groups"],
+        "operationId": "createAccessGroup",
+        "summary": "Create access group",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccessGroupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Access group created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["access_group"],
+                  "properties": {
+                    "access_group": {
+                      "$ref": "#/components/schemas/AccessGroup"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v4/access-groups/{group_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/AccessGroupId"
+        }
+      ],
+      "delete": {
+        "tags": ["Access Groups"],
+        "operationId": "deleteAccessGroup",
+        "summary": "Delete access group",
+        "description": "Removes the group from every page and role. The built-in groups `public` and `admin` return `400`.",
+        "responses": {
+          "200": {
+            "description": "Access group deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1696,6 +1803,14 @@
         "required": true,
         "schema": {
           "type": "integer"
+        }
+      },
+      "AccessGroupId": {
+        "name": "group_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
         }
       }
     },
@@ -2381,6 +2496,13 @@
             "items": {
               "$ref": "#/components/schemas/Monitor"
             }
+          },
+          "access_groups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "IDs of the access groups that may see the page. `public` makes the page visible to everyone. A page without groups is visible only to the Administrator role and roles in the `admin` group. `admin` cannot be given to a page."
           }
         },
         "additionalProperties": true
@@ -2429,6 +2551,13 @@
             "items": {
               "type": "string"
             }
+          },
+          "access_groups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "IDs of the access groups that may see the page. `public` makes the page visible to everyone. A page without groups is visible only to the Administrator role and roles in the `admin` group. `admin` cannot be given to a page. Without this field the page gets `public`, unless new pages are set to start private in Site Configurations."
           }
         }
       },
@@ -2473,6 +2602,13 @@
             "items": {
               "type": "string"
             }
+          },
+          "access_groups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "IDs of the access groups that may see the page. `public` makes the page visible to everyone. A page without groups is visible only to the Administrator role and roles in the `admin` group. `admin` cannot be given to a page. Replaces all groups of the page."
           }
         }
       },
@@ -2841,6 +2977,60 @@
           "size": {
             "type": "integer",
             "description": "Stored size in bytes."
+          }
+        }
+      },
+      "AccessGroup": {
+        "type": "object",
+        "required": ["id", "group_name", "description", "is_system"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "examples": ["customer-a"]
+          },
+          "group_name": {
+            "type": "string",
+            "examples": ["Customer A"]
+          },
+          "description": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "is_system": {
+            "type": "boolean",
+            "description": "`true` for the built-in groups `public` and `admin`, which cannot be deleted"
+          }
+        }
+      },
+      "CreateAccessGroupRequest": {
+        "type": "object",
+        "required": ["id", "group_name"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Lowercased; spaces become hyphens and characters other than a-z, 0-9, `-` and `_` are removed. `public` and `admin` are reserved.",
+            "examples": ["customer-a"]
+          },
+          "group_name": {
+            "type": "string",
+            "minLength": 1,
+            "examples": ["Customer A"]
+          },
+          "description": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       }

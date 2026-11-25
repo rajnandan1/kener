@@ -81,6 +81,28 @@ When a field is left empty, the site-level value is used. When the site-level va
 > [!TIP]
 > Upload a 1200×630 image for best results across social platforms.
 
+## Page access {#page-access}
+
+Use **Page Access** on a page to decide who can see it. A page lists access groups, and a role lists the groups its users belong to (see [Page access for roles](/docs/v4/user-management#page-access)).
+
+| Page groups                  | Who sees the page                                                          |
+| ---------------------------- | -------------------------------------------------------------------------- |
+| includes **Public**          | Everyone, signed in or not                                                 |
+| custom groups, no **Public** | Signed-in users whose role shares a group, plus administrators             |
+| none                         | Only the Administrator role and roles in the **All pages** (`admin`) group |
+
+Everyone else gets **Page not found**, as if the page did not exist. The page is also left out of the page switcher and the sitemap, its events return **Page not found**, and its RSS feed (`/<page_path>/rss.xml`) works only while the page is public.
+
+New pages are public unless **New pages are public** is turned off in [Site Configuration](/docs/v4/setup/site-configuration#page-access). Pages that existed before the upgrade stay public.
+
+> [!IMPORTANT]
+> Access groups hide pages, not monitors. A monitor on a restricted page still has its own page at `/monitors/<tag>`, its badges and embeds. Hide the monitor too if those must stay private. See [Monitor visibility](/docs/v4/monitors/visibility).
+
+> [!NOTE]
+> Restricting the home page shows **Page not found** at the site root to visitors who are not signed in.
+
+Visitors sign in at `/account/signin` and then open the page again.
+
 ## Delete a page {#delete-a-page}
 
 Non-home pages can be deleted from **Danger Zone**.
@@ -99,7 +121,7 @@ delete services
 
 ## Manage pages via API {#manage-pages-via-api}
 
-Pages support full CRUD through the v4 REST API (`/api/v4/pages`), including assigning monitors. The home page has an empty stored path, so the API addresses it with the special segment `~home` (for example `PATCH /api/v4/pages/~home`); its path cannot be changed and it cannot be deleted. See the [API Reference](/docs/spec/v4/) for endpoints and schemas.
+Pages support full CRUD through the v4 REST API (`/api/v4/pages`), including assigning monitors and access groups (`access_groups`). Access groups themselves are listed, created and deleted under `/api/v4/access-groups`. The home page has an empty stored path, so the API addresses it with the special segment `~home` (for example `PATCH /api/v4/pages/~home`); its path cannot be changed and it cannot be deleted. See the [API Reference](/docs/spec/v4/) for endpoints and schemas.
 
 ## Tips {#tips}
 

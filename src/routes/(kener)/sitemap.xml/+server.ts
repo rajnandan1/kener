@@ -1,5 +1,5 @@
 import { GetSiteDataByKey } from "$lib/server/controllers/siteDataController.js";
-import { GetAllPages } from "$lib/server/controllers/pagesController.js";
+import { GetAccessiblePages } from "$lib/server/controllers/pagesController.js";
 import { GetMonitors } from "$lib/server/controllers/monitorsController.js";
 import serverResolver from "$lib/server/resolver.js";
 import type { SitemapXMLConfig } from "$lib/types/site.js";
@@ -31,8 +31,8 @@ export const GET: RequestHandler = async () => {
 
   const locs: string[] = [];
 
-  // Add pages
-  const pages = await GetAllPages();
+  // Add the pages everyone may see; search engines do not sign in
+  const pages = await GetAccessiblePages(null);
   for (const page of pages) {
     const path = page.page_path ? `/${page.page_path}` : "/";
     locs.push(siteURL + serverResolver(path));

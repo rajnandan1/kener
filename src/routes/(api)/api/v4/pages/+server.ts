@@ -11,13 +11,14 @@ import type {
 import type { PageRecord } from "$lib/server/types/db";
 import GC from "$lib/global-constants";
 import { toApiPageSettings, applyPageSettingsPatch, validatePageSettings } from "$lib/server/pageSettings";
-import { AddMonitorToPage, CreatePage } from "$lib/server/controllers/pagesController";
+import { AddMonitorToPage, CreatePage, ValidatePageAccessGroups } from "$lib/server/controllers/pagesController";
 import { readRequestBody } from "$lib/server/requestBody";
 
 async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
   const pageSettings = toApiPageSettings(page.page_settings_json);
 
   const pageMonitors = await db.getPageMonitors(page.id);
+  const accessGroups = await db.getAccessGroupsForPage(page.id);
 
   return {
     id: page.id,
@@ -29,6 +30,7 @@ async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
     page_logo: page.page_logo,
     page_settings: pageSettings,
     monitors: pageMonitors.map((pm) => ({ monitor_tag: pm.monitor_tag, position: pm.position })),
+    access_groups: accessGroups,
     created_at: parseDbTimestamp(page.created_at).toISOString(),
     updated_at: parseDbTimestamp(page.updated_at).toISOString(),
   };
@@ -137,6 +139,19 @@ export const POST: RequestHandler = async ({ request }) => {
     return json(errorResponse, { status: 400 });
   }
 
+  // Validate access groups before anything is written; without them the page gets the default
+  let accessGroups: string[] | undefined;
+  if (body.access_groups !== undefined) {
+    try {
+      accessGroups = await ValidatePageAccessGroups(body.access_groups);
+    } catch (e) {
+      const errorResponse: BadRequestResponse = {
+        error: { code: "BAD_REQUEST", message: e instanceof Error ? e.message : String(e) },
+      };
+      return json(errorResponse, { status: 400 });
+    }
+  }
+
   // Create the page
   const pageData = {
     page_path: sanitizedPagePath,
@@ -147,7 +162,7 @@ export const POST: RequestHandler = async ({ request }) => {
     page_settings_json: body.page_settings === undefined ? null : applyPageSettingsPatch(null, body.page_settings),
   };
 
-  const createdPage = await CreatePage(pageData);
+  const createdPage = await CreatePage(pageData, accessGroups);
 
   // Add monitors to the page
   if (body.monitors) {

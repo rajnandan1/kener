@@ -1,6 +1,13 @@
 import { BaseRepository } from "./base.js";
 import { GetDbType } from "../../tool.js";
-import type { PageRecord, PageRecordInsert, PageMonitorRecord, PageMonitorRecordInsert } from "../../types/db.js";
+import type {
+  AccessGroupRecord,
+  AccessGroupRecordInsert,
+  PageRecord,
+  PageRecordInsert,
+  PageMonitorRecord,
+  PageMonitorRecordInsert,
+} from "../../types/db.js";
 
 /**
  * Repository for pages and page monitors operations
@@ -8,7 +15,11 @@ import type { PageRecord, PageRecordInsert, PageMonitorRecord, PageMonitorRecord
 export class PagesRepository extends BaseRepository {
   // ============ Pages ============
 
-  async createPage(data: PageRecordInsert): Promise<PageRecord> {
+  /**
+   * Inserts a page. When accessGroupIds is given, the page and its access
+   * groups are written in one transaction, so a failure leaves no page behind.
+   */
+  async createPage(data: PageRecordInsert, accessGroupIds: string[] = []): Promise<PageRecord> {
     const dbType = GetDbType();
     const insertData = {
       page_path: data.page_path,
@@ -21,16 +32,25 @@ export class PagesRepository extends BaseRepository {
       updated_at: this.knex.fn.now(),
     };
 
-    if (dbType === "postgresql") {
-      const result = await this.knex("pages").insert(insertData).returning("*");
-      const page = Array.isArray(result) ? result[0] : result;
-      return page;
-    }
+    return await this.knex.transaction(async (trx) => {
+      let page: PageRecord;
+      if (dbType === "postgresql") {
+        const result = await trx("pages").insert(insertData).returning("*");
+        page = Array.isArray(result) ? result[0] : result;
+      } else {
+        const result = await trx("pages").insert(insertData);
+        const insertedId = result[0];
+        const id = typeof insertedId === "object" ? (insertedId as { id: number }).id : insertedId;
+        page = await trx("pages").where("id", id).first();
+      }
 
-    const result = await this.knex("pages").insert(insertData);
-    const insertedId = result[0];
-    const id = typeof insertedId === "object" ? (insertedId as { id: number }).id : insertedId;
-    return (await this.getPageById(id))!;
+      if (accessGroupIds.length > 0) {
+        await trx("page_access_groups").insert(
+          accessGroupIds.map((access_group_id) => ({ page_id: page.id, access_group_id })),
+        );
+      }
+      return page;
+    });
   }
 
   async getPageById(id: number): Promise<PageRecord | undefined> {
@@ -127,6 +147,101 @@ export class PagesRepository extends BaseRepository {
         await trx("pages_monitors")
           .where({ page_id, monitor_tag: mp.monitor_tag })
           .update({ position: mp.position, updated_at: trx.fn.now() });
+      }
+    });
+  }
+
+  // ============ Access Groups ============
+
+  async getAllAccessGroups(): Promise<AccessGroupRecord[]> {
+    const rows = await this.knex("access_groups").select("id", "group_name", "description", "is_system");
+    // System groups first, then by name
+    return rows
+      .map((row: AccessGroupRecord & { is_system: number | boolean }) => ({
+        id: row.id,
+        group_name: row.group_name,
+        description: row.description ?? null,
+        is_system: Number(row.is_system) === 1,
+      }))
+      .sort((a, b) => Number(b.is_system) - Number(a.is_system) || a.group_name.localeCompare(b.group_name));
+  }
+
+  async getAccessGroupById(id: string): Promise<AccessGroupRecord | undefined> {
+    return (await this.getAllAccessGroups()).find((group) => group.id === id);
+  }
+
+  async createAccessGroup(data: AccessGroupRecordInsert): Promise<void> {
+    await this.knex("access_groups").insert({
+      id: data.id,
+      group_name: data.group_name,
+      description: data.description ?? null,
+      is_system: 0,
+      created_at: this.knex.fn.now(),
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  /** Deletes a group. ON DELETE CASCADE removes it from every page and role. */
+  async deleteAccessGroup(id: string): Promise<number> {
+    return await this.knex("access_groups").where("id", id).del();
+  }
+
+  async getAccessGroupsForPage(page_id: number): Promise<string[]> {
+    const rows = await this.knex("page_access_groups").where("page_id", page_id).select("access_group_id");
+    return rows.map((row: { access_group_id: string }) => row.access_group_id).sort();
+  }
+
+  async getAccessGroupsForPages(page_ids: number[]): Promise<Map<number, string[]>> {
+    const map = new Map<number, string[]>();
+    if (page_ids.length === 0) return map;
+    const rows = await this.knex("page_access_groups")
+      .whereIn("page_id", page_ids)
+      .select("page_id", "access_group_id");
+    for (const row of rows as { page_id: number; access_group_id: string }[]) {
+      const list = map.get(Number(row.page_id)) ?? [];
+      list.push(row.access_group_id);
+      map.set(Number(row.page_id), list);
+    }
+    return map;
+  }
+
+  async getAccessGroupsForRole(role_id: string): Promise<string[]> {
+    const rows = await this.knex("role_access_groups").where("role_id", role_id).select("access_group_id");
+    return rows.map((row: { access_group_id: string }) => row.access_group_id).sort();
+  }
+
+  /** Groups of the given roles. Inactive roles count for nothing, as with permissions. */
+  async getAccessGroupsForRoles(role_ids: string[]): Promise<string[]> {
+    if (role_ids.length === 0) return [];
+    const rows = await this.knex("role_access_groups")
+      .join("roles", "roles.id", "role_access_groups.role_id")
+      .whereIn("role_access_groups.role_id", role_ids)
+      .andWhere("roles.status", "ACTIVE")
+      .distinct("role_access_groups.access_group_id as access_group_id");
+    return rows.map((row: { access_group_id: string }) => row.access_group_id).sort();
+  }
+
+  /** Replaces all access groups of a page. */
+  async setPageAccessGroups(page_id: number, group_ids: string[]): Promise<void> {
+    await this.knex.transaction(async (trx) => {
+      // Two saves at the same time would otherwise mix their groups. SQLite ignores this
+      // and runs write transactions one after the other anyway.
+      await trx("pages").where("id", page_id).forUpdate().first();
+      await trx("page_access_groups").where("page_id", page_id).del();
+      if (group_ids.length > 0) {
+        await trx("page_access_groups").insert(group_ids.map((access_group_id) => ({ page_id, access_group_id })));
+      }
+    });
+  }
+
+  /** Replaces all access groups of a role. */
+  async setRoleAccessGroups(role_id: string, group_ids: string[]): Promise<void> {
+    await this.knex.transaction(async (trx) => {
+      // See setPageAccessGroups
+      await trx("roles").where("id", role_id).forUpdate().first();
+      await trx("role_access_groups").where("role_id", role_id).del();
+      if (group_ids.length > 0) {
+        await trx("role_access_groups").insert(group_ids.map((access_group_id) => ({ role_id, access_group_id })));
       }
     });
   }

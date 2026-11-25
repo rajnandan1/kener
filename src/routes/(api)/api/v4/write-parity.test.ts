@@ -44,8 +44,11 @@ import { GetNowTimestampUTC, GetMinuteStartNowTimestampUTC } from "$lib/server/t
 import { seed as seedPermissions } from "../../../../../seeds/permissions";
 import { seed as seedRoles } from "../../../../../seeds/roles";
 import { seed as seedSiteData } from "../../../../../seeds/site_data";
+import { seed as seedAccessGroups } from "../../../../../seeds/access_groups";
 import sharp from "sharp";
 import * as manageApi from "../../../(manage)/manage/api/+server";
+import * as accessGroups from "./access-groups/+server";
+import * as accessGroup from "./access-groups/[group_id]/+server";
 import * as images from "./images/+server";
 import * as incidents from "./incidents/+server";
 import * as incident from "./incidents/[incident_id]/+server";
@@ -78,6 +81,9 @@ const COUNTED: Record<string, string | null> = {
   maintenance_monitors: "monitor_impact",
   pages: null,
   pages_monitors: null,
+  access_groups: null,
+  page_access_groups: null,
+  role_access_groups: null,
   monitors: "status",
   monitoring_data: "status",
   site_data: null,
@@ -161,6 +167,7 @@ async function seed() {
   await clearTables();
   vi.clearAllMocks();
   await seedSiteData(knex);
+  await seedAccessGroups(knex);
 
   const adminId = await insert("users", {
     email: ADMIN_EMAIL,
@@ -254,6 +261,12 @@ async function seed() {
     { page_id: statusPage, monitor_tag: "api", position: 0 },
     { page_id: statusPage, monitor_tag: "web", position: 1 },
   ]);
+  await knex("access_groups").insert({ id: "team", group_name: "Team", is_system: 0 });
+  await knex("page_access_groups").insert([
+    { page_id: statusPage, access_group_id: "public" },
+    { page_id: statusPage, access_group_id: "team" },
+  ]);
+  await knex("role_access_groups").insert({ role_id: "editor", access_group_id: "team" });
 
   return {
     openIncident,
@@ -653,6 +666,36 @@ const pairs: Pair[] = [
     dashboard: (f) => dashboard("deletePage", { id: f.statusPage }),
   },
   {
+    name: "POST /pages with access_groups = createPage + setPageAccessGroups",
+    api: () => v4(pages.POST, { page_path: "eu", page_title: "EU", page_header: "EU", access_groups: ["team"] }),
+    dashboard: async () => {
+      const { id } = await dashboard("createPage", {
+        page_path: "eu",
+        page_title: "EU",
+        page_header: "EU",
+        page_subheader: null,
+        page_logo: null,
+      });
+      await dashboard("setPageAccessGroups", { page_id: id, group_ids: ["team"] });
+    },
+  },
+  {
+    name: "PATCH /pages/{page_path} with access_groups = setPageAccessGroups",
+    api: async () => v4(page.PATCH, { access_groups: ["team"] }, await pageLocals("status")),
+    dashboard: (f) => dashboard("setPageAccessGroups", { page_id: f.statusPage, group_ids: ["team"] }),
+  },
+  {
+    name: "POST /access-groups = createAccessGroup",
+    api: () => v4(accessGroups.POST, { id: "Customer A", group_name: " Customer A ", description: "Pages for A" }),
+    dashboard: () =>
+      dashboard("createAccessGroup", { id: "Customer A", group_name: " Customer A ", description: "Pages for A" }),
+  },
+  {
+    name: "DELETE /access-groups/{group_id} = deleteAccessGroup",
+    api: () => v4(accessGroup.DELETE, undefined, {}, { group_id: "team" }),
+    dashboard: () => dashboard("deleteAccessGroup", { id: "team" }),
+  },
+  {
     name: "PATCH /site/siteName = storeSiteData",
     api: () => v4(siteKey.PATCH, { value: "Acme Status" }, {}, { config_key: "siteName" }),
     dashboard: () => dashboard("storeSiteData", { siteName: "Acme Status" }),
@@ -885,6 +928,52 @@ describe("v4 writes the dashboard cannot make keep working through the dashboard
     expect((await response.json()).incident).toMatchObject({ start_date_time: T0 + 1200, end_date_time: null });
   });
 
+  it("POST /pages and PATCH /pages/{page_path} return 400 for an unknown or misplaced access group, and save nothing", async () => {
+    for (const write of [
+      () => send(pages.POST, { page_path: "eu", page_title: "EU", page_header: "EU", access_groups: ["missing"] }),
+      () => send(pages.POST, { page_path: "eu", page_title: "EU", page_header: "EU", access_groups: ["admin"] }),
+      async () => send(page.PATCH, { page_title: "Renamed", access_groups: ["missing"] }, await pageLocals("status")),
+      async () => send(page.PATCH, { monitors: ["web"], access_groups: ["admin"] }, await pageLocals("status")),
+    ]) {
+      await seed();
+      const before = await signals();
+      const response = await write();
+
+      expect(response.status).toBe(400);
+      expect(await signals()).toEqual(before);
+    }
+  });
+
+  it("POST /access-groups returns 400 for a reserved, taken or empty id, and saves nothing", async () => {
+    for (const id of ["public", "Admin", "team", "!!!"]) {
+      await seed();
+      const before = await signals();
+      const response = await send(accessGroups.POST, { id, group_name: "Probe" });
+
+      expect(response.status, id).toBe(400);
+      expect(await signals()).toEqual(before);
+    }
+  });
+
+  it("DELETE /access-groups/{group_id} keeps the built-in groups and answers 404 for an unknown group", async () => {
+    await seed();
+    const before = await signals();
+
+    expect((await send(accessGroup.DELETE, undefined, {}, { group_id: "public" })).status).toBe(400);
+    expect((await send(accessGroup.DELETE, undefined, {}, { group_id: "admin" })).status).toBe(400);
+    expect((await send(accessGroup.DELETE, undefined, {}, { group_id: "missing" })).status).toBe(404);
+    expect(await signals()).toEqual(before);
+  });
+
+  it("POST /pages and PATCH /pages/{page_path} return the access groups of the page", async () => {
+    await seed();
+    const created = await send(pages.POST, { page_path: "eu", page_title: "EU", page_header: "EU" });
+    expect((await created.json()).page.access_groups).toEqual(["public"]);
+
+    const updated = await send(page.PATCH, { access_groups: ["team", "team"] }, await pageLocals("status"));
+    expect((await updated.json()).page.access_groups).toEqual(["team"]);
+  });
+
   it("POST /pages and PATCH /pages/{page_path} return 400 for a repeated monitor tag, and save nothing", async () => {
     for (const write of [
       () => send(pages.POST, { page_path: "eu", page_title: "EU", page_header: "EU", monitors: ["api", "api"] }),
@@ -1044,6 +1133,10 @@ const writeTargets: Record<string, (f: Fixture) => Promise<WriteTarget>> = {
     handler: page.PATCH,
     valid: {},
     locals: await pageLocals("status"),
+  }),
+  "POST /api/v4/access-groups": async () => ({
+    handler: accessGroups.POST,
+    valid: { id: "probe", group_name: "Probe" },
   }),
   "PATCH /api/v4/site/{config_key}": async () => ({
     handler: siteKey.PATCH,

@@ -229,6 +229,15 @@ export const ACTION_PERMISSION_MAP: Record<string, string | null> = {
   deleteOidcGroupRoleMapping: "settings.write",
   testOidcConnection: "settings.write",
   getOidcSettingsMasked: "settings.read",
+
+  // Page access groups
+  getAccessGroups: null, // needs pages.read or roles.read, checked in the handler
+  createAccessGroup: "roles.write",
+  deleteAccessGroup: "roles.write", // also needs pages.write, checked in the handler
+  getPageAccessGroups: "pages.read",
+  setPageAccessGroups: "pages.write",
+  getRoleAccessGroups: "roles.read",
+  setRoleAccessGroups: "roles.write",
 };
 
 export const ROUTE_PERMISSION_MAP: Record<string, string | null> = {

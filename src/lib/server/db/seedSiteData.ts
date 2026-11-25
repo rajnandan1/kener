@@ -171,6 +171,7 @@ const seedSiteData = {
     mode: "off",
     urls: [],
   },
+  autoPublicPages: "YES",
   globalMaintenanceNotificationSettings: {
     event_types: {
       created: false,

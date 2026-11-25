@@ -19,7 +19,7 @@ Three readonly roles are seeded automatically:
 | `editor` | All except `api_keys.delete` | Day-to-day operations                   |
 | `member` | All `.read` permissions only | View-only access                        |
 
-Built-in roles cannot be edited or deleted.
+Built-in roles cannot be edited or deleted. You can still set which pages **Editor** and **Member** can see; see [Page access](#page-access).
 
 Every dashboard user sees stored monitor and trigger secrets as `********`. Users with `monitors.write` also see the heartbeat secret. See [Stored secrets](/docs/v4/monitors/overview#stored-secrets).
 
@@ -68,6 +68,16 @@ From the roles table, click **Permissions** on any role to view or edit its perm
 ### Managing role users {#managing-role-users}
 
 Click **Users** on any role to see assigned users. Users with `roles.assign_users` permission can add or remove users from roles.
+
+### Page access {#page-access}
+
+Click **Page Access** on a role to choose its access groups. Users with that role see public pages and every page that shares one of these groups. A role without groups sees public pages only.
+
+- **All pages** (`admin`) lets a role see every page.
+- The **Administrator** role always sees every page; its page access cannot be changed.
+- The groups of an inactive role do not count.
+
+Create and delete groups in the same panel. Creating needs `roles.write`; deleting also needs `pages.write`, because the group is removed from every page. The built-in groups **Public** and **All pages** cannot be deleted. To choose which groups may see a page, see [Page access](/docs/v4/pages#page-access).
 
 ## User management {#user-management}
 

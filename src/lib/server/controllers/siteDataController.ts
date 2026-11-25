@@ -70,6 +70,7 @@ export interface SiteDataTransformed {
   metaSiteDescription?: string;
   sitemap?: SitemapXMLConfig;
   globalMaintenanceNotificationSettings?: GlobalMaintenanceNotificationSettings;
+  autoPublicPages?: string;
 }
 
 function secretPath(key: string): string[] | null {

@@ -3,6 +3,8 @@ import type { APIServerRequest } from "$lib/server/types/api-server";
 import type { IncidentForMonitorListWithComments, MaintenanceEventsMonitorList } from "$lib/server/types/db";
 import db from "$lib/server/db/db";
 import { GetAllSiteData } from "$lib/server/controllers/siteDataController";
+import { GetVisiblePageByPath } from "$lib/server/controllers/pagesController";
+import { GetLoggedInSession } from "$lib/server/controllers/userController";
 
 interface EventsByMonthRequest {
   start_ts: number;
@@ -43,7 +45,8 @@ export default async function post(req: APIServerRequest): Promise<Response> {
 
   let pathMonitors: string[] | undefined = undefined;
   if (pagePath !== null) {
-    const pageData = await db.getPageByPath(pagePath);
+    // Restricted pages answer like missing ones
+    const pageData = await GetVisiblePageByPath(pagePath, await GetLoggedInSession(req.cookies));
     if (!pageData) {
       return error(404, { message: "Page not found" });
     }

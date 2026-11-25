@@ -2,11 +2,17 @@ import type { PageServerLoad } from "./$types";
 import { error } from "@sveltejs/kit";
 import { parse, isValid, getYear, startOfMonth, endOfMonth, addMonths, getUnixTime } from "date-fns";
 import { GetPageByPathWithMonitors } from "$lib/server/controllers/controller.js";
+import { GetVisiblePageByPath } from "$lib/server/controllers/pagesController.js";
 
 const MIN_YEAR = 2023;
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const parentData = await parent();
+
+  // Same rule as the page itself: a page the user may not see answers like a missing one
+  if (!(await GetVisiblePageByPath(params.page_path, parentData.loggedInUser))) {
+    throw error(404, "Page Not Found");
+  }
 
   // Parse month parameter (format: MMMM-YYYY e.g. "January-2026")
   const monthParam = `${params.MMMM}-${params.YYYY}`;
