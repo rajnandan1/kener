@@ -28,6 +28,17 @@ const WHITELISTED_DYNAMIC_KEYS = new Set([
   "Partial System Outage",
   "Major System Outage",
   "No Status Available",
+  // Error messages thrown by the public routes, translated by src/routes/(kener)/+error.svelte
+  "Internal Error",
+  "Page Not Found",
+  "Monitor not found",
+  "Incident not found",
+  "Maintenance not found",
+  "Maintenance event not found",
+  "Invalid incident ID",
+  "Invalid maintenance event ID",
+  "Invalid date format",
+  "Date out of allowed range",
 ]);
 
 function decodeQuotedContent(value) {
