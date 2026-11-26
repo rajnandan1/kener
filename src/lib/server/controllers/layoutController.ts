@@ -233,7 +233,8 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     locales: (siteData.i18n?.locales || seedSiteData.i18n.locales).filter((l) => l.selected).map((l) => ({ ...l })),
   };
   if (languageSetting.contentTranslations && Object.keys(languageSetting.contentTranslations).length > 0) {
-    const [pages, monitors] = await Promise.all([GetAllPages(), GetMonitors({})]);
+    // Only ACTIVE monitors appear on public pages
+    const [pages, monitors] = await Promise.all([GetAllPages(), GetMonitors({ status: "ACTIVE" })]);
     languageSetting.contentTranslations = KeepPublicContentTranslations(
       languageSetting.contentTranslations,
       GetPublicContentTexts({ siteData, pages, monitors, canSeeHiddenMonitors }),

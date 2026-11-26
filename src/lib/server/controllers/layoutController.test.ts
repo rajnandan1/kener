@@ -116,6 +116,9 @@ describe("GetLayoutServerData contentTranslations", () => {
     await knex("monitors").insert([
       { tag: "visible-billing", name: "Facturation", status: "ACTIVE", monitor_type: "NONE", is_hidden: "NO" },
       { tag: "hidden-project", name: "Projet secret", status: "ACTIVE", monitor_type: "NONE", is_hidden: "YES" },
+      { tag: "inactive-draft", name: "Brouillon", status: "INACTIVE", monitor_type: "NONE", is_hidden: "NO" },
+      // A hidden monitor renamed after its old name was translated
+      { tag: "hidden-renamed", name: "Nouveau nom privé", status: "ACTIVE", monitor_type: "NONE", is_hidden: "YES" },
     ]);
     await knex("site_data").where({ key: "i18n" }).del();
     await knex("site_data").insert({
@@ -124,7 +127,14 @@ describe("GetLayoutServerData contentTranslations", () => {
         defaultLocale: "fr",
         locales: [{ code: "nl", name: "Nederlands", selected: true, disabled: false }],
         contentTranslations: {
-          nl: { Facturation: "Facturatie", "Projet secret": "Geheim project", "Monitor supprimé": "Verwijderd" },
+          nl: {
+            Facturation: "Facturatie",
+            "Projet secret": "Geheim project",
+            Brouillon: "Concept",
+            "Ancien nom privé": "Oude privénaam",
+            // A monitor deleted after its name was translated
+            "Monitor supprimé": "Verwijderd",
+          },
         },
       }),
       data_type: "object",
@@ -133,7 +143,8 @@ describe("GetLayoutServerData contentTranslations", () => {
     const layout = await GetLayoutServerData(anonymous, new Request("http://localhost/"));
 
     expect(layout.languageSetting.contentTranslations).toEqual({ nl: { Facturation: "Facturatie" } });
-    expect(JSON.stringify(layout)).not.toContain("Projet secret");
-    expect(JSON.stringify(layout)).not.toContain("Monitor supprimé");
+    for (const privateText of ["Projet secret", "Brouillon", "Ancien nom privé", "Monitor supprimé"]) {
+      expect(JSON.stringify(layout)).not.toContain(privateText);
+    }
   });
 });
