@@ -7,6 +7,7 @@
   import AlertCircle from "@lucide/svelte/icons/alert-circle";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import { t } from "$lib/stores/i18n";
 </script>
 
 <div class="flex min-h-[60vh] items-center justify-center p-4">
@@ -20,13 +21,13 @@
         <h1 class="text-4xl font-bold">{$page.status}</h1>
         <p class="text-muted-foreground text-lg">
           {#if $page.error?.message}
-            {$page.error.message}
+            {$t($page.error.message)}
           {:else if $page.status === 404}
-            The page you're looking for doesn't exist or has been moved.
+            {$t("The page you're looking for doesn't exist or has been moved.")}
           {:else if $page.status === 500}
-            Something went wrong on our end. Please try again later.
+            {$t("Something went wrong on our end. Please try again later.")}
           {:else}
-            An unexpected error occurred.
+            {$t("An unexpected error occurred.")}
           {/if}
         </p>
       </div>
@@ -34,11 +35,11 @@
       <div class="flex gap-3">
         <Button variant="outline" onclick={() => history.back()} class="rounded-full">
           <ArrowLeft class="mr-2 size-4" />
-          Go Back
+          {$t("Go Back")}
         </Button>
         <Button href={clientResolver(resolve, "/")} class="rounded-full">
           <Home class="mr-2 size-4" />
-          Home
+          {$t("Home")}
         </Button>
       </div>
     </Card.Content>
