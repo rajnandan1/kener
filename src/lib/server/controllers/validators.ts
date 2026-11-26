@@ -90,7 +90,10 @@ export function IsValidI18n(i18n: string): boolean {
     if (!isPlainObject(contentTranslations)) return false;
     for (const mappings of Object.values(contentTranslations)) {
       if (!isPlainObject(mappings)) return false;
-      if (!Object.values(mappings).every((value) => typeof value === "string")) return false;
+      for (const [source, translated] of Object.entries(mappings)) {
+        // Lookups trim the displayed text, so a key with surrounding spaces would never match
+        if (typeof translated !== "string" || source.trim() === "" || source !== source.trim()) return false;
+      }
     }
   }
 

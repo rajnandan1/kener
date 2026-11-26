@@ -22,6 +22,8 @@ describe("TranslateContent", () => {
     expect(TranslateContent(contentTranslations, "nl", "Stockage")).toBe("Stockage");
     expect(TranslateContent(contentTranslations, "en", "Site web")).toBe("Site web");
     expect(TranslateContent(undefined, "nl", "Facturation")).toBe("Facturation");
+    expect(TranslateContent(contentTranslations, "nl", "constructor")).toBe("constructor");
+    expect(TranslateContent(contentTranslations, "nl", "toString")).toBe("toString");
   });
 
   it("returns an empty string for a missing text", () => {

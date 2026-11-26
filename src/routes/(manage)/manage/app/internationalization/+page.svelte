@@ -165,13 +165,15 @@
   async function saveContentTranslations() {
     savingContent = true;
     try {
+      // Record exactly what was sent: edits made during the request wait for the next save
+      const submitted = contentTranslationsFromRows();
       const result = await postManageApi("storeSiteData", {
-        i18n: JSON.stringify({ ...savedLanguages, contentTranslations: contentTranslationsFromRows() })
+        i18n: JSON.stringify({ ...savedLanguages, contentTranslations: submitted })
       });
       if (result.error) {
         toast.error(result.error);
       } else {
-        i18n.contentTranslations = contentTranslationsFromRows();
+        i18n.contentTranslations = submitted;
         toast.success("Translations saved successfully");
       }
     } catch (e) {
@@ -446,7 +448,7 @@
         </div>
       </Card.Content>
       <Card.Footer class="flex justify-end">
-        <Button onclick={saveLanguages} disabled={savingLanguages}>
+        <Button onclick={saveLanguages} disabled={savingLanguages || savingContent}>
           {#if savingLanguages}
             <Loader class="h-4 w-4 animate-spin" />
           {:else}
@@ -542,7 +544,10 @@
         {/if}
       </Card.Content>
       <Card.Footer class="flex justify-end">
-        <Button onclick={saveContentTranslations} disabled={savingContent || translationLocales.length === 0}>
+        <Button
+          onclick={saveContentTranslations}
+          disabled={savingContent || savingLanguages || translationLocales.length === 0}
+        >
           {#if savingContent}
             <Loader class="h-4 w-4 animate-spin" />
           {:else}

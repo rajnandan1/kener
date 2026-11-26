@@ -8,6 +8,14 @@ describe("IsValidI18n", () => {
     expect(IsValidI18n(JSON.stringify(base))).toBe(true);
   });
 
+  it("accepts texts that collide with object prototype names", () => {
+    const value = {
+      ...base,
+      contentTranslations: JSON.parse('{"nl":{"constructor":"Constructeur","__proto__":"Proto"}}'),
+    };
+    expect(IsValidI18n(JSON.stringify(value))).toBe(true);
+  });
+
   it("accepts content translations keyed by locale, then by typed text", () => {
     const value = { ...base, contentTranslations: { nl: { Facturation: "Facturatie" }, en: {} } };
     expect(IsValidI18n(JSON.stringify(value))).toBe(true);
@@ -18,7 +26,15 @@ describe("IsValidI18n", () => {
   });
 
   it("rejects content translations of the wrong shape", () => {
-    for (const contentTranslations of [[], "nl", { nl: ["Facturatie"] }, { nl: null }, { nl: { Facturation: 1 } }]) {
+    for (const contentTranslations of [
+      [],
+      "nl",
+      { nl: ["Facturatie"] },
+      { nl: null },
+      { nl: { Facturation: 1 } },
+      { nl: { " Facturation ": "Facturatie" } },
+      { nl: { "": "Leeg" } },
+    ]) {
       expect(IsValidI18n(JSON.stringify({ ...base, contentTranslations }))).toBe(false);
     }
   });
