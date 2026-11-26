@@ -31,9 +31,16 @@ export interface LocaleInfo {
   selected?: boolean;
 }
 
+/**
+ * Translations of text the site owner typed in (monitor names, page headers, the footer...),
+ * keyed by locale code, then by the text exactly as it was typed.
+ */
+export type ContentTranslations = Record<string, Record<string, string>>;
+
 export interface I18nStore {
   currentLocale: string;
   translations: Record<string, string>;
+  contentTranslations: ContentTranslations;
   availableLocales: LocaleInfo[];
   isLoading: boolean;
 }
@@ -41,6 +48,7 @@ export interface I18nStore {
 const defaultState: I18nStore = {
   currentLocale: "en",
   translations: {},
+  contentTranslations: {},
   availableLocales: [],
   isLoading: false,
 };
@@ -58,8 +66,14 @@ function createI18nStore() {
      * Initialize the store with available locales and load the appropriate locale
      * Checks localStorage first, then falls back to defaultLocale
      * @param fetchFn - The fetch function from SvelteKit load
+     * @param contentTranslations - Translations of the site's own text, by locale
      */
-    async init(availableLocales: LocaleInfo[], defaultLocale: string, fetchFn: typeof fetch): Promise<void> {
+    async init(
+      availableLocales: LocaleInfo[],
+      defaultLocale: string,
+      fetchFn: typeof fetch,
+      contentTranslations: ContentTranslations = {},
+    ): Promise<void> {
       // Store fetch for later use
       storedFetch = fetchFn;
 
@@ -77,6 +91,7 @@ function createI18nStore() {
       update((state) => ({
         ...state,
         availableLocales,
+        contentTranslations,
         currentLocale: preferredLocale,
         isLoading: true,
       }));
@@ -195,4 +210,27 @@ export const t = derived(i18n, ($i18n) => {
       return key;
     }
   };
+});
+
+/**
+ * Translate a text the site owner typed in, such as a monitor name or a page header.
+ * Returns the translation for the current locale, or the text unchanged when there is none.
+ * Unlike `t`, a missing translation is expected here and is not logged.
+ */
+export function TranslateContent(
+  contentTranslations: ContentTranslations | undefined,
+  locale: string,
+  text: string | null | undefined,
+): string {
+  if (!text) return text ?? "";
+  const translated = contentTranslations?.[locale]?.[text.trim()];
+  return typeof translated === "string" && translated.trim() !== "" ? translated : text;
+}
+
+/**
+ * Reactive helper for the site's own text. Use in components: $tc(monitor.name)
+ */
+export const tc = derived(i18n, ($i18n) => {
+  return (text: string | null | undefined): string =>
+    TranslateContent($i18n.contentTranslations, $i18n.currentLocale, text);
 });

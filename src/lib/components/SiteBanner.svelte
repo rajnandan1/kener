@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tc } from "$lib/stores/i18n";
   import { browser } from "$app/environment";
   import { Button } from "$lib/components/ui/button/index.js";
   import { onMount } from "svelte";
@@ -76,7 +77,7 @@
 {#if visible}
   <div class="bg-background relative flex w-full flex-col gap-0 rounded-3xl border border-{typeClasses} px-4 pt-2 pb-4">
     <div class="relative flex items-center justify-between gap-2 pr-2">
-      <span class="text-foreground text-base text-{typeClasses} font-medium">{announcement.title}</span>
+      <span class="text-foreground text-base text-{typeClasses} font-medium">{$tc(announcement.title)}</span>
       {#if announcement.ctaURL && announcement.ctaText}
         <div>
           <Button
@@ -92,7 +93,7 @@
       {/if}
     </div>
 
-    <p class="text-muted-foreground text-sm">{announcement.message}</p>
+    <p class="text-muted-foreground text-sm">{$tc(announcement.message)}</p>
     {#if announcement.cancellable}
       <Button
         variant="outline"

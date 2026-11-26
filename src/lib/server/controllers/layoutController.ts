@@ -48,6 +48,7 @@ export interface LayoutServerData {
   languageSetting: {
     defaultLocale: string;
     locales: Array<{ code: string; name: string; selected: boolean; disabled: boolean }>;
+    contentTranslations?: Record<string, Record<string, string>>;
   };
   subMenuOptions: {
     showShareBadgeMonitor: boolean;

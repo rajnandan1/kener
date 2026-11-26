@@ -6,7 +6,7 @@
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import STATUS_ICON from "$lib/icons";
-  import { t } from "$lib/stores/i18n";
+  import { t, tc } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
@@ -63,7 +63,7 @@
                 variant="outline"
                 class="border-{monitor.monitor_impact.toLowerCase()}   max-w-full cursor-pointer rounded-none border-0 border-b px-0 text-sm font-normal wrap-anywhere whitespace-normal"
               >
-                {monitor.monitor_name}
+                {$tc(monitor.monitor_name)}
               </Badge>
             </Popover.Trigger>
             <Popover.Content class="w-64">
@@ -71,12 +71,15 @@
                 <div class="flex items-center gap-3">
                   <Avatar.Root>
                     {#if monitor.monitor_image}
-                      <Avatar.Image src={clientResolver(resolve, monitor.monitor_image)} alt={monitor.monitor_name} />
+                      <Avatar.Image
+                        src={clientResolver(resolve, monitor.monitor_image)}
+                        alt={$tc(monitor.monitor_name)}
+                      />
                     {/if}
-                    <Avatar.Fallback>{GetInitials(monitor.monitor_name)}</Avatar.Fallback>
+                    <Avatar.Fallback>{GetInitials($tc(monitor.monitor_name))}</Avatar.Fallback>
                   </Avatar.Root>
                   <div class="flex flex-col">
-                    <span class="font-medium">{monitor.monitor_name}</span>
+                    <span class="font-medium">{$tc(monitor.monitor_name)}</span>
                     <span class="text-muted-foreground text-xs">{monitor.monitor_tag}</span>
                   </div>
                 </div>

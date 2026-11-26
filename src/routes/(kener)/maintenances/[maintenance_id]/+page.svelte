@@ -13,7 +13,7 @@
   import mdToHTML from "$lib/marked";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import STATUS_ICON from "$lib/icons";
-  import { t } from "$lib/stores/i18n";
+  import { t, tc } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import clientResolver, { absoluteResolve } from "$lib/client/resolver.js";
   import { SveltePurify } from "@humanspeak/svelte-purify";
@@ -64,8 +64,8 @@
 </script>
 
 <svelte:head>
-  <title>{data.maintenance.title + " - " + data.siteName}</title>
-  <meta property="og:title" content={data.maintenance.title + " - " + data.siteName} />
+  <title>{data.maintenance.title + " - " + $tc(data.siteName)}</title>
+  <meta property="og:title" content={data.maintenance.title + " - " + $tc(data.siteName)} />
   <meta property="og:type" content="article" />
   <meta name="twitter:card" content="summary_large_image" />
   {#if data.maintenance.description}
@@ -206,7 +206,7 @@
                     </Tooltip.Root>
                   </Item.Media>
                   <Item.Content>
-                    <Item.Title>{monitor.monitor_name}</Item.Title>
+                    <Item.Title>{$tc(monitor.monitor_name)}</Item.Title>
                     <Item.Description>
                       <span class="text-{monitor.monitor_impact.toLowerCase()}">
                         {$t(monitor.monitor_impact)}
