@@ -138,7 +138,12 @@ interface PublicTextSources {
     page_subheader?: string | null;
     page_settings_json?: string | null;
   }>;
-  monitors: Array<{ name?: string | null; description?: string | null; is_hidden?: string | null }>;
+  monitors: Array<{
+    name?: string | null;
+    description?: string | null;
+    is_hidden?: string | null;
+    status?: string | null;
+  }>;
   canSeeHiddenMonitors: boolean;
 }
 
@@ -172,7 +177,10 @@ export function GetPublicContentTexts({
   }
   for (const monitor of monitors) {
     if (monitor.is_hidden === "YES" && !canSeeHiddenMonitors) continue;
-    texts.push(monitor.name, monitor.description);
+    texts.push(monitor.name);
+    // Descriptions show only on status and monitor pages, which list ACTIVE monitors;
+    // event pages show the name alone
+    if (monitor.status === "ACTIVE") texts.push(monitor.description);
   }
   return new Set(
     texts.filter((text): text is string => typeof text === "string" && text.trim() !== "").map((text) => text.trim()),

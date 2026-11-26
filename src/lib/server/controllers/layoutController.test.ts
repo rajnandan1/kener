@@ -74,8 +74,9 @@ describe("GetPublicContentTexts", () => {
       { page_title: "Autre", page_header: "En-tête", page_subheader: "Sous-titre", page_settings_json: "{" },
     ],
     monitors: [
-      { name: "Paiements", description: "Description publique", is_hidden: "NO" },
-      { name: "Projet secret", description: "Base interne", is_hidden: "YES" },
+      { name: "Paiements", description: "Description publique", is_hidden: "NO", status: "ACTIVE" },
+      { name: "Projet secret", description: "Base interne", is_hidden: "YES", status: "ACTIVE" },
+      { name: "Ancienne API", description: "Description inactive", is_hidden: "NO", status: "INACTIVE" },
     ],
   };
 
@@ -89,6 +90,9 @@ describe("GetPublicContentTexts", () => {
     expect(texts.has("Paiements")).toBe(true);
     expect(texts.has("Projet secret")).toBe(false);
     expect(texts.has("Base interne")).toBe(false);
+    // Event pages show an inactive monitor's name, never its description
+    expect(texts.has("Ancienne API")).toBe(true);
+    expect(texts.has("Description inactive")).toBe(false);
   });
 
   it("includes hidden monitors for a visitor who can see them", () => {
@@ -113,22 +117,51 @@ describe("KeepPublicContentTranslations", () => {
 
 describe("GetLayoutServerData contentTranslations", () => {
   it("sends an anonymous visitor only the translations of texts it can see", async () => {
+    const monitor = (
+      tag: string,
+      name: string,
+      status: string,
+      is_hidden = "NO",
+      description: string | null = null,
+    ) => ({
+      tag,
+      name,
+      description,
+      status,
+      monitor_type: "NONE",
+      is_hidden,
+    });
     await knex("monitors").insert([
-      { tag: "visible-billing", name: "Facturation", status: "ACTIVE", monitor_type: "NONE", is_hidden: "NO" },
-      { tag: "hidden-project", name: "Projet secret", status: "ACTIVE", monitor_type: "NONE", is_hidden: "YES" },
-      { tag: "inactive-draft", name: "Brouillon", status: "INACTIVE", monitor_type: "NONE", is_hidden: "NO" },
-      { tag: "inactive-linked", name: "Ancienne API", status: "INACTIVE", monitor_type: "NONE", is_hidden: "NO" },
+      monitor("visible-billing", "Facturation", "ACTIVE", "NO", "Factures et relances"),
+      monitor("hidden-project", "Projet secret", "ACTIVE", "YES"),
       // A hidden monitor renamed after its old name was translated
-      { tag: "hidden-renamed", name: "Nouveau nom privé", status: "ACTIVE", monitor_type: "NONE", is_hidden: "YES" },
+      monitor("hidden-renamed", "Nouveau nom privé", "ACTIVE", "YES"),
+      monitor("inactive-draft", "Brouillon", "INACTIVE"),
+      monitor("inactive-incident", "Ancienne API", "INACTIVE", "NO", "Description jamais affichée"),
+      monitor("inactive-orphan-link", "Lien orphelin", "INACTIVE"),
+      monitor("inactive-maintenance", "Base en maintenance", "INACTIVE"),
+      monitor("inactive-no-event", "Maintenance sans événement", "INACTIVE"),
     ]);
-    const [incidentId] = await knex("incidents")
+    const [incident] = await knex("incidents")
       .insert({ title: "Panne", start_date_time: 1, status: "OPEN", state: "INVESTIGATING" })
       .returning("id");
-    await knex("incident_monitors").insert({
-      incident_id: typeof incidentId === "object" ? incidentId.id : incidentId,
-      monitor_tag: "inactive-linked",
-      monitor_impact: "DOWN",
-    });
+    const [withEvent, withoutEvent] = await knex("maintenances")
+      .insert([
+        { title: "Mise à jour", start_date_time: 1, rrule: "FREQ=MINUTELY;COUNT=1", duration_seconds: 60 },
+        { title: "Événements supprimés", start_date_time: 1, rrule: "FREQ=MINUTELY;COUNT=1", duration_seconds: 60 },
+      ])
+      .returning("id");
+    const id = (row: number | { id: number }) => (typeof row === "object" ? row.id : row);
+    await knex("incident_monitors").insert([
+      { incident_id: id(incident), monitor_tag: "inactive-incident", monitor_impact: "DOWN" },
+      // Incident links have no foreign key: this one points to a deleted incident
+      { incident_id: 999999, monitor_tag: "inactive-orphan-link", monitor_impact: "DOWN" },
+    ]);
+    await knex("maintenance_monitors").insert([
+      { maintenance_id: id(withEvent), monitor_tag: "inactive-maintenance" },
+      { maintenance_id: id(withoutEvent), monitor_tag: "inactive-no-event" },
+    ]);
+    await knex("maintenances_events").insert({ maintenance_id: id(withEvent), start_date_time: 1, end_date_time: 61 });
     await knex("site_data").where({ key: "i18n" }).del();
     await knex("site_data").insert({
       key: "i18n",
@@ -138,10 +171,15 @@ describe("GetLayoutServerData contentTranslations", () => {
         contentTranslations: {
           nl: {
             Facturation: "Facturatie",
-            "Projet secret": "Geheim project",
-            Brouillon: "Concept",
+            "Factures et relances": "Facturen en herinneringen",
             "Ancienne API": "Oude API",
+            "Base en maintenance": "Database in onderhoud",
+            "Projet secret": "Geheim project",
             "Ancien nom privé": "Oude privénaam",
+            Brouillon: "Concept",
+            "Description jamais affichée": "Nooit getoond",
+            "Lien orphelin": "Verweesde koppeling",
+            "Maintenance sans événement": "Onderhoud zonder gebeurtenis",
             // A monitor deleted after its name was translated
             "Monitor supprimé": "Verwijderd",
           },
@@ -152,11 +190,24 @@ describe("GetLayoutServerData contentTranslations", () => {
 
     const layout = await GetLayoutServerData(anonymous, new Request("http://localhost/"));
 
-    // An inactive monitor still shows on the page of an incident it is linked to
     expect(layout.languageSetting.contentTranslations).toEqual({
-      nl: { Facturation: "Facturatie", "Ancienne API": "Oude API" },
+      nl: {
+        Facturation: "Facturatie",
+        "Factures et relances": "Facturen en herinneringen",
+        // Inactive monitors listed on an incident page or on a maintenance that has an event
+        "Ancienne API": "Oude API",
+        "Base en maintenance": "Database in onderhoud",
+      },
     });
-    for (const privateText of ["Projet secret", "Brouillon", "Ancien nom privé", "Monitor supprimé"]) {
+    for (const privateText of [
+      "Projet secret",
+      "Ancien nom privé",
+      "Brouillon",
+      "Description jamais affichée",
+      "Lien orphelin",
+      "Maintenance sans événement",
+      "Monitor supprimé",
+    ]) {
       expect(JSON.stringify(layout)).not.toContain(privateText);
     }
   });

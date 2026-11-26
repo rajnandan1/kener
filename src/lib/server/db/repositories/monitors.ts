@@ -85,13 +85,22 @@ export class MonitorsRepository extends BaseRepository {
   }
 
   /**
-   * Tags of the monitors linked to at least one incident or maintenance. Event pages show
-   * these monitors whatever their status.
+   * Tags of the monitors that a public event page lists: linked to an existing incident, or to a
+   * maintenance that still has at least one event. Event pages show these monitors whatever their
+   * status. Incident links have no foreign key, so a deleted incident can leave some behind.
    */
   async getMonitorTagsLinkedToEvents(): Promise<string[]> {
     const [incidentTags, maintenanceTags] = await Promise.all([
-      this.knex("incident_monitors").distinct("monitor_tag"),
-      this.knex("maintenance_monitors").distinct("monitor_tag"),
+      this.knex("incident_monitors as im")
+        .innerJoin("incidents as i", "i.id", "im.incident_id")
+        .distinct("im.monitor_tag"),
+      this.knex("maintenance_monitors as mm")
+        .whereExists(
+          this.knex("maintenances_events as e")
+            .select("e.id")
+            .where("e.maintenance_id", this.knex.ref("mm.maintenance_id")),
+        )
+        .distinct("mm.monitor_tag"),
     ]);
     return Array.from(
       new Set([...incidentTags, ...maintenanceTags].map((row: { monitor_tag: string }) => row.monitor_tag)),
