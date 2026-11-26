@@ -117,9 +117,18 @@ describe("GetLayoutServerData contentTranslations", () => {
       { tag: "visible-billing", name: "Facturation", status: "ACTIVE", monitor_type: "NONE", is_hidden: "NO" },
       { tag: "hidden-project", name: "Projet secret", status: "ACTIVE", monitor_type: "NONE", is_hidden: "YES" },
       { tag: "inactive-draft", name: "Brouillon", status: "INACTIVE", monitor_type: "NONE", is_hidden: "NO" },
+      { tag: "inactive-linked", name: "Ancienne API", status: "INACTIVE", monitor_type: "NONE", is_hidden: "NO" },
       // A hidden monitor renamed after its old name was translated
       { tag: "hidden-renamed", name: "Nouveau nom privé", status: "ACTIVE", monitor_type: "NONE", is_hidden: "YES" },
     ]);
+    const [incidentId] = await knex("incidents")
+      .insert({ title: "Panne", start_date_time: 1, status: "OPEN", state: "INVESTIGATING" })
+      .returning("id");
+    await knex("incident_monitors").insert({
+      incident_id: typeof incidentId === "object" ? incidentId.id : incidentId,
+      monitor_tag: "inactive-linked",
+      monitor_impact: "DOWN",
+    });
     await knex("site_data").where({ key: "i18n" }).del();
     await knex("site_data").insert({
       key: "i18n",
@@ -131,6 +140,7 @@ describe("GetLayoutServerData contentTranslations", () => {
             Facturation: "Facturatie",
             "Projet secret": "Geheim project",
             Brouillon: "Concept",
+            "Ancienne API": "Oude API",
             "Ancien nom privé": "Oude privénaam",
             // A monitor deleted after its name was translated
             "Monitor supprimé": "Verwijderd",
@@ -142,7 +152,10 @@ describe("GetLayoutServerData contentTranslations", () => {
 
     const layout = await GetLayoutServerData(anonymous, new Request("http://localhost/"));
 
-    expect(layout.languageSetting.contentTranslations).toEqual({ nl: { Facturation: "Facturatie" } });
+    // An inactive monitor still shows on the page of an incident it is linked to
+    expect(layout.languageSetting.contentTranslations).toEqual({
+      nl: { Facturation: "Facturatie", "Ancienne API": "Oude API" },
+    });
     for (const privateText of ["Projet secret", "Brouillon", "Ancien nom privé", "Monitor supprimé"]) {
       expect(JSON.stringify(layout)).not.toContain(privateText);
     }

@@ -84,6 +84,20 @@ export class MonitorsRepository extends BaseRepository {
     });
   }
 
+  /**
+   * Tags of the monitors linked to at least one incident or maintenance. Event pages show
+   * these monitors whatever their status.
+   */
+  async getMonitorTagsLinkedToEvents(): Promise<string[]> {
+    const [incidentTags, maintenanceTags] = await Promise.all([
+      this.knex("incident_monitors").distinct("monitor_tag"),
+      this.knex("maintenance_monitors").distinct("monitor_tag"),
+    ]);
+    return Array.from(
+      new Set([...incidentTags, ...maintenanceTags].map((row: { monitor_tag: string }) => row.monitor_tag)),
+    );
+  }
+
   async getMonitors(data: MonitorFilter): Promise<MonitorRecord[]> {
     let query = this.knex("monitors").whereRaw("1=1");
     if (!!data.status) {

@@ -11,7 +11,7 @@ import {
   HasRequiredEnv,
   IsEmailSetup,
 } from "./controller.js";
-import { GetMonitors } from "./monitorsController.js";
+import { GetMonitors, GetMonitorTagsLinkedToEvents } from "./monitorsController.js";
 import { GetAllPages } from "./pagesController.js";
 import type { EventDisplaySettings, GlobalPageVisibilitySettings, SiteDateTimeFormat } from "$lib/types/site.js";
 import serverResolve from "../resolver.js";
@@ -233,8 +233,15 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     locales: (siteData.i18n?.locales || seedSiteData.i18n.locales).filter((l) => l.selected).map((l) => ({ ...l })),
   };
   if (languageSetting.contentTranslations && Object.keys(languageSetting.contentTranslations).length > 0) {
-    // Only ACTIVE monitors appear on public pages
-    const [pages, monitors] = await Promise.all([GetAllPages(), GetMonitors({ status: "ACTIVE" })]);
+    // Status pages show ACTIVE monitors; incident and maintenance pages show their linked monitors
+    // whatever their status
+    const [pages, allMonitors, eventMonitorTags] = await Promise.all([
+      GetAllPages(),
+      GetMonitors({}),
+      GetMonitorTagsLinkedToEvents(),
+    ]);
+    const linkedToEvents = new Set(eventMonitorTags);
+    const monitors = allMonitors.filter((monitor) => monitor.status === "ACTIVE" || linkedToEvents.has(monitor.tag));
     languageSetting.contentTranslations = KeepPublicContentTranslations(
       languageSetting.contentTranslations,
       GetPublicContentTexts({ siteData, pages, monitors, canSeeHiddenMonitors }),
