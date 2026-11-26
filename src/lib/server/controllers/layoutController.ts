@@ -12,6 +12,7 @@ import {
   IsEmailSetup,
 } from "./controller.js";
 import { GetMonitors } from "./monitorsController.js";
+import { GetAllPages } from "./pagesController.js";
 import type { EventDisplaySettings, GlobalPageVisibilitySettings, SiteDateTimeFormat } from "$lib/types/site.js";
 import serverResolve from "../resolver.js";
 import { ResolveEventListPlacement } from "$lib/clientTools";
@@ -122,31 +123,75 @@ function NormalizeEventDisplaySettings(settings?: Partial<EventDisplaySettings>)
 
 type ContentTranslations = Record<string, Record<string, string>>;
 
-/**
- * Drops the translations whose source text is the name or description of a hidden monitor,
- * unless a visible monitor uses the same text. The public layout sends the whole dictionary,
- * source texts included, so a hidden monitor's text must not be in it.
- */
-export function RemoveHiddenMonitorTexts(
-  contentTranslations: ContentTranslations,
-  monitors: Array<{ name?: string | null; description?: string | null; is_hidden?: string | null }>,
-): ContentTranslations {
-  const textsOf = (hidden: boolean) =>
-    new Set(
-      monitors
-        .filter((monitor) => (monitor.is_hidden === "YES") === hidden)
-        .flatMap((monitor) => [monitor.name, monitor.description])
-        .filter((text): text is string => typeof text === "string" && text.trim() !== "")
-        .map((text) => text.trim()),
-    );
-  const hiddenTexts = textsOf(true);
-  const visibleTexts = textsOf(false);
-  const isPrivate = (source: string) => hiddenTexts.has(source.trim()) && !visibleTexts.has(source.trim());
+interface PublicTextSources {
+  siteData: {
+    siteName?: string;
+    metaSiteTitle?: string;
+    metaSiteDescription?: string;
+    nav?: Array<{ name?: string }>;
+    footerHTML?: string;
+    announcement?: { title?: string; message?: string };
+  };
+  pages: Array<{
+    page_title?: string | null;
+    page_header?: string | null;
+    page_subheader?: string | null;
+    page_settings_json?: string | null;
+  }>;
+  monitors: Array<{ name?: string | null; description?: string | null; is_hidden?: string | null }>;
+  canSeeHiddenMonitors: boolean;
+}
 
+/**
+ * The texts the public pages show right now, as trimmed strings. A hidden monitor's name and
+ * description count only for a visitor who can see hidden monitors.
+ */
+export function GetPublicContentTexts({
+  siteData,
+  pages,
+  monitors,
+  canSeeHiddenMonitors,
+}: PublicTextSources): Set<string> {
+  const texts: unknown[] = [
+    siteData.siteName,
+    siteData.metaSiteTitle,
+    siteData.metaSiteDescription,
+    siteData.footerHTML,
+    siteData.announcement?.title,
+    siteData.announcement?.message,
+    ...(siteData.nav || []).map((item) => item.name),
+  ];
+  for (const page of pages) {
+    texts.push(page.page_title, page.page_header, page.page_subheader);
+    try {
+      const settings = JSON.parse(page.page_settings_json || "{}");
+      texts.push(settings?.metaPageTitle, settings?.metaPageDescription);
+    } catch {
+      // A page with unreadable settings has no meta texts to translate
+    }
+  }
+  for (const monitor of monitors) {
+    if (monitor.is_hidden === "YES" && !canSeeHiddenMonitors) continue;
+    texts.push(monitor.name, monitor.description);
+  }
+  return new Set(
+    texts.filter((text): text is string => typeof text === "string" && text.trim() !== "").map((text) => text.trim()),
+  );
+}
+
+/**
+ * Keeps only the translations whose source text a public page shows right now. The public layout
+ * sends the dictionary with its source texts, so an entry for a hidden monitor, or for a text
+ * that was renamed or deleted, must not reach visitors.
+ */
+export function KeepPublicContentTranslations(
+  contentTranslations: ContentTranslations,
+  publicTexts: Set<string>,
+): ContentTranslations {
   return Object.fromEntries(
     Object.entries(contentTranslations).map(([locale, mappings]) => [
       locale,
-      Object.fromEntries(Object.entries(mappings).filter(([source]) => !isPrivate(source))),
+      Object.fromEntries(Object.entries(mappings).filter(([source]) => publicTexts.has(source.trim()))),
     ]),
   );
 }
@@ -187,10 +232,11 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     ...(siteData.i18n || seedSiteData.i18n),
     locales: (siteData.i18n?.locales || seedSiteData.i18n.locales).filter((l) => l.selected).map((l) => ({ ...l })),
   };
-  if (!canSeeHiddenMonitors && languageSetting.contentTranslations) {
-    languageSetting.contentTranslations = RemoveHiddenMonitorTexts(
+  if (languageSetting.contentTranslations && Object.keys(languageSetting.contentTranslations).length > 0) {
+    const [pages, monitors] = await Promise.all([GetAllPages(), GetMonitors({})]);
+    languageSetting.contentTranslations = KeepPublicContentTranslations(
       languageSetting.contentTranslations,
-      await GetMonitors({}),
+      GetPublicContentTexts({ siteData, pages, monitors, canSeeHiddenMonitors }),
     );
   }
   const isTimezoneEnabled = !!siteData.tzToggle && siteData.tzToggle !== "NO";

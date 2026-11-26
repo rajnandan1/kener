@@ -84,7 +84,7 @@ These texts can be translated:
 
 Incident and maintenance titles and updates are not translated.
 
-Translations of a hidden monitor's name and description are only sent to signed-in users who can see hidden monitors.
+Visitors only receive the translations of texts the public pages show at that moment. A hidden monitor's name and description count only for signed-in users who can see hidden monitors, unless a visible monitor, a page, the site name, the nav, the footer or the banner uses the same text. Entries for a text that was renamed or deleted are kept in the editor but not sent.
 
 ### Add translations {#content-translations-add}
 

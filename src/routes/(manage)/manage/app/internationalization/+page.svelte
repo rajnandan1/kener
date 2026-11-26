@@ -237,6 +237,11 @@
 
   async function saveLanguages() {
     savingLanguages = true;
+    // Record exactly what was sent: edits made during the request wait for the next save
+    const submitted = {
+      defaultLocale: i18n.defaultLocale,
+      locales: i18n.locales.map((l) => ({ ...l }))
+    };
     try {
       const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
@@ -244,7 +249,7 @@
         body: JSON.stringify({
           action: "storeSiteData",
           data: {
-            i18n: JSON.stringify(i18n)
+            i18n: JSON.stringify({ ...submitted, contentTranslations: i18n.contentTranslations || {} })
           }
         })
       });
@@ -252,10 +257,7 @@
       if (result.error) {
         toast.error(result.error);
       } else {
-        savedLanguages = {
-          defaultLocale: i18n.defaultLocale,
-          locales: i18n.locales.map((l) => ({ ...l }))
-        };
+        savedLanguages = submitted;
         toast.success("Language settings saved successfully");
       }
     } catch (e) {
