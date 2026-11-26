@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as Item from "$lib/components/ui/item/index.js";
-  import { t } from "$lib/stores/i18n";
+  import { t, tc } from "$lib/stores/i18n";
   import { formatDate } from "$lib/stores/datetime";
   import { Button } from "$lib/components/ui/button/index.js";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
@@ -41,13 +41,13 @@
 </script>
 
 <svelte:head>
-  <title>{data.monitorName + " - " + data.siteName}</title>
-  <meta property="og:title" content={data.monitorName + " - " + data.siteName} />
+  <title>{$tc(data.monitorName) + " - " + $tc(data.siteName)}</title>
+  <meta property="og:title" content={$tc(data.monitorName) + " - " + $tc(data.siteName)} />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
   {#if data.monitorDescription}
-    <meta name="description" content={data.monitorDescription} />
-    <meta property="og:description" content={data.monitorDescription} />
+    <meta name="description" content={$tc(data.monitorDescription)} />
+    <meta property="og:description" content={$tc(data.monitorDescription)} />
   {/if}
   {#if data.socialPreviewImage}
     <meta property="og:image" content={absoluteResolve(resolve, data.siteUrl, data.socialPreviewImage)} />
@@ -64,7 +64,7 @@
     {#if data.monitorImage}
       <img
         src={clientResolver(resolve, data.monitorImage)}
-        alt={data.monitorName || "Monitor icon"}
+        alt={$tc(data.monitorName) || "Monitor icon"}
         class="aspect-auto w-12 rounded object-cover"
       />
     {/if}
@@ -72,7 +72,7 @@
       <Item.Content>
         {#if data.monitorName}
           <h1>
-            <Item.Title class="text-3xl">{data.monitorName}</Item.Title>
+            <Item.Title class="text-3xl">{$tc(data.monitorName)}</Item.Title>
           </h1>
         {/if}
         {#if data.monitorDescription}
@@ -80,16 +80,16 @@
             <Item.Description
               class="text-muted-foreground w-full {descriptionExpanded ? 'line-clamp-none' : ''} text-pretty"
             >
-              {#if data.monitorDescription.length > 150 && !descriptionExpanded}
-                {data.monitorDescription.slice(0, 150)}...
+              {#if $tc(data.monitorDescription).length > 150 && !descriptionExpanded}
+                {$tc(data.monitorDescription).slice(0, 150)}...
                 <button
                   class="text-accent-foreground inline font-medium hover:underline"
                   onclick={() => toggleDescription(true)}
                 >
                   {$t("Read more")}
                 </button>
-              {:else if data.monitorDescription.length > 150}
-                {data.monitorDescription}
+              {:else if $tc(data.monitorDescription).length > 150}
+                {$tc(data.monitorDescription)}
                 <button
                   class="text-accent-foreground inline font-medium hover:underline"
                   onclick={() => toggleDescription(false)}
@@ -97,7 +97,7 @@
                   {$t("Read less")}
                 </button>
               {:else}
-                {data.monitorDescription}
+                {$tc(data.monitorDescription)}
               {/if}
             </Item.Description>
           </h2>

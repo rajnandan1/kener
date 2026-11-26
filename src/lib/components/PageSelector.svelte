@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tc } from "$lib/stores/i18n";
   import { Button } from "$lib/components/ui/button/index.js";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
@@ -55,8 +56,8 @@
             size="sm"
             class="bg-background/80 dark:bg-background/70 border-foreground/10 flex items-center justify-center rounded-full border text-xs shadow-none backdrop-blur-md"
           >
-            <span class="hidden max-w-[16rem] truncate sm:inline">{currentPage?.page_title || "Home"}</span>
-            <span class="sr-only sm:hidden">{currentPage?.page_title || "Home"}</span>
+            <span class="hidden max-w-[16rem] truncate sm:inline">{$tc(currentPage?.page_title) || "Home"}</span>
+            <span class="sr-only sm:hidden">{$tc(currentPage?.page_title) || "Home"}</span>
             <ChevronDown class="h-4 w-4" />
           </Button>
         {/snippet}
@@ -72,7 +73,7 @@
             href={clientResolver(resolve, `/${page.page_path}`)}
             class="w-full justify-start rounded-full text-xs shadow-none"
           >
-            {page.page_title}
+            {$tc(page.page_title)}
           </Button>
         {/each}
       </DropdownMenu.Content>

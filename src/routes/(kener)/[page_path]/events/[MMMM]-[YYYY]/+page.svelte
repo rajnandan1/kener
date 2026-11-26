@@ -10,7 +10,7 @@
   import ArrowRight from "@lucide/svelte/icons/arrow-right";
   import Check from "@lucide/svelte/icons/check";
   import ICONS from "$lib/icons";
-  import { t } from "$lib/stores/i18n";
+  import { t, tc } from "$lib/stores/i18n";
   import { formatDate } from "$lib/stores/datetime";
   import { resolve } from "$app/paths";
   import clientResolver, { absoluteResolve } from "$lib/client/resolver.js";
@@ -158,10 +158,10 @@
 </script>
 
 <svelte:head>
-  <title>{currentMonth} - Maintenances & Incidents - {data.siteName}</title>
-  <meta name="description" content={`${currentMonth} maintenances and incidents for ${data.siteName}`} />
-  <meta property="og:title" content={`${currentMonth} - Maintenances & Incidents - ${data.siteName}`} />
-  <meta property="og:description" content={`${currentMonth} maintenances and incidents for ${data.siteName}`} />
+  <title>{currentMonth} - Maintenances & Incidents - {$tc(data.siteName)}</title>
+  <meta name="description" content={`${currentMonth} maintenances and incidents for ${$tc(data.siteName)}`} />
+  <meta property="og:title" content={`${currentMonth} - Maintenances & Incidents - ${$tc(data.siteName)}`} />
+  <meta property="og:description" content={`${currentMonth} maintenances and incidents for ${$tc(data.siteName)}`} />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
   {#if data.socialPreviewImage}

@@ -441,6 +441,10 @@ export const GetMonitors = async (data: MonitorFilter): Promise<MonitorRecord[]>
   return await db.getMonitors(data);
 };
 
+export const GetMonitorTagsLinkedToEvents = async (): Promise<string[]> => {
+  return await db.getMonitorTagsLinkedToEvents();
+};
+
 export const GetLatestMonitoringData = async (monitor_tag: string): Promise<MonitoringData | undefined> => {
   let latestData = await db.getLatestMonitoringData(monitor_tag);
 

@@ -11,6 +11,8 @@ import {
   HasRequiredEnv,
   IsEmailSetup,
 } from "./controller.js";
+import { GetMonitors, GetMonitorTagsLinkedToEvents } from "./monitorsController.js";
+import { GetAllPages } from "./pagesController.js";
 import type { EventDisplaySettings, GlobalPageVisibilitySettings, SiteDateTimeFormat } from "$lib/types/site.js";
 import serverResolve from "../resolver.js";
 import { ResolveEventListPlacement } from "$lib/clientTools";
@@ -48,6 +50,7 @@ export interface LayoutServerData {
   languageSetting: {
     defaultLocale: string;
     locales: Array<{ code: string; name: string; selected: boolean; disabled: boolean }>;
+    contentTranslations?: Record<string, Record<string, string>>;
   };
   subMenuOptions: {
     showShareBadgeMonitor: boolean;
@@ -118,6 +121,89 @@ function NormalizeEventDisplaySettings(settings?: Partial<EventDisplaySettings>)
   };
 }
 
+type ContentTranslations = Record<string, Record<string, string>>;
+
+interface PublicTextSources {
+  siteData: {
+    siteName?: string;
+    metaSiteTitle?: string;
+    metaSiteDescription?: string;
+    nav?: Array<{ name?: string }>;
+    footerHTML?: string;
+    announcement?: { title?: string; message?: string };
+  };
+  pages: Array<{
+    page_title?: string | null;
+    page_header?: string | null;
+    page_subheader?: string | null;
+    page_settings_json?: string | null;
+  }>;
+  monitors: Array<{
+    name?: string | null;
+    description?: string | null;
+    is_hidden?: string | null;
+    status?: string | null;
+  }>;
+  canSeeHiddenMonitors: boolean;
+}
+
+/**
+ * The texts the public pages show right now, as trimmed strings. A hidden monitor's name and
+ * description count only for a visitor who can see hidden monitors.
+ */
+export function GetPublicContentTexts({
+  siteData,
+  pages,
+  monitors,
+  canSeeHiddenMonitors,
+}: PublicTextSources): Set<string> {
+  const texts: unknown[] = [
+    siteData.siteName,
+    siteData.metaSiteTitle,
+    siteData.metaSiteDescription,
+    siteData.footerHTML,
+    siteData.announcement?.title,
+    siteData.announcement?.message,
+    ...(siteData.nav || []).map((item) => item.name),
+  ];
+  for (const page of pages) {
+    texts.push(page.page_title, page.page_header, page.page_subheader);
+    try {
+      const settings = JSON.parse(page.page_settings_json || "{}");
+      texts.push(settings?.metaPageTitle, settings?.metaPageDescription);
+    } catch {
+      // A page with unreadable settings has no meta texts to translate
+    }
+  }
+  for (const monitor of monitors) {
+    if (monitor.is_hidden === "YES" && !canSeeHiddenMonitors) continue;
+    texts.push(monitor.name);
+    // Descriptions show only on status and monitor pages, which list ACTIVE monitors;
+    // event pages show the name alone
+    if (monitor.status === "ACTIVE") texts.push(monitor.description);
+  }
+  return new Set(
+    texts.filter((text): text is string => typeof text === "string" && text.trim() !== "").map((text) => text.trim()),
+  );
+}
+
+/**
+ * Keeps only the translations whose source text a public page shows right now. The public layout
+ * sends the dictionary with its source texts, so an entry for a hidden monitor, or for a text
+ * that was renamed or deleted, must not reach visitors.
+ */
+export function KeepPublicContentTranslations(
+  contentTranslations: ContentTranslations,
+  publicTexts: Set<string>,
+): ContentTranslations {
+  return Object.fromEntries(
+    Object.entries(contentTranslations).map(([locale, mappings]) => [
+      locale,
+      Object.fromEntries(Object.entries(mappings).filter(([source]) => publicTexts.has(source.trim()))),
+    ]),
+  );
+}
+
 export async function GetLayoutServerData(cookies: Cookies, request: Request): Promise<LayoutServerData> {
   const userAgent = request.headers.get("user-agent") ?? "";
   const md = new MobileDetect(userAgent);
@@ -150,10 +236,25 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     isSubsEnabled = true;
   }
 
-  const languageSetting = {
+  const languageSetting: LayoutServerData["languageSetting"] = {
     ...(siteData.i18n || seedSiteData.i18n),
     locales: (siteData.i18n?.locales || seedSiteData.i18n.locales).filter((l) => l.selected).map((l) => ({ ...l })),
   };
+  if (languageSetting.contentTranslations && Object.keys(languageSetting.contentTranslations).length > 0) {
+    // Status pages show ACTIVE monitors; incident and maintenance pages show their linked monitors
+    // whatever their status
+    const [pages, allMonitors, eventMonitorTags] = await Promise.all([
+      GetAllPages(),
+      GetMonitors({}),
+      GetMonitorTagsLinkedToEvents(),
+    ]);
+    const linkedToEvents = new Set(eventMonitorTags);
+    const monitors = allMonitors.filter((monitor) => monitor.status === "ACTIVE" || linkedToEvents.has(monitor.tag));
+    languageSetting.contentTranslations = KeepPublicContentTranslations(
+      languageSetting.contentTranslations,
+      GetPublicContentTexts({ siteData, pages, monitors, canSeeHiddenMonitors }),
+    );
+  }
   const isTimezoneEnabled = !!siteData.tzToggle && siteData.tzToggle !== "NO";
   const isThemeToggleEnabled = !!siteData.themeToggle && siteData.themeToggle !== "NO";
   const defaultSiteTheme = siteData.theme || "system";

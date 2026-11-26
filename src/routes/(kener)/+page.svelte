@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tc } from "$lib/stores/i18n";
   import { browser } from "$app/environment";
   import * as Item from "$lib/components/ui/item/index.js";
   import EventsCard from "$lib/components/EventsCard.svelte";
@@ -117,24 +118,24 @@
 
 <svelte:head>
   {#if data.metaPageTitle}
-    <title>{data.metaPageTitle}</title>
-    <meta property="og:title" content={data.metaPageTitle} />
-  {:else if data.pageDetails?.page_title}
-    <title>{data.pageDetails.page_title} - {data.siteName}</title>
-    <meta property="og:title" content={data.pageDetails.page_title + " - " + data.siteName} />
+    <title>{$tc(data.metaPageTitle)}</title>
+    <meta property="og:title" content={$tc(data.metaPageTitle)} />
+  {:else if $tc(data.pageDetails?.page_title)}
+    <title>{$tc(data.pageDetails.page_title)} - {$tc(data.siteName)}</title>
+    <meta property="og:title" content={$tc(data.pageDetails.page_title) + " - " + $tc(data.siteName)} />
   {:else}
-    <title>{data.siteName} - Status Page</title>
-    <meta property="og:title" content={data.siteName + " - Status Page"} />
+    <title>{$tc(data.siteName)} - Status Page</title>
+    <meta property="og:title" content={$tc(data.siteName) + " - Status Page"} />
   {/if}
   {#if data.metaPageDescription}
-    <meta name="description" content={data.metaPageDescription} />
-    <meta property="og:description" content={data.metaPageDescription} />
-  {:else if data.pageDetails?.page_header}
-    <meta name="description" content={data.pageDetails.page_header} />
-    <meta property="og:description" content={data.pageDetails.page_header} />
+    <meta name="description" content={$tc(data.metaPageDescription)} />
+    <meta property="og:description" content={$tc(data.metaPageDescription)} />
+  {:else if $tc(data.pageDetails?.page_header)}
+    <meta name="description" content={$tc(data.pageDetails.page_header)} />
+    <meta property="og:description" content={$tc(data.pageDetails.page_header)} />
   {:else}
-    <meta name="description" content={(data.pageDetails?.page_title || "Status Page") + " - Status Page"} />
-    <meta property="og:description" content={(data.pageDetails?.page_title || "Status Page") + " - Status Page"} />
+    <meta name="description" content={($tc(data.pageDetails?.page_title) || "Status Page") + " - Status Page"} />
+    <meta property="og:description" content={($tc(data.pageDetails?.page_title) || "Status Page") + " - Status Page"} />
   {/if}
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -159,13 +160,13 @@
       <Item.Content>
         {#if data.pageDetails?.page_header}
           <h1>
-            <Item.Title class="text-2xl sm:text-3xl">{data.pageDetails.page_header}</Item.Title>
+            <Item.Title class="text-2xl sm:text-3xl">{$tc(data.pageDetails.page_header)}</Item.Title>
           </h1>
         {/if}
         {#if data.pageDetails?.page_subheader}
           <h2 class="">
             <div class="prose prose-sm dark:prose-invert max-w-none">
-              <SveltePurify html={mdToHTML(data.pageDetails.page_subheader)} />
+              <SveltePurify html={mdToHTML($tc(data.pageDetails.page_subheader))} />
             </div>
           </h2>
         {/if}

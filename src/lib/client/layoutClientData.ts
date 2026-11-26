@@ -1,7 +1,7 @@
 import { fromZonedTime } from "date-fns-tz";
 import { getUnixTime } from "date-fns";
 import { get } from "svelte/store";
-import { i18n } from "$lib/stores/i18n";
+import { i18n, type ContentTranslations } from "$lib/stores/i18n";
 import { timezone, selectedTimezone } from "$lib/stores/timezone";
 import { getStartOfDayAtTz, resolveTimezone } from "./datetime";
 
@@ -15,6 +15,7 @@ export interface LayoutClientData {
 interface LanguageSetting {
   defaultLocale: string;
   locales: Array<{ code: string; name: string; selected: boolean; disabled: boolean }>;
+  contentTranslations?: ContentTranslations;
 }
 
 export async function GetLayoutClientData(
@@ -22,7 +23,12 @@ export async function GetLayoutClientData(
   fetchFn: typeof fetch,
 ): Promise<LayoutClientData> {
   // Initialize i18n store with available locales
-  await i18n.init(languageSetting.locales, languageSetting.defaultLocale, fetchFn);
+  await i18n.init(
+    languageSetting.locales,
+    languageSetting.defaultLocale,
+    fetchFn,
+    languageSetting.contentTranslations || {},
+  );
 
   // Initialize timezone store (checks localStorage, falls back to browser timezone)
   timezone.init();

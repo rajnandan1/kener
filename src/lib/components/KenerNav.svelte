@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tc } from "$lib/stores/i18n";
   import { page } from "$app/state";
   import * as NavigationMenu from "$lib/components/ui/navigation-menu/index.js";
   import * as Dropdown from "$lib/components/ui/dropdown-menu/index.js";
@@ -43,9 +44,9 @@
         onclick={trackBrandClick}
       >
         {#if logo}
-          <img src={clientResolver(resolve, logo)} alt={siteName} class="mr-2 h-6 w-6 rounded-full object-cover" />
+          <img src={clientResolver(resolve, logo)} alt={$tc(siteName)} class="mr-2 h-6 w-6 rounded-full object-cover" />
         {/if}
-        {siteName}
+        {$tc(siteName)}
       </a>
 
       <!-- Desktop Nav Links -->
@@ -67,11 +68,11 @@
                     {#if item.iconURL}
                       <img
                         src={clientResolver(resolve, item.iconURL)}
-                        alt={item.name}
+                        alt={$tc(item.name)}
                         class="mr-2 h-4 w-4 object-cover"
                       />
                     {/if}
-                    {item.name}
+                    {$tc(item.name)}
                   </a>
                 {/snippet}
               </NavigationMenu.Link>
@@ -108,9 +109,13 @@
                 onclick={() => trackNavClick(item)}
               >
                 {#if item.iconURL}
-                  <img src={clientResolver(resolve, item.iconURL)} alt={item.name} class="mr-2 h-4 w-4 object-cover" />
+                  <img
+                    src={clientResolver(resolve, item.iconURL)}
+                    alt={$tc(item.name)}
+                    class="mr-2 h-4 w-4 object-cover"
+                  />
                 {/if}
-                {item.name}
+                {$tc(item.name)}
               </Button>
             {/each}
           </Dropdown.Content>

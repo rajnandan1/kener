@@ -1,15 +1,16 @@
 ---
 title: Internationalization
-description: Configure language localization, timezone behavior, and date/time formats for your Kener status page.
+description: Configure language localization, content translations, timezone behavior, and date/time formats for your Kener status page.
 ---
 
-Kener internationalization has three parts:
+Kener internationalization has four parts:
 
 1. **Localization** (translated UI text)
-2. **Timezone handling** (how date/time values are displayed)
-3. **Date & time format** (how dates and times are formatted)
+2. **Content translations** (your own text: monitor names, page headers, footer)
+3. **Timezone handling** (how date/time values are displayed)
+4. **Date & time format** (how dates and times are formatted)
 
-Use this page to configure all three from the admin UI.
+Use this page to configure all four from the admin UI.
 
 ## Quick setup {#quick-setup}
 
@@ -18,10 +19,11 @@ Use this page to configure all three from the admin UI.
     - select available locales,
     - pick a default locale,
     - click **Save Languages**.
-3. In **Timezone Settings**:
+3. In **Content Translations**, translate your own text into each selected language, then click **Save Translations**.
+4. In **Timezone Settings**:
     - enable or disable **Allow users to switch timezones**,
     - click **Save Timezone**.
-4. In **Date & Time Format**:
+5. In **Date & Time Format**:
     - set formats for **Date + Time**, **Date Only**, and **Time Only**,
     - click **Save Format**.
 
@@ -66,6 +68,35 @@ node scripts/sort-translations.js
 
 - `check-translations` reports missing/unused keys.
 - `sort-translations` normalizes key order in locale files.
+
+## Content translations {#content-translations}
+
+Locale files translate Kener's own interface. The text you type in yourself is shown as typed, in every language, unless you translate it in **Manage → Internationalization → Content Translations**.
+
+These texts can be translated:
+
+- monitor names and descriptions, on the status page, the monitor page, and incident and maintenance pages,
+- page titles, headers and subheaders,
+- the site and page meta titles and descriptions (browser tab and link previews),
+- the site name and navigation labels,
+- the footer HTML (translate the whole HTML as one text),
+- the announcement banner title and message.
+
+Incident and maintenance titles and updates are not translated.
+
+Visitors only receive the translations of texts the public pages show at that moment. A hidden monitor's name and description count only for signed-in users who can see hidden monitors, unless a visible monitor, a page, the site name, the nav, the footer or the banner uses the same text. Entries for a text that was renamed or deleted are kept in the editor but not sent.
+
+### Add translations {#content-translations-add}
+
+1. Select at least one language besides the default language, and save.
+2. Click **Add Texts from Monitors and Pages** to list every translatable text, or type one in and click **Add Text**.
+3. Fill in a translation for each language. Leave a field empty to show the text as typed.
+4. Click **Save Translations**.
+
+Write each text in the default language. A translation is matched to the text exactly as typed, ignoring spaces at either end.
+
+> [!NOTE]
+> When you rename a monitor or a page, its translations no longer match. Add the new name and translate it again.
 
 ## Timezone handling {#timezone}
 
@@ -124,16 +155,18 @@ Tokens that start with an uppercase `P` (like `PP`, `PPp`) are **locale-aware** 
 
 Kener saves internationalization settings in site data with keys like:
 
-| Key                  | Purpose                                                                              |
-| -------------------- | ------------------------------------------------------------------------------------ |
-| `i18n.defaultLocale` | Default locale shown on first visit (unless user already has a language preference). |
-| `i18n.locales[]`     | List of available locales and whether each one is selected.                          |
-| `tzToggle`           | Enables/disables manual timezone switching in the public UI.                         |
-| `dateAndTimeFormat`  | JSON object with `datePlusTime`, `dateOnly`, and `timeOnly` format strings.          |
+| Key                        | Purpose                                                                              |
+| -------------------------- | ------------------------------------------------------------------------------------ |
+| `i18n.defaultLocale`       | Default locale shown on first visit (unless user already has a language preference). |
+| `i18n.locales[]`           | List of available locales and whether each one is selected.                          |
+| `i18n.contentTranslations` | Translations of your own text, by locale code, then by the text as typed.            |
+| `tzToggle`                 | Enables/disables manual timezone switching in the public UI.                         |
+| `dateAndTimeFormat`        | JSON object with `datePlusTime`, `dateOnly`, and `timeOnly` format strings.          |
 
 ## Verification checklist {#verification}
 
 - Language selector shows only selected locales.
+- Monitor names and page headers change with the selected language.
 - Default language is used for first-time visits.
 - `translation-report.json` has no unexpected missing keys.
 - Time values render correctly for your locale/timezone.
@@ -148,6 +181,10 @@ Kener saves internationalization settings in site data with keys like:
 - **Language not appearing in selector**
     - Make sure it is selected in **Manage → Internationalization**.
     - Save language settings.
+
+- **A monitor name stays in the default language**
+    - Check that the text in **Content Translations** matches the monitor name exactly.
+    - Check that it has a translation for the selected language, and that you clicked **Save Translations**.
 
 - **Timezone selector not visible**
     - Enable **Allow users to switch timezones** and save.

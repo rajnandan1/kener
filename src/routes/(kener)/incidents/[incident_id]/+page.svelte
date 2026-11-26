@@ -10,7 +10,7 @@
   import mdToHTML from "$lib/marked";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import { SveltePurify } from "@humanspeak/svelte-purify";
-  import { t } from "$lib/stores/i18n";
+  import { t, tc } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import clientResolver, { absoluteResolve } from "$lib/client/resolver.js";
   import { page } from "$app/state";
@@ -19,8 +19,8 @@
 </script>
 
 <svelte:head>
-  <title>{data.incident.title + " - " + data.siteName}</title>
-  <meta property="og:title" content={data.incident.title + " - " + data.siteName} />
+  <title>{data.incident.title + " - " + $tc(data.siteName)}</title>
+  <meta property="og:title" content={data.incident.title + " - " + $tc(data.siteName)} />
   <meta property="og:type" content="article" />
   <meta name="twitter:card" content="summary_large_image" />
   {#if data.comments.length > 0}
@@ -115,7 +115,7 @@
                     </Tooltip.Root>
                   </Item.Media>
                   <Item.Content>
-                    <Item.Title>{monitor.monitor_name}</Item.Title>
+                    <Item.Title>{$tc(monitor.monitor_name)}</Item.Title>
                     <Item.Description>
                       {#if monitor.monitor_impact}
                         <span class="text-{monitor.monitor_impact.toLowerCase()}">

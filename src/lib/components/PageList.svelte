@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tc } from "$lib/stores/i18n";
   import { Button } from "$lib/components/ui/button/index.js";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
@@ -58,7 +59,7 @@
                 <Item.Media variant="image">
                   <img
                     src={page.page_logo}
-                    alt={page.page_title}
+                    alt={$tc(page.page_title)}
                     width="32"
                     height="32"
                     class="size-8 rounded object-cover"
@@ -67,9 +68,9 @@
               {/if}
               <Item.Content>
                 <Item.Title class="line-clamp-1">
-                  {page.page_title}
+                  {$tc(page.page_title)}
                 </Item.Title>
-                <Item.Description>{page.page_header}</Item.Description>
+                <Item.Description>{$tc(page.page_header)}</Item.Description>
               </Item.Content>
               <Item.Actions>
                 <ChevronRight class="size-4" />

@@ -18,7 +18,7 @@
   import { getSslNowMs } from "$lib/client/sslClock.svelte";
   import GroupMonitorPopover from "./GroupMonitorPopover.svelte";
   import type { GroupMemberDisplay } from "$lib/server/types/monitor";
-  import { t } from "$lib/stores/i18n";
+  import { t, tc } from "$lib/stores/i18n";
   import { page } from "$app/state";
 
   interface Props {
@@ -118,18 +118,18 @@
         <Item.Media variant="image" class="hidden sm:block">
           <Avatar.Root class="size-10">
             {#if data.image}
-              <Avatar.Image src={clientResolver(resolve, data.image)} alt={data.name} class="  " />
+              <Avatar.Image src={clientResolver(resolve, data.image)} alt={$tc(data.name)} class="  " />
             {/if}
-            <Avatar.Fallback>{GetInitials(data.name)}</Avatar.Fallback>
+            <Avatar.Fallback>{GetInitials($tc(data.name))}</Avatar.Fallback>
           </Avatar.Root>
         </Item.Media>
       {/if}
       <Item.Content class="min-w-0 flex-1">
         <Item.Title class="w-full truncate">
-          <a class="hover:underline" href={clientResolver(resolve, `/monitors/${tag}`)}>{data.name}</a>
+          <a class="hover:underline" href={clientResolver(resolve, `/monitors/${tag}`)}>{$tc(data.name)}</a>
         </Item.Title>
         {#if data.description}
-          <Item.Description class="line-clamp-2 wrap-break-word">{data.description}</Item.Description>
+          <Item.Description class="line-clamp-2 wrap-break-word">{$tc(data.description)}</Item.Description>
         {/if}
       </Item.Content>
 

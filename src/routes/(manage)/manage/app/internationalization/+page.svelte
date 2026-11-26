@@ -13,6 +13,10 @@
   import GlobeIcon from "@lucide/svelte/icons/globe";
   import ClockIcon from "@lucide/svelte/icons/clock";
   import CalendarClockIcon from "@lucide/svelte/icons/calendar-clock";
+  import LanguagesIcon from "@lucide/svelte/icons/languages";
+  import PlusIcon from "@lucide/svelte/icons/plus";
+  import TrashIcon from "@lucide/svelte/icons/trash-2";
+  import ListPlusIcon from "@lucide/svelte/icons/list-plus";
   import { toast } from "svelte-sonner";
   import { availableLocalesList } from "$lib/stores/i18n";
   import { resolve } from "$app/paths";
@@ -29,6 +33,7 @@
   interface I18nConfig {
     defaultLocale: string;
     locales: Locale[];
+    contentTranslations?: Record<string, Record<string, string>>;
   }
 
   // State
@@ -36,6 +41,13 @@
   let savingLanguages = $state(false);
   let savingTimezone = $state(false);
   let savingDateTimeFormat = $state(false);
+  let savingContent = $state(false);
+  let importingTexts = $state(false);
+  // One row per text typed by the site owner; translations keyed by locale code
+  let contentRows = $state<{ source: string; translations: Record<string, string> }[]>([]);
+  // Language settings as last loaded or saved, so saving translations never publishes unsaved language edits
+  let savedLanguages = $state<{ defaultLocale: string; locales: Locale[] }>({ defaultLocale: "en", locales: [] });
+  let newSourceText = $state("");
   let tzToggle = $state("NO");
   let dateAndTimeFormat = $state({
     datePlusTime: "PPpp",
@@ -54,6 +66,122 @@
 
   // Computed: available locales for default selection (only selected ones)
   const availableDefaultLocales = $derived(i18n.locales.filter((locale) => locale.selected));
+  // Texts are typed in the default language, so they are translated into the other selected ones
+  const translationLocales = $derived(
+    i18n.locales.filter((locale) => locale.selected && locale.code !== i18n.defaultLocale)
+  );
+
+  function rowsFromContentTranslations(contentTranslations: Record<string, Record<string, string>> | undefined) {
+    // A Map, because any text is a valid key, "constructor" and "__proto__" included
+    const rows = new Map<string, Record<string, string>>();
+    for (const [code, mappings] of Object.entries(contentTranslations || {})) {
+      for (const [source, translated] of Object.entries(mappings || {})) {
+        if (!rows.has(source)) rows.set(source, {});
+        rows.get(source)![code] = translated;
+      }
+    }
+    return Array.from(rows, ([source, translations]) => ({ source, translations }));
+  }
+
+  function contentTranslationsFromRows() {
+    const byLocale = new Map<string, Array<[string, string]>>();
+    for (const row of contentRows) {
+      const source = row.source.trim();
+      if (!source) continue;
+      for (const [code, translated] of Object.entries(row.translations)) {
+        if (!translated || !translated.trim()) continue;
+        if (!byLocale.has(code)) byLocale.set(code, []);
+        byLocale.get(code)!.push([source, translated.trim()]);
+      }
+    }
+    // Object.fromEntries defines own properties, so a "__proto__" text stays an ordinary key
+    return Object.fromEntries(Array.from(byLocale, ([code, entries]) => [code, Object.fromEntries(entries)]));
+  }
+
+  function addSourceText(text: string) {
+    const source = text.trim();
+    if (!source || contentRows.some((row) => row.source.trim() === source)) return false;
+    contentRows.push({ source, translations: {} });
+    return true;
+  }
+
+  function addNewSourceText() {
+    if (addSourceText(newSourceText)) newSourceText = "";
+  }
+
+  function removeSourceText(index: number) {
+    contentRows.splice(index, 1);
+  }
+
+  async function postManageApi(action: string, data: Record<string, unknown> = {}) {
+    const response = await fetch(clientResolver(resolve, "/manage/api"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, data })
+    });
+    return response.json();
+  }
+
+  function pageMetaTexts(pageSettingsJson: string | null | undefined): string[] {
+    try {
+      const settings = JSON.parse(pageSettingsJson || "{}");
+      return [settings?.metaPageTitle, settings?.metaPageDescription];
+    } catch {
+      return [];
+    }
+  }
+
+  // Adds a row for every text the public pages translate: site name and meta tags, nav labels,
+  // page titles, headers and meta tags, monitor names and descriptions, the footer and the banner
+  async function importSiteTexts() {
+    importingTexts = true;
+    try {
+      const [monitors, pages, siteData] = await Promise.all([
+        postManageApi("getMonitors"),
+        postManageApi("getPages"),
+        postManageApi("getAllSiteData")
+      ]);
+      if (monitors.error || pages.error || siteData.error) {
+        toast.error(monitors.error || pages.error || siteData.error);
+        return;
+      }
+      const texts: string[] = [];
+      texts.push(siteData.siteName, siteData.metaSiteTitle, siteData.metaSiteDescription);
+      for (const item of siteData.nav || []) texts.push(item.name);
+      for (const page of pages || []) {
+        texts.push(page.page_title, page.page_header, page.page_subheader, ...pageMetaTexts(page.page_settings_json));
+      }
+      for (const monitor of monitors || []) texts.push(monitor.name, monitor.description);
+      texts.push(siteData.footerHTML, siteData.announcement?.title, siteData.announcement?.message);
+      const added = texts.filter((text) => typeof text === "string" && addSourceText(text)).length;
+      toast.success(added ? `${added} texts added` : "No new texts to add");
+    } catch (e) {
+      toast.error("Failed to load the site texts");
+    } finally {
+      importingTexts = false;
+    }
+  }
+
+  async function saveContentTranslations() {
+    savingContent = true;
+    try {
+      // Record exactly what was sent: edits made during the request wait for the next save
+      const submitted = contentTranslationsFromRows();
+      const result = await postManageApi("storeSiteData", {
+        i18n: JSON.stringify({ ...savedLanguages, contentTranslations: submitted })
+      });
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        i18n.contentTranslations = submitted;
+        toast.success("Translations saved successfully");
+      }
+    } catch (e) {
+      toast.error("Failed to save translations");
+    } finally {
+      savingContent = false;
+    }
+  }
 
   async function fetchSettings() {
     loading = true;
@@ -80,7 +208,13 @@
         if (result.i18n) {
           // Merge with all available locales
           const existingLocales = result.i18n.locales || [];
+          contentRows = rowsFromContentTranslations(result.i18n.contentTranslations);
+          savedLanguages = {
+            defaultLocale: result.i18n.defaultLocale || "en",
+            locales: (result.i18n.locales || []).map((l: Locale) => ({ ...l }))
+          };
           i18n = {
+            contentTranslations: result.i18n.contentTranslations || {},
             defaultLocale: result.i18n.defaultLocale || "en",
             locales: availableLocalesList.map((el) => {
               const existing = existingLocales.find((l: Locale) => l.code === el.code);
@@ -103,6 +237,11 @@
 
   async function saveLanguages() {
     savingLanguages = true;
+    // Record exactly what was sent: edits made during the request wait for the next save
+    const submitted = {
+      defaultLocale: i18n.defaultLocale,
+      locales: i18n.locales.map((l) => ({ ...l }))
+    };
     try {
       const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
@@ -110,7 +249,7 @@
         body: JSON.stringify({
           action: "storeSiteData",
           data: {
-            i18n: JSON.stringify(i18n)
+            i18n: JSON.stringify({ ...submitted, contentTranslations: i18n.contentTranslations || {} })
           }
         })
       });
@@ -118,6 +257,7 @@
       if (result.error) {
         toast.error(result.error);
       } else {
+        savedLanguages = submitted;
         toast.success("Language settings saved successfully");
       }
     } catch (e) {
@@ -310,13 +450,112 @@
         </div>
       </Card.Content>
       <Card.Footer class="flex justify-end">
-        <Button onclick={saveLanguages} disabled={savingLanguages}>
+        <Button onclick={saveLanguages} disabled={savingLanguages || savingContent}>
           {#if savingLanguages}
             <Loader class="h-4 w-4 animate-spin" />
           {:else}
             <SaveIcon class="h-4 w-4" />
           {/if}
           Save Languages
+        </Button>
+      </Card.Footer>
+    </Card.Root>
+
+    <!-- Content Translations Card -->
+    <Card.Root>
+      <Card.Header>
+        <div class="flex items-center gap-2">
+          <LanguagesIcon class="h-5 w-5" />
+          <div>
+            <Card.Title>Content Translations</Card.Title>
+            <Card.Description>
+              Translate the text you typed in yourself: monitor names and descriptions, page titles and headers, the
+              site name, navigation labels, the footer and the announcement banner.
+            </Card.Description>
+          </div>
+        </div>
+      </Card.Header>
+      <Card.Content class="space-y-4">
+        {#if translationLocales.length === 0}
+          <p class="text-muted-foreground text-sm">
+            Select at least one language besides the default language to translate your content.
+          </p>
+        {:else}
+          <p class="text-muted-foreground text-xs">
+            Write each text exactly as it appears in the default language. A text with no translation is shown as typed.
+            If you rename a monitor or a page, add its new name here again.
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <Input
+              class="max-w-md flex-1"
+              placeholder="Text in the default language"
+              bind:value={newSourceText}
+              onkeydown={(e) => {
+                if (e.key === "Enter") addNewSourceText();
+              }}
+            />
+            <Button variant="outline" onclick={addNewSourceText} disabled={!newSourceText.trim()}>
+              <PlusIcon class="h-4 w-4" />
+              Add Text
+            </Button>
+            <Button variant="outline" onclick={importSiteTexts} disabled={importingTexts}>
+              {#if importingTexts}
+                <Loader class="h-4 w-4 animate-spin" />
+              {:else}
+                <ListPlusIcon class="h-4 w-4" />
+              {/if}
+              Add Texts from Monitors and Pages
+            </Button>
+          </div>
+          {#if contentRows.length === 0}
+            <p class="text-muted-foreground text-sm">No texts to translate yet.</p>
+          {:else}
+            <div class="space-y-3">
+              {#each contentRows as row, index (row.source)}
+                <div class="space-y-2 rounded-lg border p-3">
+                  <div class="flex items-start justify-between gap-2">
+                    <p class="text-sm font-medium break-words whitespace-pre-wrap">{row.source}</p>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      class="shrink-0"
+                      aria-label="Remove text"
+                      onclick={() => removeSourceText(index)}
+                    >
+                      <TrashIcon class="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+                    {#each translationLocales as locale (locale.code)}
+                      <div class="space-y-1">
+                        <Label for="content-{index}-{locale.code}" class="text-muted-foreground text-xs"
+                          >{locale.name}</Label
+                        >
+                        <Input
+                          id="content-{index}-{locale.code}"
+                          value={row.translations[locale.code] || ""}
+                          oninput={(e) => (row.translations[locale.code] = e.currentTarget.value)}
+                        />
+                      </div>
+                    {/each}
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        {/if}
+      </Card.Content>
+      <Card.Footer class="flex justify-end">
+        <Button
+          onclick={saveContentTranslations}
+          disabled={savingContent || savingLanguages || translationLocales.length === 0}
+        >
+          {#if savingContent}
+            <Loader class="h-4 w-4 animate-spin" />
+          {:else}
+            <SaveIcon class="h-4 w-4" />
+          {/if}
+          Save Translations
         </Button>
       </Card.Footer>
     </Card.Root>

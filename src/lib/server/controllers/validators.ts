@@ -77,13 +77,31 @@ export function IsValidFooterHTML(html: unknown): boolean {
 }
 
 export function IsValidI18n(i18n: string): boolean {
+  let parsed: unknown;
   try {
-    JSON.parse(i18n);
+    parsed = JSON.parse(i18n);
   } catch (error) {
     return false;
   }
 
+  // Optional translations of the site's own text: { [locale]: { [typed text]: translation } }
+  const contentTranslations = (parsed as { contentTranslations?: unknown } | null)?.contentTranslations;
+  if (contentTranslations !== undefined) {
+    if (!isPlainObject(contentTranslations)) return false;
+    for (const mappings of Object.values(contentTranslations)) {
+      if (!isPlainObject(mappings)) return false;
+      for (const [source, translated] of Object.entries(mappings)) {
+        // Lookups trim the displayed text, so a key with surrounding spaces would never match
+        if (typeof translated !== "string" || source.trim() === "" || source !== source.trim()) return false;
+      }
+    }
+  }
+
   return true;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 export function IsValidAnalytics(analytics: string): boolean {

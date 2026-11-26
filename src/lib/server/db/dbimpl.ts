@@ -85,6 +85,7 @@ class DbImpl {
   updateMonitor!: MonitorsRepository["updateMonitor"];
   updateMonitorTrigger!: MonitorsRepository["updateMonitorTrigger"];
   getMonitors!: MonitorsRepository["getMonitors"];
+  getMonitorTagsLinkedToEvents!: MonitorsRepository["getMonitorTagsLinkedToEvents"];
   getMonitorByTag!: MonitorsRepository["getMonitorByTag"];
   deleteMonitorsByTag!: MonitorsRepository["deleteMonitorsByTag"];
 
@@ -464,6 +465,7 @@ class DbImpl {
     this.updateMonitor = this.monitors.updateMonitor.bind(this.monitors);
     this.updateMonitorTrigger = this.monitors.updateMonitorTrigger.bind(this.monitors);
     this.getMonitors = this.monitors.getMonitors.bind(this.monitors);
+    this.getMonitorTagsLinkedToEvents = this.monitors.getMonitorTagsLinkedToEvents.bind(this.monitors);
     this.getMonitorByTag = this.monitors.getMonitorByTag.bind(this.monitors);
     this.deleteMonitorsByTag = this.monitors.deleteMonitorsByTag.bind(this.monitors);
   }
