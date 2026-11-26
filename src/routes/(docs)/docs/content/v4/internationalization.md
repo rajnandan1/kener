@@ -77,11 +77,14 @@ These texts can be translated:
 
 - monitor names and descriptions, on the status page, the monitor page, and incident and maintenance pages,
 - page titles, headers and subheaders,
+- the site and page meta titles and descriptions (browser tab and link previews),
 - the site name and navigation labels,
 - the footer HTML (translate the whole HTML as one text),
 - the announcement banner title and message.
 
 Incident and maintenance titles and updates are not translated.
+
+Translations of a hidden monitor's name and description are only sent to signed-in users who can see hidden monitors.
 
 ### Add translations {#content-translations-add}
 

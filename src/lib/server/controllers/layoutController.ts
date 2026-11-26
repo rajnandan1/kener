@@ -11,6 +11,7 @@ import {
   HasRequiredEnv,
   IsEmailSetup,
 } from "./controller.js";
+import { GetMonitors } from "./monitorsController.js";
 import type { EventDisplaySettings, GlobalPageVisibilitySettings, SiteDateTimeFormat } from "$lib/types/site.js";
 import serverResolve from "../resolver.js";
 import { ResolveEventListPlacement } from "$lib/clientTools";
@@ -119,6 +120,37 @@ function NormalizeEventDisplaySettings(settings?: Partial<EventDisplaySettings>)
   };
 }
 
+type ContentTranslations = Record<string, Record<string, string>>;
+
+/**
+ * Drops the translations whose source text is the name or description of a hidden monitor,
+ * unless a visible monitor uses the same text. The public layout sends the whole dictionary,
+ * source texts included, so a hidden monitor's text must not be in it.
+ */
+export function RemoveHiddenMonitorTexts(
+  contentTranslations: ContentTranslations,
+  monitors: Array<{ name?: string | null; description?: string | null; is_hidden?: string | null }>,
+): ContentTranslations {
+  const textsOf = (hidden: boolean) =>
+    new Set(
+      monitors
+        .filter((monitor) => (monitor.is_hidden === "YES") === hidden)
+        .flatMap((monitor) => [monitor.name, monitor.description])
+        .filter((text): text is string => typeof text === "string" && text.trim() !== "")
+        .map((text) => text.trim()),
+    );
+  const hiddenTexts = textsOf(true);
+  const visibleTexts = textsOf(false);
+  const isPrivate = (source: string) => hiddenTexts.has(source.trim()) && !visibleTexts.has(source.trim());
+
+  return Object.fromEntries(
+    Object.entries(contentTranslations).map(([locale, mappings]) => [
+      locale,
+      Object.fromEntries(Object.entries(mappings).filter(([source]) => !isPrivate(source))),
+    ]),
+  );
+}
+
 export async function GetLayoutServerData(cookies: Cookies, request: Request): Promise<LayoutServerData> {
   const userAgent = request.headers.get("user-agent") ?? "";
   const md = new MobileDetect(userAgent);
@@ -151,10 +183,16 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     isSubsEnabled = true;
   }
 
-  const languageSetting = {
+  const languageSetting: LayoutServerData["languageSetting"] = {
     ...(siteData.i18n || seedSiteData.i18n),
     locales: (siteData.i18n?.locales || seedSiteData.i18n.locales).filter((l) => l.selected).map((l) => ({ ...l })),
   };
+  if (!canSeeHiddenMonitors && languageSetting.contentTranslations) {
+    languageSetting.contentTranslations = RemoveHiddenMonitorTexts(
+      languageSetting.contentTranslations,
+      await GetMonitors({}),
+    );
+  }
   const isTimezoneEnabled = !!siteData.tzToggle && siteData.tzToggle !== "NO";
   const isThemeToggleEnabled = !!siteData.themeToggle && siteData.themeToggle !== "NO";
   const defaultSiteTheme = siteData.theme || "system";

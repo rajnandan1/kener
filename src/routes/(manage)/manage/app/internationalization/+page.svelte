@@ -45,6 +45,8 @@
   let importingTexts = $state(false);
   // One row per text typed by the site owner; translations keyed by locale code
   let contentRows = $state<{ source: string; translations: Record<string, string> }[]>([]);
+  // Language settings as last loaded or saved, so saving translations never publishes unsaved language edits
+  let savedLanguages = $state<{ defaultLocale: string; locales: Locale[] }>({ defaultLocale: "en", locales: [] });
   let newSourceText = $state("");
   let tzToggle = $state("NO");
   let dateAndTimeFormat = $state({
@@ -70,28 +72,30 @@
   );
 
   function rowsFromContentTranslations(contentTranslations: Record<string, Record<string, string>> | undefined) {
-    const rows: Record<string, Record<string, string>> = {};
+    // A Map, because any text is a valid key, "constructor" and "__proto__" included
+    const rows = new Map<string, Record<string, string>>();
     for (const [code, mappings] of Object.entries(contentTranslations || {})) {
       for (const [source, translated] of Object.entries(mappings || {})) {
-        rows[source] ??= {};
-        rows[source][code] = translated;
+        if (!rows.has(source)) rows.set(source, {});
+        rows.get(source)![code] = translated;
       }
     }
-    return Object.entries(rows).map(([source, translations]) => ({ source, translations }));
+    return Array.from(rows, ([source, translations]) => ({ source, translations }));
   }
 
   function contentTranslationsFromRows() {
-    const contentTranslations: Record<string, Record<string, string>> = {};
+    const byLocale = new Map<string, Array<[string, string]>>();
     for (const row of contentRows) {
       const source = row.source.trim();
       if (!source) continue;
       for (const [code, translated] of Object.entries(row.translations)) {
         if (!translated || !translated.trim()) continue;
-        contentTranslations[code] ??= {};
-        contentTranslations[code][source] = translated.trim();
+        if (!byLocale.has(code)) byLocale.set(code, []);
+        byLocale.get(code)!.push([source, translated.trim()]);
       }
     }
-    return contentTranslations;
+    // Object.fromEntries defines own properties, so a "__proto__" text stays an ordinary key
+    return Object.fromEntries(Array.from(byLocale, ([code, entries]) => [code, Object.fromEntries(entries)]));
   }
 
   function addSourceText(text: string) {
@@ -118,7 +122,17 @@
     return response.json();
   }
 
-  // Adds a row for each monitor name and description, page title and header, site name and nav label
+  function pageMetaTexts(pageSettingsJson: string | null | undefined): string[] {
+    try {
+      const settings = JSON.parse(pageSettingsJson || "{}");
+      return [settings?.metaPageTitle, settings?.metaPageDescription];
+    } catch {
+      return [];
+    }
+  }
+
+  // Adds a row for every text the public pages translate: site name and meta tags, nav labels,
+  // page titles, headers and meta tags, monitor names and descriptions, the footer and the banner
   async function importSiteTexts() {
     importingTexts = true;
     try {
@@ -132,11 +146,13 @@
         return;
       }
       const texts: string[] = [];
-      if (siteData.siteName) texts.push(siteData.siteName);
+      texts.push(siteData.siteName, siteData.metaSiteTitle, siteData.metaSiteDescription);
       for (const item of siteData.nav || []) texts.push(item.name);
-      for (const page of pages || []) texts.push(page.page_title, page.page_header, page.page_subheader);
+      for (const page of pages || []) {
+        texts.push(page.page_title, page.page_header, page.page_subheader, ...pageMetaTexts(page.page_settings_json));
+      }
       for (const monitor of monitors || []) texts.push(monitor.name, monitor.description);
-      if (siteData.footerHTML) texts.push(siteData.footerHTML);
+      texts.push(siteData.footerHTML, siteData.announcement?.title, siteData.announcement?.message);
       const added = texts.filter((text) => typeof text === "string" && addSourceText(text)).length;
       toast.success(added ? `${added} texts added` : "No new texts to add");
     } catch (e) {
@@ -150,7 +166,7 @@
     savingContent = true;
     try {
       const result = await postManageApi("storeSiteData", {
-        i18n: JSON.stringify({ ...i18n, contentTranslations: contentTranslationsFromRows() })
+        i18n: JSON.stringify({ ...savedLanguages, contentTranslations: contentTranslationsFromRows() })
       });
       if (result.error) {
         toast.error(result.error);
@@ -191,6 +207,10 @@
           // Merge with all available locales
           const existingLocales = result.i18n.locales || [];
           contentRows = rowsFromContentTranslations(result.i18n.contentTranslations);
+          savedLanguages = {
+            defaultLocale: result.i18n.defaultLocale || "en",
+            locales: (result.i18n.locales || []).map((l: Locale) => ({ ...l }))
+          };
           i18n = {
             contentTranslations: result.i18n.contentTranslations || {},
             defaultLocale: result.i18n.defaultLocale || "en",
@@ -230,6 +250,10 @@
       if (result.error) {
         toast.error(result.error);
       } else {
+        savedLanguages = {
+          defaultLocale: i18n.defaultLocale,
+          locales: i18n.locales.map((l) => ({ ...l }))
+        };
         toast.success("Language settings saved successfully");
       }
     } catch (e) {
