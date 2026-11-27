@@ -36,6 +36,8 @@ interface NewUserInput {
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// RFC 5321 address limit. Checked before the regex, which is quadratic on long dotted input.
+const MAX_EMAIL_LENGTH = 254;
 
 const normalizeEmail = (email: string): string => email.trim().toLowerCase();
 const normalizeName = (name: string): string => name.trim().replace(/\s+/g, " ");
@@ -45,7 +47,7 @@ const validateEmailOrThrow = (email: string): string => {
   if (!normalizedEmail) {
     throw new Error("Email cannot be empty");
   }
-  if (!EMAIL_REGEX.test(normalizedEmail)) {
+  if (normalizedEmail.length > MAX_EMAIL_LENGTH || !EMAIL_REGEX.test(normalizedEmail)) {
     throw new Error("Please enter a valid email address");
   }
   return normalizedEmail;
